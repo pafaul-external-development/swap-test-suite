@@ -26,8 +26,9 @@ class RootContract {
      */
     async _deployRoot(onlyAddress) {
         return await this.rootContract.deploy(
-            this.constructorParams,
-            this.initParams,
+            constructorParams = this.constructorParams,
+            initParams = this.initParams,
+            initialBalance = 3 * Math.pow(10, 9),
             _randomNonce = true,
             keyPair = keyPair,
             onlyDeriveAddress = onlyAddress

@@ -9,11 +9,9 @@ class Giver {
      * @param {JSON} giverParameters 
      * @param {JSON} keyPair 
      */
-    constructor(tonInstance, giverParameters, keyPair) {
+    constructor(tonInstance, keyPair) {
         this.tonInstance = tonInstance;
         this.keyPair = keyPair;
-        this.initParams = giverParameters.initParams;
-        this.constructorParams = giverParameters.constructorParams;
         this.giverContract = undefined;
     }
 
@@ -24,14 +22,14 @@ class Giver {
     /**
      * Send grams (10^-9 ton) to dest
      * @param {Number} dest 
-     * @param {String} grams 
+     * @param {String} crystals 
      */
-    async sendGrams(dest, grams) {
+    async sendGrams(dest, crystals) {
         await this.giverContract.run(
             functionName = 'sendGrams',
             input = {
                 dest = dest,
-                amount = grams
+                amount = crystals * Math.pow(10, 9)
             },
             keyPair = this.keyPair
         )

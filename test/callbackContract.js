@@ -21,6 +21,16 @@ class CallbackContract {
         this.giverContract = await freeton.requireContract(this.tonInstance, 'CallbackTestContract');
     }
 
+    async deployContract() {
+        return await this.giverContract.deploy(
+            constructorParams = this.constructorParams,
+            initParams = this.initParams,
+            initialBalance = 3 * Math.pow(10, 9),
+            _randomNonce = true,
+            keyPair = this.keyPair
+        );
+    }
+
     /**
      * Get result of callback call
      */
