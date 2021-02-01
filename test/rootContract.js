@@ -1,7 +1,7 @@
-const freeton = require('./../src');
+const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const Wallet = require('./walletTest');
+const Wallet = require('./walletContract');
 
 class RootContract {
     /**
@@ -77,7 +77,7 @@ class RootContract {
      * Load root contract from local file system
      */
     async loadContract() {
-        this.rootContract = await this.tonInstance.requireContract(this.tonInstance, 'RootTokenContract');
+        this.rootContract = await freeton.requireContract(this.tonInstance, 'RootTokenContract');
 
         expect(this.rootContract.address).to.equal(undefined, 'Address should be undefined');
         expect(this.rootContract.code).not.to.equal(undefined, 'Code should be available');
@@ -165,3 +165,5 @@ class RootContract {
         await this._mintToWallet(swapPairWallet, initialTokens.swap);
     }
 }
+
+module.exports = RootContract;
