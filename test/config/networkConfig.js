@@ -1,5 +1,5 @@
 let networkConfig = {
-    network: 'http://net.ton.dev'
+    network: 'http://localhost:3333'
 }
 
 module.exports = networkConfig;
