@@ -25,9 +25,10 @@ class RootContract {
      * @returns {Promise<String>}
      */
     async _deployRoot(onlyAddress) {
+        let that = this;
         return await this.rootContract.deploy(
-            constructorParams = this.constructorParams,
-            initParams = this.initParams,
+            constructorParams = that.constructorParams,
+            initParams = that.initParams,
             initialBalance = 3 * Math.pow(10, 9),
             _randomNonce = true,
             keyPair = keyPair,
