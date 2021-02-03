@@ -51,8 +51,8 @@ describe('Test for TIP-3 token', async function() {
             wallet1 = new Wallet(ton, wallet1Config, ton.keys[1]);
             wallet2 = new Wallet(ton, wallet2Config, ton.keys[2]);
 
-            rootContractParameters.initialParameters.root_public_key_ = ton.keys[0].public;
-            rootContractParameters.initialParameters.wallet_code_ = wallet1.imageBase64;
+            rootContractParameters.initParams.root_public_key_ = ton.keys[0].public;
+            rootContractParameters.initParams.wallet_code_ = wallet1.imageBase64;
             rootSC = new RootContract(ton, rootContractParameters, ton.keys[0]);
 
             giverCS = new Giver(ton, giverConfig.keyPair);
