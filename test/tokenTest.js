@@ -15,6 +15,7 @@ const RootContract = require('./rootContract');
 const Wallet = require('./walletContract');
 const Giver = require('./giverContract');
 const CallbackContract = require('./callbackContract');
+const wallet = require('./config/walletParameters');
 
 function clone(a) {
     return JSON.parse(JSON.stringify(a));
@@ -56,6 +57,13 @@ describe('Test for TIP-3 token', async function() {
 
             giverCS = new Giver(ton, giverConfig.keyPair);
             callbackSC = new CallbackContract(ton, CallbackContract, ton.keys[0]);
+        });
+
+        it('Load contract', async function() {
+            await rootSC.loadContract();
+            await wallet1.loadContract();
+            await wallet2.loadContract();
+            await callbackSC.loadContract();
         });
 
         it('Deploy of root contract', async function() {
