@@ -66,15 +66,16 @@ class RootContract {
             'mint', {
                 tokens: tokensAmount,
                 to: walletObject.walletContract.address
-            }
+            },
+            this.keyPair
         );
 
-        let balance = await walletObject.walletContract.run(
+        let balance = (await walletObject.walletContract.run(
             'getBalance', {},
             walletObject.keyPair
-        );
+        )).decoded.output.value0;
 
-        expect(balance).to.be.a('Number').and.equal(tokensAmount);
+        return balance;
     }
 
     /**
@@ -166,8 +167,11 @@ class RootContract {
      * @param {JSON} initialTokens Initial tokens distribution
      */
     async mintTokensToWallets(userWallet, swapPairWallet, initialTokens) {
-        await this._mintToWallet(userWallet, initialTokens.user);
-        await this._mintToWallet(swapPairWallet, initialTokens.swap);
+        let balance = await this._mintToWallet(userWallet, initialTokens.user);
+        expect(balance).to.be.a('Number').and.equal(initialTokens.user);
+        balance = await this._mintToWallet(swapPairWallet, initialTokens.swap);
+        expect(balance).to.be.a('Number').and.equal(initialTokens.swap);
+        logger.success(`Tokens minted successfully`);
     }
 }
 

@@ -20,6 +20,15 @@ function clone(a) {
     return JSON.parse(JSON.stringify(a));
 }
 
+async function sendGrams(giver, address, amount) {
+    return await giver.run(
+        'sendGrams', {
+            'dest': address,
+            'amount': amount
+        }
+    );
+}
+
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
     network: networkConfig.network,
@@ -104,10 +113,11 @@ describe('Test for TIP-3 token', async function() {
                 giverConfig.address,
             );
 
-            await giverSC.sendGrams(wallet1.address, freeton.utils.convertCrystal('10', 'nano'));
-            await giverSC.sendGrams(wallet2.address, freeton.utils.convertCrystal('10', 'nano'));
-            await giverSC.sendGrams(rootSC.address, freeton.utils.convertCrystal('10', 'nano'));
-            await giverSC.sendGrams(callbackSC.address, freeton.utils.convertCrystal('10', 'nano'));
+            let crystalAmount = freeton.utils.convertCrystal('10', 'nano');
+            await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
+            await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
+            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
+            await sendGrams(giverSC, callbackSC.CallbackContract.address, crystalAmount);
         });
 
         it('Minting tokens to contracts', async function() {
