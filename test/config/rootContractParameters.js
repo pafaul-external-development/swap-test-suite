@@ -1,8 +1,12 @@
+function toHex(str) {
+    return Buffer.from(str, 'utf8').toString('hex');
+}
+
 let rootParameters = {
     // В корневом контракте присутствуют только initial параметры
     initParams: {
-        name_: "TestRootContract",
-        symbol_: "TRC",
+        name_: toHex('TestRootContract'),
+        symbol_: toHex('TRC'),
         decimals_: 9,
         wallet_code_: "", // Нужно будет добавить код кошелька
         root_public_key_: "pubkey",
