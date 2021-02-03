@@ -33,7 +33,6 @@ class RootContract {
         return await this.rootContract.deploy(
             this.constructorParams,
             this.initParams,
-            3 * Math.pow(10, 9),
             true,
             this.keyPair,
             onlyAddress
