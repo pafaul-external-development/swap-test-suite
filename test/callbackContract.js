@@ -23,11 +23,11 @@ class CallbackContract {
 
     async deployContract() {
         return await this.giverContract.deploy(
-            constructorParams = this.constructorParams,
-            initParams = this.initParams,
-            initialBalance = 3 * Math.pow(10, 9),
-            _randomNonce = true,
-            keyPair = this.keyPair
+            this.constructorParams,
+            this.initParams,
+            3 * Math.pow(10, 9),
+            true,
+            this.keyPair
         );
     }
 
@@ -36,9 +36,8 @@ class CallbackContract {
      */
     async getResult() {
         let result = await this.giverContract.run(
-            functionName = 'getResult',
-            input = {},
-            _keyPair = this.keyPair
+            'getResult', {},
+            this.keyPair
         );
         return result;
     }

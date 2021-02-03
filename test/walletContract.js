@@ -48,14 +48,13 @@ class Wallet {
      */
     async transfer(tokenAmount, callbackAddress) {
         await this.walletContract.run(
-            functionName = 'transfer',
-            input = {
+            'transfer', {
                 to: this.transactionAddress,
                 tokens: tokenAmount,
                 grams: 0,
                 callbackAddress: callbackAddress
             },
-            _keyPair = this.keyPair
+            this.keyPair
         );
     }
 }

@@ -25,14 +25,13 @@ class RootContract {
      * @returns {Promise<String>}
      */
     async _deployRoot(onlyAddress) {
-        let that = this;
         return await this.rootContract.deploy(
-            constructorParams = that.constructorParams,
-            initParams = that.initParams,
-            initialBalance = 3 * Math.pow(10, 9),
-            _randomNonce = true,
-            keyPair = keyPair,
-            onlyDeriveAddress = onlyAddress
+            this.constructorParams,
+            this.initParams,
+            3 * Math.pow(10, 9),
+            true,
+            keyPair,
+            onlyAddress
         );
     }
 
@@ -44,9 +43,9 @@ class RootContract {
      */
     async _deployWallet(walletObject) {
         return await this.rootContract.run(
-            functionName = 'deployEmptyWallet',
-            input = walletObject.initParams,
-            _keyPair = walletObject.keyPair
+            'deployEmptyWallet',
+            walletObject.initParams,
+            walletObject.keyPair
         )
     }
 
@@ -59,17 +58,15 @@ class RootContract {
      */
     async _mintToWallet(walletObject, tokensAmount) {
         await this.rootContract.run(
-            functionName = 'mint',
-            input = {
+            'mint', {
                 tokens: tokensAmount,
                 to: walletObject.walletContract.address
             }
         );
 
         let balance = await walletObject.walletContract.run(
-            functionName = 'getBalance',
-            input = {},
-            _keyPair = walletObject.keyPair
+            'getBalance', {},
+            walletObject.keyPair
         );
 
         expect(balance).to.be.a('Number').and.equal(tokensAmount);
@@ -110,10 +107,10 @@ class RootContract {
      * Check initial parameters for correctness
      */
     async checkParameters() {
-        let name_ = await this.rootContract.run(functionName = 'getName', input = {}, _keyPair = this.keyPair);
-        let symbol_ = await this.rootContract.run(functionName = 'getSymbol', input = {}, _keyPair = this.keyPair);
-        let decimals_ = await this.rootContract.run(functionName = 'getDecimals', input = {}, _keyPair = this.keyPair);
-        let root_public_key_ = await this.rootContract.run(functionName = 'getRootPublicKey', input = {}, _keyPair = this.keyPair);
+        let name_ = await this.rootContract.run('getName', {}, this.keyPair);
+        let symbol_ = await this.rootContract.run('getSymbol', {}, this.keyPair);
+        let decimals_ = await this.rootContract.run('getDecimals', {}, this.keyPair);
+        let root_public_key_ = await this.rootContract.run('getRootPublicKey', {}, this.keyPair);
 
         expect(name_).to.be.a('String').and.satisfy(s => s.equal(this.initParams.name_),
             `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);

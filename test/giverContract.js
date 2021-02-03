@@ -26,12 +26,11 @@ class Giver {
      */
     async sendGrams(dest, crystals) {
         await this.giverContract.run(
-            functionName = 'sendGrams',
-            input = {
+            'sendGrams', {
                 dest: dest,
                 amount: crystals * Math.pow(10, 9)
             },
-            keyPair = this.keyPair
+            this.keyPair
         )
     }
 }
