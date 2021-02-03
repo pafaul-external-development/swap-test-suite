@@ -45,8 +45,8 @@ describe('Test for TIP-3 token', async function() {
         it('Initial stage', async function() {
             wallet1Config = clone(walletParameters); // user wallet
             wallet2Config = clone(walletParameters); // swap pair wallet
-            wallet1Config.initParams.wallet_public_key = ton.keys[1].public;
-            wallet2Config.initParams.wallet_public_key = ton.keys[2].public;
+            wallet1Config.initParams.wallet_public_key = '0x' + ton.keys[1].public;
+            wallet2Config.initParams.wallet_public_key = '0x' + ton.keys[2].public;
 
             wallet1 = new Wallet(ton, wallet1Config, ton.keys[1]);
             wallet2 = new Wallet(ton, wallet2Config, ton.keys[2]);
@@ -63,7 +63,7 @@ describe('Test for TIP-3 token', async function() {
         })
 
         it('Load root contract', async function() {
-            rootContractParameters.initParams.root_public_key_ = ton.keys[0].public;
+            rootContractParameters.initParams.root_public_key_ = '0x' + ton.keys[0].public;
             rootContractParameters.initParams.wallet_code_ = wallet1.walletContract.imageBase64;
             rootSC.setConfig(rootContractParameters);
             await rootSC.loadContract();
