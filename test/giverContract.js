@@ -28,8 +28,8 @@ class Giver {
         await this.giverContract.run(
             functionName = 'sendGrams',
             input = {
-                dest = dest,
-                amount = crystals * Math.pow(10, 9)
+                dest: dest,
+                amount: crystals * Math.pow(10, 9)
             },
             keyPair = this.keyPair
         )

@@ -6,7 +6,7 @@ const testScenario = require('./config/testScenario');
 
 const giverConfig = require('./config/giverConfig');
 const networkConfig = require('./config/networkConfig');
-const seedPhrase = require('./config/seedPhraseCongig');
+const seedPhrase = require('./config/seedPhraseConfig');
 
 const rootContractParameters = require('./config/rootContractParameters');
 const walletParameters = require('./config/walletParameters');
