@@ -70,34 +70,34 @@ describe('Test for TIP-3 token', async function() {
         });
 
         it('Load callback contract', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await callbackSC.loadContract();
         })
 
         it('Deploy of root contract', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await rootSC.deployContract();
         });
 
         it('Root contract basic checks', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await rootSC.checkParameters();
         });
 
         it('Wallet contracts deploy', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
             wallet1.address = walletAddresses.user;
             wallet2.address = walletAddresses.swap;
         });
 
         it('Callback contract deploy', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await callbackSC.deployContract();
         });
 
         it('Ton crystal distribution', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await giverSC.sendGrams(wallet1.address, 3);
             await giverSC.sendGrams(wallet2.address, 3);
             await giverSC.sendGrams(rootSC.address, 3);
@@ -105,12 +105,12 @@ describe('Test for TIP-3 token', async function() {
         });
 
         it('Minting tokens to contracts', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             await rootSC.mintTokensToWallets(wallet1, wallet2, testScenario.pair1.tokensAmount);
         });
 
         it('Transactions with callback test', async function() {
-            this.setTimeout(0);
+            this.timeout(0);
             wallet1.setTransactionAddress(wallet2.address);
             wallet2.setTransactionAddress(wallet1.address);
             await wallet1.transfer(10, callbackSC.address);
