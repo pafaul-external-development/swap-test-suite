@@ -51,20 +51,26 @@ describe('Test for TIP-3 token', async function() {
             wallet1 = new Wallet(ton, wallet1Config, ton.keys[1]);
             wallet2 = new Wallet(ton, wallet2Config, ton.keys[2]);
 
-            rootContractParameters.initParams.root_public_key_ = ton.keys[0].public;
-            rootContractParameters.initParams.wallet_code_ = wallet1.imageBase64;
             rootSC = new RootContract(ton, rootContractParameters, ton.keys[0]);
 
             giverCS = new Giver(ton, giverConfig.keyPair);
             callbackSC = new CallbackContract(ton, CallbackContract, ton.keys[0]);
         });
 
-        it('Load contract', async function() {
-            await rootSC.loadContract();
+        it('Load wallet contracts', async function() {
             await wallet1.loadContract();
             await wallet2.loadContract();
-            await callbackSC.loadContract();
+        })
+
+        it('Load root contract', async function() {
+            rootContractParameters.initParams.root_public_key_ = ton.keys[0].public;
+            rootContractParameters.initParams.wallet_code_ = wallet1.imageBase64;
+            await rootSC.loadContract();
         });
+
+        it('Load callback contract', async function() {
+            await callbackSC.loadContract();
+        })
 
         it('Deploy of root contract', async function() {
             await rootSC.deployContract();

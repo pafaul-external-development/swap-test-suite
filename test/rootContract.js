@@ -18,6 +18,11 @@ class RootContract {
         this.rootContract = undefined;
     }
 
+    setConfig(newConfig) {
+        this.initParams = newConfig.initParams;
+        this.constructorParams = newConfig.constructorParams;
+    }
+
     /**
      * Deploy root contract or just get the address
      * @dev For internal use only
