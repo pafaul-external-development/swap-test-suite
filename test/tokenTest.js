@@ -97,10 +97,17 @@ describe('Test for TIP-3 token', async function() {
 
         it('Ton crystal distribution', async function() {
             this.timeout(0);
-            await giverSC.sendGrams(wallet1.address, 3);
-            await giverSC.sendGrams(wallet2.address, 3);
-            await giverSC.sendGrams(rootSC.address, 3);
-            await giverSC.sendGrams(callbackSC.address, 3);
+            const giverContract = new ContractWrapper(
+                this.tonWrapper,
+                this.tonWrapper.giverConfig.abi,
+                null,
+                this.tonWrapper.giverConfig.address,
+            );
+
+            await giverSC.sendGrams(wallet1.address, freeton.utils.convertCrystal('10', 'nano'));
+            await giverSC.sendGrams(wallet2.address, freeton.utils.convertCrystal('10', 'nano'));
+            await giverSC.sendGrams(rootSC.address, freeton.utils.convertCrystal('10', 'nano'));
+            await giverSC.sendGrams(callbackSC.address, freeton.utils.convertCrystal('10', 'nano'));
         });
 
         it('Minting tokens to contracts', async function() {

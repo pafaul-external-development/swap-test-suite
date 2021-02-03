@@ -26,7 +26,7 @@ class CallbackContract {
             this.constructorParams,
             this.initParams,
             freeton.utils.convertCrystal('10', 'nano'),
-            false,
+            true,
             this.keyPair
         );
     }

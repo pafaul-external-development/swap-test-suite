@@ -48,9 +48,9 @@ class RootContract {
      */
     async _deployWallet(walletObject) {
         return await this.rootContract.run(
-            'deployEmptyWallet',
+            'deployWallet',
             walletObject.initParams,
-            walletObject.keyPair
+            this.keyPair
         )
     }
 
@@ -119,16 +119,13 @@ class RootContract {
 
         expect(name_).to.be.a('String').and.satisfy(s => s === this.initParams.name_,
             `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);
-        logger.success(`received name_: ${name_}; expected: ${this.initParams.name_}`);
         expect(symbol_).to.be.a('String').and.satisfy(s => s === this.initParams.symbol_,
             `Invalid symbol_ parameter. expected: ${this.initParams.symbol_}, got: ${symbol_}`);
-        logger.success(`received symbol_: ${symbol_}; expected: ${this.initParams.symbol_}`);
         expect(decimals_).to.be.a('String').and.satisfy(s => s === String(this.initParams.decimals_),
             `Invalid decimals_ parameter. expected: ${this.initParams.decimals_}, got: ${decimals_}`);
-        logger.success(`received decimals_: ${decimals_}; expected: ${this.initParams.decimals_}`);
         expect(root_public_key_).to.be.a('String').and.satisfy(s => s === this.initParams.root_public_key_,
             `Invalid root_public_key_ paramter. expected: ${this.initParams.root_public_key_}`);
-        logger.success(`received name_: ${root_public_key_}; expected: ${this.initParams.root_public_key_}`);
+        logger.success(`received valid name_, symbol_, decimals_, root_public_key_`);
     }
 
     /**
