@@ -8,7 +8,7 @@ const giverConfig = require('./config/giverConfig');
 const networkConfig = require('./config/networkConfig');
 const seedPhrase = require('./config/seedPhraseConfig');
 
-const rootContractParameters = require('./config/rootContractParameters');
+let rootContractParameters = require('./config/rootContractParameters');
 const walletParameters = require('./config/walletParameters');
 
 const RootContract = require('./rootContract');
@@ -42,8 +42,6 @@ describe('Test for TIP-3 token', async function() {
         });
 
         it('Initial stage', async function() {
-            rootSC = new RootContract(ton, rootContractParameters, ton.keys[0]);
-
             wallet1Config = clone(walletParameters); // user wallet
             wallet2Config = clone(walletParameters); // swap pair wallet
             wallet1Config.initParams.wallet_public_key = ton.keys[1].public;
@@ -51,6 +49,10 @@ describe('Test for TIP-3 token', async function() {
 
             wallet1 = new Wallet(ton, wallet1Config, ton.keys[1]);
             wallet2 = new Wallet(ton, wallet2Config, ton.keys[2]);
+
+            rootContractParameters.initialParameters.root_public_key_ = ton.keys[0].public;
+            rootContractParameters.initialParameters.wallet_code_ = wallet1.imageBase64;
+            rootSC = new RootContract(ton, rootContractParameters, ton.keys[0]);
 
             giverCS = new Giver(ton, giverConfig.keyPair);
             callbackSC = new CallbackContract(ton, CallbackContract, ton.keys[0]);
