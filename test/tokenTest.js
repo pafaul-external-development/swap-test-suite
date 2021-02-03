@@ -21,11 +21,11 @@ function clone(a) {
 }
 
 async function sendGrams(giver, address, amount) {
-    return await giver.run(
+    await giver.run(
         'sendGrams', {
-            'dest': address,
-            'amount': amount
-        }
+            dest: address,
+            amount: amount
+        }, null
     );
 }
 
@@ -106,7 +106,7 @@ describe('Test for TIP-3 token', async function() {
 
         it('Ton crystal distribution', async function() {
             this.timeout(0);
-            const giverContract = new freeton.ContractWrapper(
+            giverSC = new freeton.ContractWrapper(
                 ton,
                 giverConfig.abi,
                 null,

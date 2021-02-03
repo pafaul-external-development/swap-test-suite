@@ -155,8 +155,8 @@ class RootContract {
         logger.success(`Swap pair wallet deployed successfully. Address: ${swapPairAddress}`);
 
         return {
-            user: userWallet,
-            swap: swapPairWallet
+            user: userWalletAddress,
+            swap: swapPairAddress
         }
     }
 
