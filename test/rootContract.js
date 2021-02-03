@@ -30,7 +30,7 @@ class RootContract {
             this.initParams,
             3 * Math.pow(10, 9),
             true,
-            keyPair,
+            this.keyPair,
             onlyAddress
         );
     }
