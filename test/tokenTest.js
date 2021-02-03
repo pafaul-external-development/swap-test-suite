@@ -117,7 +117,13 @@ describe('Test for TIP-3 token', async function() {
             await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
             await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
             await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
-            await sendGrams(giverSC, callbackSC.CallbackContract.address, crystalAmount);
+            await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
+        });
+
+        it('AWAKE MY FELLOW CONTRACTS!', async function() {
+            this.timeout(0);
+            await wallet1.walletObject.run('constructor', {}, wallet1.keyPair);
+            await wallet2.walletObject.run('constructor', {}, wallet2.keyPair);
         });
 
         it('Minting tokens to contracts', async function() {

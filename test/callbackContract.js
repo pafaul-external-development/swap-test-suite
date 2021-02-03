@@ -14,15 +14,15 @@ class CallbackContract {
         this.keyPair = keyPair;
         this.initParams = callbackContractParams.initParams;
         this.constructorParams = callbackContractParams.constructorParams;
-        this.giverContract = undefined;
+        this.callbackContract = undefined;
     }
 
     async loadContract() {
-        this.giverContract = await freeton.requireContract(this.tonInstance, 'CallbackTestContract');
+        this.callbackContract = await freeton.requireContract(this.tonInstance, 'CallbackTestContract');
     }
 
     async deployContract() {
-        return await this.giverContract.deploy(
+        return await this.callbackContract.deploy(
             this.constructorParams,
             this.initParams,
             freeton.utils.convertCrystal('10', 'nano'),
@@ -35,7 +35,7 @@ class CallbackContract {
      * Get result of callback call
      */
     async getResult() {
-        let result = await this.giverContract.run(
+        let result = await this.callbackContract.run(
             'getResult', {},
             this.keyPair
         );
