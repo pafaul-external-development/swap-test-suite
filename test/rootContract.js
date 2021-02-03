@@ -147,11 +147,11 @@ class RootContract {
         expect(swapPairAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
             `Cannot deploy swap pair wallet for token: ${this.initParams.name_}`);
 
-        userWallet.address = userWalletAddress;
-        swapPairWallet.address = swapPairAddress;
+        userWallet.walletContract.address = userWalletAddress;
+        swapPairWallet.walletContract.address = swapPairAddress;
 
         logger.success(`User wallet deployed successfully. Address: ${userWalletAddress}`);
-        logger.success(`Swap pair wallet deployed successfully. Address: ${swapPairWallet}`);
+        logger.success(`Swap pair wallet deployed successfully. Address: ${swapPairAddress}`);
 
         return {
             user: userWallet,

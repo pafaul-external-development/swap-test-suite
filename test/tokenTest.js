@@ -91,17 +91,17 @@ describe('Test for TIP-3 token', async function() {
         it('Wallet contracts deploy', async function() {
             this.timeout(0);
             let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
-            wallet1.address = walletAddresses.user;
-            wallet2.address = walletAddresses.swap;
+            wallet1.walletContract.address = walletAddresses.user;
+            wallet2.walletContract.address = walletAddresses.swap;
         });
 
         it('Ton crystal distribution', async function() {
             this.timeout(0);
             const giverContract = new freeton.ContractWrapper(
-                this.tonWrapper,
-                this.tonWrapper.giverConfig.abi,
+                ton,
+                giverConfig.abi,
                 null,
-                this.tonWrapper.giverConfig.address,
+                giverConfig.address,
             );
 
             await giverSC.sendGrams(wallet1.address, freeton.utils.convertCrystal('10', 'nano'));
