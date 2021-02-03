@@ -25,8 +25,8 @@ class CallbackContract {
         return await this.giverContract.deploy(
             this.constructorParams,
             this.initParams,
-            3 * Math.pow(10, 9),
-            true,
+            freeton.utils.convertCrystal('10', 'nano'),
+            false,
             this.keyPair
         );
     }

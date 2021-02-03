@@ -15,7 +15,6 @@ const RootContract = require('./rootContract');
 const Wallet = require('./walletContract');
 const Giver = require('./giverContract');
 const CallbackContract = require('./callbackContract');
-const wallet = require('./config/walletParameters');
 
 function clone(a) {
     return JSON.parse(JSON.stringify(a));
@@ -72,7 +71,12 @@ describe('Test for TIP-3 token', async function() {
         it('Load callback contract', async function() {
             this.timeout(0);
             await callbackSC.loadContract();
-        })
+        });
+
+        it('Callback contract deploy', async function() {
+            this.timeout(0);
+            await callbackSC.deployContract();
+        });
 
         it('Deploy of root contract', async function() {
             this.timeout(0);
@@ -89,11 +93,6 @@ describe('Test for TIP-3 token', async function() {
             let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
             wallet1.address = walletAddresses.user;
             wallet2.address = walletAddresses.swap;
-        });
-
-        it('Callback contract deploy', async function() {
-            this.timeout(0);
-            await callbackSC.deployContract();
         });
 
         it('Ton crystal distribution', async function() {
