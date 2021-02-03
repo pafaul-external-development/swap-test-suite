@@ -123,7 +123,7 @@ class RootContract {
         expect(symbol_).to.be.a('String').and.satisfy(s => s === this.initParams.symbol_,
             `Invalid symbol_ parameter. expected: ${this.initParams.symbol_}, got: ${symbol_}`);
         logger.success(`received symbol_: ${symbol_}; expected: ${this.initParams.symbol_}`);
-        expect(decimals_).to.be.a('Number').and.satisfy(s => s === this.initParams.decimals_,
+        expect(decimals_).to.be.a('String').and.satisfy(s => s === String(this.initParams.decimals_),
             `Invalid decimals_ parameter. expected: ${this.initParams.decimals_}, got: ${decimals_}`);
         logger.success(`received decimals_: ${decimals_}; expected: ${this.initParams.decimals_}`);
         expect(root_public_key_).to.be.a('String').and.satisfy(s => s === this.initParams.root_public_key_,
