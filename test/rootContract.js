@@ -139,12 +139,12 @@ class RootContract {
      * @returns {Promise<JSON>} JSON with 'user' and 'swap' properties with wallets
      */
     async deployWallets(userWallet, swapPairWallet) {
-        let userWalletAddress = await this._deployWallet(userWallet);
-        let swapPairAddress = await this._deployWallet(swapPairWallet);
+        let userWalletAddress = (await this._deployWallet(userWallet)).decoded.output.value0;
+        let swapPairAddress = (await this._deployWallet(swapPairWallet)).decoded.output.value0;
 
-        expect(userWalletAddress).to.be.a('String').and.satisfy(s => startsWith('0:'),
+        expect(userWalletAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
             `Cannot deploy user wallet for token: ${this.initParams.name_}`);
-        expect(swapPairAddress).to.be.a('String').and.satisfy(s => startsWith('0:'),
+        expect(swapPairAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
             `Cannot deploy swap pair wallet for token: ${this.initParams.name_}`);
 
         userWallet.address = userWalletAddress;

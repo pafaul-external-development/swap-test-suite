@@ -97,7 +97,7 @@ describe('Test for TIP-3 token', async function() {
 
         it('Ton crystal distribution', async function() {
             this.timeout(0);
-            const giverContract = new ContractWrapper(
+            const giverContract = new freeton.ContractWrapper(
                 this.tonWrapper,
                 this.tonWrapper.giverConfig.abi,
                 null,
