@@ -117,16 +117,16 @@ class RootContract {
         let decimals_ = (await this.rootContract.run('getDecimals', {}, this.keyPair)).decoded.output.value0;
         let root_public_key_ = (await this.rootContract.run('getRootPublicKey', {}, this.keyPair)).decoded.output.value0;
 
-        expect(name_).to.be.a('String').and.satisfy(s => s.equal(this.initParams.name_),
+        expect(name_).to.be.a('String').and.satisfy(s => s === this.initParams.name_,
             `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);
         logger.success(`received name_: ${name_}; expected: ${this.initParams.name_}`);
-        expect(symbol_).to.be.a('String').and.satisfy(s => s.equal(this.initParams.symbol_),
+        expect(symbol_).to.be.a('String').and.satisfy(s => s === this.initParams.symbol_,
             `Invalid symbol_ parameter. expected: ${this.initParams.symbol_}, got: ${symbol_}`);
         logger.success(`received symbol_: ${symbol_}; expected: ${this.initParams.symbol_}`);
-        expect(decimals_).to.be.a('Number').and.satisfy(s => s.equal(this.initParams.decimals_),
+        expect(decimals_).to.be.a('Number').and.satisfy(s => s === this.initParams.decimals_,
             `Invalid decimals_ parameter. expected: ${this.initParams.decimals_}, got: ${decimals_}`);
         logger.success(`received decimals_: ${decimals_}; expected: ${this.initParams.decimals_}`);
-        expect(root_public_key_).to.be.a('String').and.satisfy(s => s.equal(this.initParams.root_public_key_),
+        expect(root_public_key_).to.be.a('String').and.satisfy(s => s === this.initParams.root_public_key_,
             `Invalid root_public_key_ paramter. expected: ${this.initParams.root_public_key_}`);
         logger.success(`received name_: ${root_public_key_}; expected: ${this.initParams.root_public_key_}`);
     }
