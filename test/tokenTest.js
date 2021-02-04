@@ -83,7 +83,6 @@ describe('Test for TIP-3 token', async function() {
             rootContractParameters.initParams.wallet_code_ = wallet1.walletContract.imageBase64;
             rootSC.setConfig(rootContractParameters);
             await rootSC.loadContract();
-            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount*10);
         });
 
         it('Load callback contract', async function() {
@@ -100,6 +99,7 @@ describe('Test for TIP-3 token', async function() {
         it('Deploy of root contract', async function() {
             this.timeout(0);
             await rootSC.deployContract();
+            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount*10);
         });
 
         it('Root contract basic checks', async function() {
