@@ -58,7 +58,7 @@ describe('Test for TIP-3 token', async function() {
         });
 
         it('Initial stage', async function() {
-            walletParameters.initParams.grams = freeton.utils.convertCrystal('5', 'nano');
+            walletParameters.initParams.grams = freeton.utils.convertCrystal('2', 'nano');
             wallet1Config = clone(walletParameters); // user wallet
             wallet2Config = clone(walletParameters); // swap pair wallet
             wallet1Config.initParams.wallet_public_key = '0x' + ton.keys[1].public;
