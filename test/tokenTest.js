@@ -84,7 +84,8 @@ describe('Test for TIP-3 token', async function() {
 
         it('Callback contract deploy', async function() {
             this.timeout(0);
-            await callbackSC.deployContract();
+            let address = await callbackSC.deployContract();
+            logger.success(`callback SC address: ${address}`);
         });
 
         it('Deploy of root contract', async function() {
@@ -120,7 +121,7 @@ describe('Test for TIP-3 token', async function() {
             await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
         });
 
-        it('AWAKE MY FELLOW CONTRACTS!', async function() {
+        it('Set active state to', async function() {
             this.timeout(0);
             await wallet1.walletObject.run('constructor', {}, wallet1.keyPair);
             await wallet2.walletObject.run('constructor', {}, wallet2.keyPair);
