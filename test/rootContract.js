@@ -117,7 +117,7 @@ class RootContract {
         let symbol_ = (await this.rootContract.run('getSymbol', {}, this.keyPair)).decoded.output.value0;
         let decimals_ = (await this.rootContract.run('getDecimals', {}, this.keyPair)).decoded.output.value0;
         let root_public_key_ = (await this.rootContract.run('getRootPublicKey', {}, this.keyPair)).decoded.output.value0;
-        let reserved = (await this.rootContract.run('getReserved', {}. this.keyPair)).decoded.output.value0;
+        let reserved = (await this.rootContract.run('getReserved', {}, this.keyPair)).decoded.output.value0;
 
         expect(name_).to.be.a('String').and.satisfy(s => s === this.initParams.name_,
             `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);
