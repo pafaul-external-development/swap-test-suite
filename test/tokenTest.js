@@ -101,8 +101,8 @@ describe('Test for TIP-3 token', async function() {
         it('Wallet contracts deploy', async function() {
             this.timeout(0);
             let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
-            wallet1.walletContract.address = walletAddresses.user;
-            wallet2.walletContract.address = walletAddresses.swap;
+            wallet1.setWalletAddress(walletAddresses.user);
+            wallet2.setWalletAddress(walletAddresses.swap);
         });
 
         it('Ton crystal distribution', async function() {
@@ -119,12 +119,6 @@ describe('Test for TIP-3 token', async function() {
             await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
             await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
             await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
-        });
-
-        it('Set active state to', async function() {
-            this.timeout(0);
-            await wallet1.walletObject.run('constructor', {}, wallet1.keyPair);
-            await wallet2.walletObject.run('constructor', {}, wallet2.keyPair);
         });
 
         it('Minting tokens to contracts', async function() {
