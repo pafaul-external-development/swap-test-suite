@@ -99,7 +99,6 @@ describe('Test for TIP-3 token', async function() {
         it('Deploy of root contract', async function() {
             this.timeout(0);
             await rootSC.deployContract();
-            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
         });
 
         it('Root contract basic checks', async function() {
@@ -109,6 +108,7 @@ describe('Test for TIP-3 token', async function() {
 
         it('Wallet contracts deploy', async function() {
             this.timeout(0);
+            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount*10);
             let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
             wallet1.setWalletAddress(walletAddresses.user);
             wallet2.setWalletAddress(walletAddresses.swap);

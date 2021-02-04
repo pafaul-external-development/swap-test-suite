@@ -16,7 +16,7 @@ async function main() {
 
     await ton.setup(1);
 
-    await ton.ton.network.query_collection({
+    await ton.ton.net.query_collection({
         collection: 'accounts',
         filter: {
             id: { eq: futureAddress },
@@ -24,7 +24,7 @@ async function main() {
         result: 'balance'
     }).then(console.log);
 
-    await ton.ton.network.query_collection({
+    await ton.ton.net.query_collection({
         collection: 'accounts',
         filter: {
             id: { eq: futureAddress },
