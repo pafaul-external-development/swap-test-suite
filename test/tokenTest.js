@@ -80,7 +80,7 @@ describe('Test for TIP-3 token', async function() {
 
         it('Load root contract', async function() {
             rootContractParameters.initParams.root_public_key_ = '0x' + ton.keys[0].public;
-            rootContractParameters.initParams.wallet_code_ = Buffer.from(wallet1.walletContract.imageBase64,'base64').toString('hex');
+            rootContractParameters.initParams.wallet_code_ = wallet1.walletContract.imageBase64;
             rootSC.setConfig(rootContractParameters);
             await rootSC.loadContract();
         });
