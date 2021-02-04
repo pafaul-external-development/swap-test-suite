@@ -10,7 +10,7 @@ const ton = new freeton.TonWrapper({
     seed: seedPhraseConfig
 });
 
-futureAddress = '';
+futureAddress = process.argv[2];
 
 ton.ton.network.query_collection({
     collection: 'accounts',
