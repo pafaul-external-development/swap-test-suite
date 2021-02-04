@@ -12,18 +12,27 @@ const ton = new freeton.TonWrapper({
 
 futureAddress = process.argv[2];
 
-ton.ton.network.query_collection({
-    collection: 'accounts',
-    filter: {
-        id: { eq: futureAddress },
-    },
-    result: 'balance'
-});
+async function main() {
 
-ton.ton.network.query_collection({
-    collection: 'accounts',
-    filter: {
-        id: { eq: futureAddress },
-    },
-    result: 'acc_type'
-});
+    await ton.setup(1);
+
+    await ton.ton.network.query_collection({
+        collection: 'accounts',
+        filter: {
+            id: { eq: futureAddress },
+        },
+        result: 'balance'
+    }).then(console.log);
+
+    await ton.ton.network.query_collection({
+        collection: 'accounts',
+        filter: {
+            id: { eq: futureAddress },
+        },
+        result: 'acc_type'
+    }).then(console.log);
+
+    process.exit(0);
+}
+
+main();
