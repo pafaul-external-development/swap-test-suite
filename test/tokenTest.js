@@ -9,7 +9,7 @@ const networkConfig = require('./config/networkConfig');
 const seedPhrase = require('./config/seedPhraseConfig');
 
 let rootContractParameters = require('./config/rootContractParameters');
-const walletParameters = require('./config/walletParameters');
+let walletParameters = require('./config/walletParameters');
 
 const RootContract = require('./rootContract');
 const Wallet = require('./walletContract');
@@ -35,12 +35,17 @@ const ton = new freeton.TonWrapper({
     seed: seedPhrase
 });
 
+giverSC = new freeton.ContractWrapper(
+    ton,
+    giverConfig.abi,
+    null,
+    giverConfig.address,
+);
+
 let rootSC;
 let wallet1;
 let wallet2;
 let callbackSC;
-let giverSC;
-
 
 describe('Test for TIP-3 token', async function() {
     describe('Root token contract', async function() {
@@ -51,6 +56,7 @@ describe('Test for TIP-3 token', async function() {
         });
 
         it('Initial stage', async function() {
+            walletParameters.initParams.grams = freeton.utils.convertCrystal('5', 'nano');
             wallet1Config = clone(walletParameters); // user wallet
             wallet2Config = clone(walletParameters); // swap pair wallet
             wallet1Config.initParams.wallet_public_key = '0x' + ton.keys[1].public;
@@ -91,6 +97,7 @@ describe('Test for TIP-3 token', async function() {
         it('Deploy of root contract', async function() {
             this.timeout(0);
             await rootSC.deployContract();
+            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
         });
 
         it('Root contract basic checks', async function() {
@@ -107,17 +114,10 @@ describe('Test for TIP-3 token', async function() {
 
         it('Ton crystal distribution', async function() {
             this.timeout(0);
-            giverSC = new freeton.ContractWrapper(
-                ton,
-                giverConfig.abi,
-                null,
-                giverConfig.address,
-            );
 
             let crystalAmount = freeton.utils.convertCrystal('10', 'nano');
             await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
             await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
-            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
             await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
         });
 

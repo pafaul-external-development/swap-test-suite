@@ -4,4 +4,4 @@ let giverConfig = {
     keyPair: {}
 }
 
-module.exports = giverConfig
+module.exports = giverConfig;
