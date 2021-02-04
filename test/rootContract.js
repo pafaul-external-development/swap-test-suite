@@ -47,6 +47,7 @@ class RootContract {
      * @returns {Promise<String>}
      */
     async _deployWallet(walletObject) {
+        walletObject.initParams.value = freeton.utils.convertCrystal('10', 'nano');
         return await this.rootContract.run(
             'deployWallet',
             walletObject.initParams,
