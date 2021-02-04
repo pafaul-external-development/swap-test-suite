@@ -47,6 +47,8 @@ let wallet1;
 let wallet2;
 let callbackSC;
 
+let crystalAmount = freeton.utils.convertCrystal('10', 'nano');
+
 describe('Test for TIP-3 token', async function() {
     describe('Root token contract', async function() {
         it('Setup', async function() {
@@ -115,7 +117,6 @@ describe('Test for TIP-3 token', async function() {
         it('Ton crystal distribution', async function() {
             this.timeout(0);
 
-            let crystalAmount = freeton.utils.convertCrystal('10', 'nano');
             await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
             await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
             await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
