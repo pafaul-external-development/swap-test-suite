@@ -33,7 +33,7 @@ class RootContract {
         return await this.rootContract.deploy(
             this.constructorParams,
             this.initParams,
-            freeton.utils.convertCrystal('10', 'nano'),
+            freeton.utils.convertCrystal('1', 'nano'),
             true,
             this.keyPair,
             onlyAddress
