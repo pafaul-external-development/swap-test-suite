@@ -127,7 +127,7 @@ describe('Test for TIP-3 token', async function() {
 
         it('Deploy contract', async function() {
             dw.initParams = {
-                root = rootSC.rootContract.address
+                root: rootSC.rootContract.address
             };
             let address = dw.deployContract();
             logger.success(`DW address: ${address}`);
