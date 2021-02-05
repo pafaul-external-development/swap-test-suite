@@ -106,6 +106,14 @@ describe('Test for TIP-3 token', async function() {
             await rootSC.checkParameters();
         });
 
+        it('Send tons to wallets in advance', async function() {
+            this.timeout(0);
+            let w1address = await rootSC.calculateFutureWalletAddress(wallet1.initParams.root_public_key_, wallet1.initParams.owner_address);
+            let w2address = await rootSC.calculateFutureWalletAddress(wallet2.initParams.root_public_key_, wallet2.initParams.owner_address);
+            await sendGrams(giverSC, w1address, crystalAmount);
+            await sendGrams(giverSC, w2address, crystalAmount)
+        });
+
         it('Wallet contracts deploy', async function() {
             this.timeout(0);
             await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
@@ -117,8 +125,8 @@ describe('Test for TIP-3 token', async function() {
         it('Ton crystal distribution', async function() {
             this.timeout(0);
 
-            await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
-            await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
+            //await sendGrams(giverSC, wallet1.walletContract.address, crystalAmount);
+            //await sendGrams(giverSC, wallet2.walletContract.address, crystalAmount);
             await sendGrams(giverSC, callbackSC.callbackContract.address, crystalAmount);
         });
 

@@ -47,11 +47,11 @@ class RootContract {
      * @returns {Promise<String>}
      */
     async _deployWallet(walletObject) {
-        return await this.rootContract.run(
+        return (await this.rootContract.run(
             'deployWallet',
             walletObject.initParams,
             this.keyPair
-        )
+        )).decoded.output.value0;
     }
 
     /**
@@ -142,8 +142,8 @@ class RootContract {
      * @returns {Promise<JSON>} JSON with 'user' and 'swap' properties with wallets
      */
     async deployWallets(userWallet, swapPairWallet) {
-        let userWalletAddress = (await this._deployWallet(userWallet)).decoded.output.value0;
-        let swapPairAddress = (await this._deployWallet(swapPairWallet)).decoded.output.value0;
+        let userWalletAddress = await this._deployWallet(userWallet);
+        let swapPairAddress = await this._deployWallet(swapPairWallet);
 
         expect(userWalletAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
             `Cannot deploy user wallet for token: ${this.initParams.name_}`);
@@ -174,6 +174,18 @@ class RootContract {
         balance = await this._mintToWallet(swapPairWallet, initialTokens.swap);
         expect(balance).to.be.a('Number').and.equal(initialTokens.swap);
         logger.success(`Tokens minted successfully`);
+    }
+
+    /**
+     * 
+     * @param {String} pubkey 
+     * @param {String} address 
+     */
+    async calculateFutureWalletAddress(pubkey, address) {
+        return (await this.rootContract.runLocal('getExpectedWalletAddress', {
+            wallet_public_key_: pubkey,
+            owner_address: address
+        })).decoded.output.value0;
     }
 }
 
