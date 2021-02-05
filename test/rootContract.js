@@ -117,7 +117,6 @@ class RootContract {
         let symbol_ = (await this.rootContract.run('getSymbol', {}, this.keyPair)).decoded.output.value0;
         let decimals_ = (await this.rootContract.run('getDecimals', {}, this.keyPair)).decoded.output.value0;
         let root_public_key_ = (await this.rootContract.run('getRootPublicKey', {}, this.keyPair)).decoded.output.value0;
-        let reserved = (await this.rootContract.run('getReserved', {}, this.keyPair)).decoded.output.value0;
 
         expect(name_).to.be.a('String').and.satisfy(s => s === this.initParams.name_,
             `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);
@@ -127,7 +126,6 @@ class RootContract {
             `Invalid decimals_ parameter. expected: ${this.initParams.decimals_}, got: ${decimals_}`);
         expect(root_public_key_).to.be.a('String').and.satisfy(s => s === this.initParams.root_public_key_,
             `Invalid root_public_key_ paramter. expected: ${this.initParams.root_public_key_}`);
-        logger.success(`Reserved: ${reserved}`);
         logger.success(`received valid name_, symbol_, decimals_, root_public_key_`);
     }
 
@@ -182,7 +180,7 @@ class RootContract {
      * @param {String} address 
      */
     async calculateFutureWalletAddress(pubkey, address) {
-        return (await this.rootContract.runLocal('getExpectedWalletAddress', {
+        return (await this.rootContract.runLocal('getWalletAddress', {
             wallet_public_key_: pubkey,
             owner_address: address
         })).decoded.output.value0;
