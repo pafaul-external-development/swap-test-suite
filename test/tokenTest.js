@@ -15,6 +15,7 @@ const RootContract = require('./rootContract');
 const Wallet = require('./walletContract');
 const Giver = require('./giverContract');
 const CallbackContract = require('./callbackContract');
+const WalletDeployer = require('./walletDeployer');
 
 function clone(a) {
     return JSON.parse(JSON.stringify(a));
@@ -46,6 +47,7 @@ let rootSC;
 let wallet1;
 let wallet2;
 let callbackSC;
+let dw;
 
 let crystalAmount = freeton.utils.convertCrystal('10', 'nano');
 
@@ -71,6 +73,8 @@ describe('Test for TIP-3 token', async function() {
 
             giverCS = new Giver(ton, giverConfig.keyPair);
             callbackSC = new CallbackContract(ton, CallbackContract, ton.keys[0]);
+
+            dw = new WalletDeployer(ton, { initParams: {}, constructorParams: {} }, ton.keys[0]);
         });
 
         it('Load wallet contracts', async function() {
@@ -108,18 +112,35 @@ describe('Test for TIP-3 token', async function() {
 
         it('Send tons to wallets in advance', async function() {
             this.timeout(0);
-            let w1address = await rootSC.calculateFutureWalletAddress(wallet1.initParams.root_public_key_, wallet1.initParams.owner_address);
-            let w2address = await rootSC.calculateFutureWalletAddress(wallet2.initParams.root_public_key_, wallet2.initParams.owner_address);
+            let w1address = await rootSC.calculateFutureWalletAddress(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
+            let w2address = await rootSC.calculateFutureWalletAddress(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
             await sendGrams(giverSC, w1address, crystalAmount);
-            await sendGrams(giverSC, w2address, crystalAmount)
+            await sendGrams(giverSC, w2address, crystalAmount);
+            wallet1.walletContract.address = w1address;
+            wallet2.walletContract.address = w2address;
+        });
+
+        it('Load deploy wallet contract', async function() {
+            this.timeout(0);
+            await dw.loadContract();
+        });
+
+        it('Deploy contract', async function() {
+            dw.initParams = {
+                root = rootSC.rootContract.address
+            };
+            let address = dw.deployContract();
+            logger.success(`DW address: ${address}`);
         });
 
         it('Wallet contracts deploy', async function() {
             this.timeout(0);
-            await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
-            let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
-            wallet1.setWalletAddress(walletAddresses.user);
-            wallet2.setWalletAddress(walletAddresses.swap);
+            await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
+            await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
+            //await sendGrams(giverSC, rootSC.rootContract.address, crystalAmount);
+            //let walletAddresses = await rootSC.deployWallets(wallet1, wallet2);
+            //wallet1.setWalletAddress(walletAddresses.user);
+            //wallet2.setWalletAddress(walletAddresses.swap);
         });
 
         it('Ton crystal distribution', async function() {

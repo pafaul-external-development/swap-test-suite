@@ -182,7 +182,7 @@ class RootContract {
     async calculateFutureWalletAddress(pubkey, address) {
         return (await this.rootContract.runLocal('getWalletAddress', {
             wallet_public_key_: pubkey,
-            owner_address: address
+            owner_address_: address
         })).decoded.output.value0;
     }
 }
