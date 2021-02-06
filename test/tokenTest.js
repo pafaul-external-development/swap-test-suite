@@ -125,7 +125,7 @@ describe('Test for TIP-3 token', async function() {
         it('Wallet contracts deploy', async function() {
             this.timeout(DEFAULT_TIMEOUT);
             logger.log(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
-            //await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
+            await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
             await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
             logger.log('Root balance: ', await ton.getBalance(rootSC.rootContract.address));
             logger.log('Root address: ', (await dw.walletContract.run('getRoot', {})).decoded.output.value0);
@@ -147,38 +147,45 @@ describe('Test for TIP-3 token', async function() {
             logger.log(`wallet2 address: ${w2address}`);
         });
 
-        //     it('Ton crystal distribution', async function() {
-        //         this.timeout(DEFAULT_TIMEOUT);
-        //         await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
-        //     });
+        it('Ton crystal distribution', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
+            await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
+            await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
+        });
 
-        //     it('Minting tokens to contracts', async function() {
-        //         this.timeout(DEFAULT_TIMEOUT);
-        //         await rootSC.mintTokensToWallets(wallet1, wallet2, testScenario.pair1.tokensAmount);
-        //     });
+        it('Check parameters', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            console.log((await rootSC.rootContract.run('getDetails', {})).decoded.output.value0);
+        })
 
-        //     it('Transactions with callback test', async function() {
-        //         this.timeout(DEFAULT_TIMEOUT);
-        //         wallet1.setTransactionAddress(wallet2.address);
-        //         wallet2.setTransactionAddress(wallet1.address);
-        //         await wallet1.transfer(10, callbackSC.address);
-        //         let result = await callbackSC.getResult();
-        //         let expectedResult = {
-        //             sender: wallet1.address,
-        //             receiver: wallet2.address,
-        //             amount: 10,
-        //             timestamp: result.timestamp
-        //         };
-        //         expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
-        //         await wallet2.transfer(10, callbackSC.address);
-        //         result = await callbackSC.getResult();
-        //         expectedResult = {
-        //             sender: wallet2.address,
-        //             receiver: wallet1.address,
-        //             amount: 10,
-        //             timestamp: result.timestamp
-        //         };
-        //         expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
-        //     });
+        it('Minting tokens to contracts', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            await rootSC.mintTokensToWallets(wallet1, wallet2, testScenario.pair1.tokensAmount);
+        });
+
+        it('Transactions with callback test', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            wallet1.setTransactionAddress(wallet2.address);
+            wallet2.setTransactionAddress(wallet1.address);
+            await wallet1.transfer(10, callbackSC.address);
+            let result = await callbackSC.getResult();
+            let expectedResult = {
+                sender: wallet1.address,
+                receiver: wallet2.address,
+                amount: 10,
+                timestamp: result.timestamp
+            };
+            expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
+            await wallet2.transfer(10, callbackSC.address);
+            result = await callbackSC.getResult();
+            expectedResult = {
+                sender: wallet2.address,
+                receiver: wallet1.address,
+                amount: 10,
+                timestamp: result.timestamp
+            };
+            expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
+        });
     });
 });

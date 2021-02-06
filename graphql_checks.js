@@ -47,15 +47,15 @@ async function main() {
     await ton.ton.net.query_collection({
         collection: 'accounts',
         filter: {
-            id: { eq: '0:40cdd682b66ecfcbffdbdd57e7563e81e20551d4d6b804d494d36717aa66997a' }
+            id: { eq: '0:542c363a006ffb9e03546c3b8e26d783a5a31e5bc5ab0588d2a8ed1b1b64c690' }
         },
         result: 'balance acc_type'
-    }).then(console.log);
+    }).then(console.log).catch(console.log);
 
     await ton.ton.net.query_collection({
         collection: 'messages',
         filter: {
-            src: { eq: '0:40cdd682b66ecfcbffdbdd57e7563e81e20551d4d6b804d494d36717aa66997a' }
+            src: { eq: '0:542c363a006ffb9e03546c3b8e26d783a5a31e5bc5ab0588d2a8ed1b1b64c690' }
             //id: { eq: futureAddress },
             //now: { gt: Number(time) }
         },
