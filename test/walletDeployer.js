@@ -17,14 +17,6 @@ class WalletDeployer {
         this.walletContract = undefined
     }
 
-    /**
-     * Root token address
-     * @param {String} walletAddress 
-     */
-    setRootAddress(rootAddress) {
-        this.rootAddress = rootAddress;
-    }
-
     async loadContract() {
         this.walletContract = await freeton.requireContract(this.tonInstance, 'DeployEmptyWalletFor');
 
@@ -48,14 +40,13 @@ class WalletDeployer {
         );
     }
 
-    async deployContract() {
-        return await this.walletContract.deploy(
-            this.constructorParams,
-            this.initParams,
+    async deployContract(rootAddress) {
+        return await this.walletContract.deploy({}, {
+                root: rootAddress,
+            },
             freeton.utils.convertCrystal('10', 'nano'),
             true,
             this.keyPair,
-            onlyAddress
         );
     }
 }
