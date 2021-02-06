@@ -49,7 +49,7 @@ class WalletDeployer {
     }
 
     async deployContract() {
-        return await this.rootContract.deploy(
+        return await this.walletContract.deploy(
             this.constructorParams,
             this.initParams,
             freeton.utils.convertCrystal('10', 'nano'),
