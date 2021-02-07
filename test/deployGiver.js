@@ -11,10 +11,19 @@ const ton = new freeton.TonWrapper({
 });
 
 async function main() {
-    ton.setup(1);
+    await ton.setup(1);
 
     let giverContract = await freeton.requireContract(ton, 'GiverContract');
-    giverContract.deploy({}, {}, 0, false, ton.keys[0], true).then(console.log);
+    // let deployParams = [
+    //     giverContract.imageBase64,
+    //     {},
+    //     {},
+    //     ton.keys[0]
+    // ];
+    // let deployMessage = await giverContract.createDeployMessage(...deployParams);
+    // giverContract.waitForRunTransaction(deployMessage).then(console.log).catch(console.log);
+    giverContract.deploy({}, {}, 0, false, ton.keys[0], false, false).then(console.log);
+    //process.exit(0);
 }
 
 main();

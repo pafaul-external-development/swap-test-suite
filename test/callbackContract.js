@@ -25,7 +25,7 @@ class CallbackContract {
         return await this.callbackContract.deploy(
             this.constructorParams,
             this.initParams,
-            freeton.utils.convertCrystal('10', 'nano'),
+            freeton.utils.convertCrystal('4', 'nano'),
             true,
             this.keyPair
         );

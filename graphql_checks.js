@@ -47,7 +47,7 @@ async function main() {
     await ton.ton.net.query_collection({
         collection: 'accounts',
         filter: {
-            id: { eq: '0:542c363a006ffb9e03546c3b8e26d783a5a31e5bc5ab0588d2a8ed1b1b64c690' }
+            id: { eq: '0:71cd8b805909ac59e7742ccfc580481250d7d8829fcb9b14c242b662a789bfb4' }
         },
         result: 'balance acc_type'
     }).then(console.log).catch(console.log);
@@ -55,7 +55,7 @@ async function main() {
     await ton.ton.net.query_collection({
         collection: 'messages',
         filter: {
-            src: { eq: '0:542c363a006ffb9e03546c3b8e26d783a5a31e5bc5ab0588d2a8ed1b1b64c690' }
+            src: { eq: '0:71cd8b805909ac59e7742ccfc580481250d7d8829fcb9b14c242b662a789bfb4' }
             //id: { eq: futureAddress },
             //now: { gt: Number(time) }
         },

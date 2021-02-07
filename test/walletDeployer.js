@@ -44,7 +44,7 @@ class WalletDeployer {
         return await this.walletContract.deploy({}, {
                 root: rootAddress,
             },
-            freeton.utils.convertCrystal('10', 'nano'),
+            freeton.utils.convertCrystal('4', 'nano'),
             true,
             this.keyPair,
         );
