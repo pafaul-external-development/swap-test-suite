@@ -166,13 +166,13 @@ describe('Test for TIP-3 token', async function() {
 
         it('Transactions with callback test', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            wallet1.setTransactionAddress(wallet2.address);
-            wallet2.setTransactionAddress(wallet1.address);
-            await wallet1.transfer(10, callbackSC.address);
+            wallet1.setTransactionAddress(wallet2.walletContract.address);
+            wallet2.setTransactionAddress(wallet1.walletContract.address);
+            await wallet1.transfer(10, callbackSC.callbackContract.address);
             let result = await callbackSC.getResult();
             let expectedResult = {
-                sender: wallet1.address,
-                receiver: wallet2.address,
+                sender: wallet1.walletContract.address,
+                receiver: wallet2.walletContract.address,
                 amount: 10,
                 timestamp: result.timestamp
             };
@@ -180,8 +180,8 @@ describe('Test for TIP-3 token', async function() {
             await wallet2.transfer(10, callbackSC.address);
             result = await callbackSC.getResult();
             expectedResult = {
-                sender: wallet2.address,
-                receiver: wallet1.address,
+                sender: wallet2.walletContract.address,
+                receiver: wallet1.walletContract.address,
                 amount: 10,
                 timestamp: result.timestamp
             };
