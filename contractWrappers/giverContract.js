@@ -15,20 +15,23 @@ class Giver {
         this.giverContract = undefined;
     }
 
+    /**
+     * Load contract files from file system
+     */
     async loadContract() {
         this.giverContract = await freeton.requireContract(this.tonInstance, 'GiverContract');
     }
 
     /**
-     * Send grams (10^-9 ton) to dest
+     * Send grams to dest
      * @param {Number} dest 
-     * @param {String} crystals 
+     * @param {String} amount 
      */
-    async sendGrams(dest, crystals) {
+    async sendGrams(dest, amount) {
         await this.giverContract.run(
             'sendGrams', {
                 dest: dest,
-                amount: crystals * Math.pow(10, 9)
+                amount: amount * Math.pow(10, 9)
             },
             this.keyPair
         )

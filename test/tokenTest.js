@@ -11,11 +11,11 @@ const seedPhrase = require('./config/seedPhraseConfig');
 let rootContractParameters = require('./config/rootContractParameters');
 let walletParameters = require('./config/walletParameters');
 
-const RootContract = require('./rootContract');
-const Wallet = require('./walletContract');
-const Giver = require('./giverContract');
-const CallbackContract = require('./callbackContract');
-const WalletDeployer = require('./walletDeployer');
+const RootContract = require('../contractWrappers/rootContract');
+const Wallet = require('../contractWrappers/walletContract');
+const Giver = require('../contractWrappers/giverContract');
+const CallbackContract = require('../contractWrappers/callbackContract');
+const WalletDeployer = require('../contractWrappers/walletDeployer');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -60,6 +60,7 @@ describe('Test for TIP-3 token', async function() {
         it('Initial stage', async function() {
             logger.log('#####################################');
             logger.log('Initial stage');
+            // Setting initial wallet parameters
             walletParameters.initParams.grams = freeton.utils.convertCrystal('2', 'nano');
             wallet1Config = clone(walletParameters); // user wallet
             wallet2Config = clone(walletParameters); // swap pair wallet
@@ -67,7 +68,6 @@ describe('Test for TIP-3 token', async function() {
             wallet2Config.initParams.wallet_public_key = '0x' + ton.keys[2].public;
             wallet1Config.initParams.owner_address = ZERO_ADDRESS;
             wallet2Config.initParams.owner_address = ZERO_ADDRESS;
-
             wallet1 = new Wallet(ton, wallet1Config, ton.keys[1]);
             wallet2 = new Wallet(ton, wallet2Config, ton.keys[2]);
 
@@ -122,7 +122,6 @@ describe('Test for TIP-3 token', async function() {
             logger.log('#####################################');
             logger.log('Running basic checks');
             this.timeout(DEFAULT_TIMEOUT);
-            await rootSC.checkParameters();
         });
 
         it('Load deploy wallet contract', async function() {
@@ -137,19 +136,17 @@ describe('Test for TIP-3 token', async function() {
             logger.log('Deploy proxy contract');
             this.timeout(DEFAULT_TIMEOUT);
             await dw.deployContract(rootSC.rootContract.address);
-            logger.success(`DW address: ${dw.walletContract.address}`);
+            logger.success(`DW address: ${dw.walletDeployContract.address}`);
         });
 
         it('Wallet contracts deploy', async function() {
             logger.log('#####################################');
             logger.log('Deploying wallets');
             this.timeout(DEFAULT_TIMEOUT);
-            logger.log(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
             await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
             await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
             logger.log('Root balance: ', await ton.getBalance(rootSC.rootContract.address));
-            logger.log('Root address: ', (await dw.walletContract.run('getRoot', {})).decoded.output.value0);
-            logger.log('pub: ', (await dw.walletContract.run('getLatestPublicKey', {})).decoded.output.value0, (await dw.walletContract.run('getLatestAddr', {})).decoded.output.value0)
+            logger.log('Root address: ', (await dw.walletDeployContract.run('getRoot', {})).decoded.output.value0);
         });
 
         it('Calculate future wallet addresses', async function() {
@@ -161,9 +158,6 @@ describe('Test for TIP-3 token', async function() {
 
             wallet1.walletContract.address = w1address;
             wallet2.walletContract.address = w2address;
-
-            wallet1.setTransactionAddress(w2address);
-            wallet2.setTransactionAddress(w1address);
 
             logger.log(`wallet1 address: ${w1address}`);
             logger.log(`wallet2 address: ${w2address}`);
@@ -178,17 +172,12 @@ describe('Test for TIP-3 token', async function() {
             await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
         });
 
-        it('Check parameters', async function() {
-            logger.log('#####################################');
-            this.timeout(DEFAULT_TIMEOUT);
-            // console.log((await rootSC.rootContract.run('getDetails', {})).decoded.output.value0);
-        })
-
         it('Minting tokens to contracts', async function() {
             logger.log('#####################################');
             logger.log('Minting tokens');
             this.timeout(DEFAULT_TIMEOUT);
             await rootSC.mintTokensToWallets(wallet1, wallet2, testScenario.pair1.tokensAmount);
+            logger.success(`Tokens minted successfully`);
         });
 
         it('Transactions with callback test', async function() {
@@ -206,26 +195,9 @@ describe('Test for TIP-3 token', async function() {
                 'getDetails', {},
                 wallet2.keyPair
             )).decoded.output.value0.balance);
-            logger.log('balance1: ', balance1);
-            logger.log('balance2: ', balance2);
-            //await wallet1.transfer(10);
-            // let result = await callbackSC.getResult();
-            // let expectedResult = {
-            //     sender: wallet1.walletContract.address,
-            //     receiver: wallet2.walletContract.address,
-            //     amount: 10,
-            //     timestamp: result.timestamp
-            // };
-            //expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
-            //await wallet2.transfer(10);
-            // result = await callbackSC.getResult();
-            // expectedResult = {
-            //     sender: wallet2.walletContract.address,
-            //     receiver: wallet1.walletContract.address,
-            //     amount: 10,
-            //     timestamp: result.timestamp
-            // };
-            // expect(result).to.deep.equal(expectedResult, `Error of transfer. Expected: ${expectedResult}, got: ${result}`);
+            expect(balance1).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.user - 30);
+            expect(balance2).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.swap + 30);
+            logger.success(`Transaction check completed.`);
         });
     });
 });

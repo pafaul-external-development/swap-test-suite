@@ -1,17 +1,23 @@
+const { ZERO_ADDRESS } = require('./constants');
+
+/**
+ * Is used to encode text parameters
+ * @param {String} str 
+ */
 function toHex(str) {
     return Buffer.from(str, 'utf8').toString('hex');
 }
 
 let rootParameters = {
-    // В корневом контракте присутствуют только initial параметры
+    // Root contract utilises only initial parameters
     initParams: {
         name: toHex('TestRootContract'),
         symbol: toHex('TRC'),
         decimals: 9,
-        wallet_code: "", // Нужно будет добавить код кошелька
+        wallet_code: "", // Wallet code is added in tokenTest.js after loading wallet
         root_public_key: "pubkey",
-        root_owner_address: "0:0000000000000000000000000000000000000000000000000000000000000000", // Для рут контракта используем только pubkey
-        _randomNonce: 0
+        root_owner_address: ZERO_ADDRESS,
+        _randomNonce: 0 // This is changed during deploy stage
     },
     constructorParams: {}
 }

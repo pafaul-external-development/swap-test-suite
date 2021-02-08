@@ -94,7 +94,7 @@ class RootContract {
     async getFutureAddress() {
         let address = await this._deployRoot(true);
 
-        //expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
+        expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
         return address;
     }
 
@@ -102,63 +102,10 @@ class RootContract {
      * Deploy root contract
      */
     async deployContract() {
-        console.log('Start');
         await this._deployRoot(false);
-        console.log('Finish');
         expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
 
         logger.success(`Contract address: ${this.rootContract.address}`);
-    }
-
-    /**
-     * Check initial parameters for correctness
-     */
-    async checkParameters() {
-        // let name_ = (await this.rootContract.run('getName', {}, this.keyPair)).decoded.output.value0;
-        // let symbol_ = (await this.rootContract.run('getSymbol', {}, this.keyPair)).decoded.output.value0;
-        // let decimals_ = (await this.rootContract.run('getDecimals', {}, this.keyPair)).decoded.output.value0;
-        // let root_public_key_ = (await this.rootContract.run('getRootPublicKey', {}, this.keyPair)).decoded.output.value0;
-
-        // expect(name_).to.be.a('String').and.satisfy(s => s === this.initParams.name_,
-        //     `Invalid name_ parameter. expected: ${this.initParams.name_}, got: ${name_}`);
-        // expect(symbol_).to.be.a('String').and.satisfy(s => s === this.initParams.symbol_,
-        //     `Invalid symbol_ parameter. expected: ${this.initParams.symbol_}, got: ${symbol_}`);
-        // expect(decimals_).to.be.a('String').and.satisfy(s => s === String(this.initParams.decimals_),
-        //     `Invalid decimals_ parameter. expected: ${this.initParams.decimals_}, got: ${decimals_}`);
-        // expect(root_public_key_).to.be.a('String').and.satisfy(s => s === this.initParams.root_public_key_,
-        //     `Invalid root_public_key_ paramter. expected: ${this.initParams.root_public_key_}`);
-        // logger.success(`received valid name_, symbol_, decimals_, root_public_key_`);
-    }
-
-    /**
-     * Deploy empty wallets with 0 token balance
-     * Wallet object has these fields:
-     *  initParams - JSON with initial parameters
-     *  constructorParams - JSON with parameters which will be passed to constructor
-     *  keyPair - JSON with pulic key and private key 
-     * @param {Wallet} userWallet 
-     * @param {Wallet} swapPairWallet
-     * @returns {Promise<JSON>} JSON with 'user' and 'swap' properties with wallets
-     */
-    async deployWallets(userWallet, swapPairWallet) {
-        let userWalletAddress = await this._deployWallet(userWallet);
-        let swapPairAddress = await this._deployWallet(swapPairWallet);
-
-        expect(userWalletAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
-            `Cannot deploy user wallet for token: ${this.initParams.name_}`);
-        expect(swapPairAddress).to.be.a('String').and.satisfy(s => s.startsWith('0:'),
-            `Cannot deploy swap pair wallet for token: ${this.initParams.name_}`);
-
-        userWallet.setWalletAddress(userWalletAddress);
-        swapPairWallet.setWalletAddress(swapPairAddress);
-
-        logger.success(`User wallet deployed successfully. Address: ${userWalletAddress}`);
-        logger.success(`Swap pair wallet deployed successfully. Address: ${swapPairAddress}`);
-
-        return {
-            user: userWalletAddress,
-            swap: swapPairAddress
-        }
     }
 
     /**
@@ -168,15 +115,14 @@ class RootContract {
      * @param {JSON} initialTokens Initial tokens distribution
      */
     async mintTokensToWallets(userWallet, swapPairWallet, initialTokens) {
-        let balance = await this._mintToWallet(userWallet, initialTokens.user);
-        expect(balance).to.be.a('Number').and.equal(initialTokens.user);
-        balance = await this._mintToWallet(swapPairWallet, initialTokens.swap);
-        expect(balance).to.be.a('Number').and.equal(initialTokens.swap);
-        logger.success(`Tokens minted successfully`);
+        let userBalance = await this._mintToWallet(userWallet, initialTokens.user);
+        let swapBalance = await this._mintToWallet(swapPairWallet, initialTokens.swap);
+        expect(userBalance).to.be.a('Number').and.equal(initialTokens.user);
+        expect(swapBalance).to.be.a('Number').and.equal(initialTokens.swap);
     }
 
     /**
-     * 
+     * Calculate address of smart contract wallet
      * @param {String} pubkey 
      * @param {String} address 
      */

@@ -3,6 +3,7 @@ const { ZERO_ADDRESS } = require('./constants');
 ''
 
 let wallet = {
+    // Wallet utilises only initial parameters
     initParams: {
         tokens: 0,
         grams: freeton.utils.convertCrystal('4', 'nano'),

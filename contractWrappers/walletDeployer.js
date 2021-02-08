@@ -14,15 +14,18 @@ class WalletDeployer {
         this.keyPair = keyPair;
         this.initParams = walletParams.initParams;
         this.constructorParams = walletParams.constructorParams;
-        this.walletContract = undefined
+        this.walletDeployContract = undefined
     }
 
+    /**
+     * Load contract files from file system
+     */
     async loadContract() {
-        this.walletContract = await freeton.requireContract(this.tonInstance, 'DeployEmptyWalletFor');
+        this.walletDeployContract = await freeton.requireContract(this.tonInstance, 'DeployEmptyWalletFor');
 
-        expect(this.walletContract.address).to.equal(undefined, 'Address should be undefined');
-        expect(this.walletContract.code).not.to.equal(undefined, 'Code should be available');
-        expect(this.walletContract.abi).not.to.equal(undefined, 'ABI should be available');
+        expect(this.walletDeployContract.address).to.equal(undefined, 'Address should be undefined');
+        expect(this.walletDeployContract.code).not.to.equal(undefined, 'Code should be available');
+        expect(this.walletDeployContract.abi).not.to.equal(undefined, 'ABI should be available');
     }
 
     /**
@@ -31,7 +34,7 @@ class WalletDeployer {
      * @param {String} callbackAddress Address to send callback to
      */
     async deployWallet(pubkey, addr) {
-        await this.walletContract.run(
+        await this.walletDeployContract.run(
             'deployEmptyWalletFor', {
                 pubkey: pubkey,
                 addr: addr
@@ -40,8 +43,12 @@ class WalletDeployer {
         );
     }
 
+    /**
+     * Deploy contract
+     * @param {String} rootAddress Address of wallet's root contract
+     */
     async deployContract(rootAddress) {
-        return await this.walletContract.deploy({}, {
+        return await this.walletDeployContract.deploy({}, {
                 root: rootAddress,
             },
             freeton.utils.convertCrystal('4', 'nano'),

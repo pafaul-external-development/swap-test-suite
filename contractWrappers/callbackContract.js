@@ -17,6 +17,9 @@ class CallbackContract {
         this.callbackContract = undefined;
     }
 
+    /**
+     * Load contract files from file system
+     */
     async loadContract() {
         this.callbackContract = await freeton.requireContract(this.tonInstance, 'CallbackTestContract');
     }

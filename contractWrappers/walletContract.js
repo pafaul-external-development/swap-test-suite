@@ -26,17 +26,21 @@ class Wallet {
     }
 
     /**
-     * Set wallet address to send tokens to
-     * @param {String} walletAddress 
+     * Set callback address for deployed wallet
+     * @param {String} address Callback contract address
      */
-    setTransactionAddress(walletAddress) {
-        this.transactionAddress = walletAddress;
-    }
-
     async setCallbackAddress(address) {
-        return await this.walletContract.run('setReceiveCallback', { receive_callback_: address }, this.keyPair);
+        return await this.walletContract.run(
+            'setReceiveCallback', {
+                receive_callback_: address
+            },
+            this.keyPair
+        );
     }
 
+    /**
+     * Load contract. Requires .code, .base64, .abi.json, .tvc(probably)
+     */
     async loadContract() {
         this.walletContract = await freeton.requireContract(this.tonInstance, 'TONTokenWallet');
 
