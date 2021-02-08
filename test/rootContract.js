@@ -33,7 +33,7 @@ class RootContract {
         return await this.rootContract.deploy(
             this.constructorParams,
             this.initParams,
-            freeton.utils.convertCrystal('4', 'nano'),
+            freeton.utils.convertCrystal('60', 'nano'),
             true,
             this.keyPair,
             onlyAddress
@@ -70,11 +70,10 @@ class RootContract {
             this.keyPair
         );
 
-        let balance = (await walletObject.walletContract.run(
+        let balance = Number((await walletObject.walletContract.run(
             'getDetails', {},
             walletObject.keyPair
-        )).decoded.output.value0;
-        console.log(balance);
+        )).decoded.output.value0.balance);
         return balance;
     }
 
@@ -93,17 +92,19 @@ class RootContract {
      * Get future address of root contract
      */
     async getFutureAddress() {
-        await this._deployRoot(true);
+        let address = await this._deployRoot(true);
 
-        expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
+        //expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
+        return address;
     }
 
     /**
      * Deploy root contract
      */
     async deployContract() {
+        console.log('Start');
         await this._deployRoot(false);
-
+        console.log('Finish');
         expect(this.rootContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad address');
 
         logger.success(`Contract address: ${this.rootContract.address}`);

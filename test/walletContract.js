@@ -33,6 +33,10 @@ class Wallet {
         this.transactionAddress = walletAddress;
     }
 
+    async setCallbackAddress(address) {
+        return await this.walletContract.run('setReceiveCallback', { receive_callback_: address }, this.keyPair);
+    }
+
     async loadContract() {
         this.walletContract = await freeton.requireContract(this.tonInstance, 'TONTokenWallet');
 
@@ -43,16 +47,15 @@ class Wallet {
 
     /**
      * Transfer tokens
+     * @param {String} address
      * @param {Number} tokenAmount 
-     * @param {String} callbackAddress Address to send callback to
      */
-    async transfer(tokenAmount, callbackAddress) {
+    async transfer(address, tokenAmount) {
         await this.walletContract.run(
             'transfer', {
-                to: this.transactionAddress,
+                to: address,
                 tokens: tokenAmount,
-                grams: 0,
-                callbackAddress: callbackAddress
+                grams: freeton.utils.convertCrystal('0.2', 'nano')
             },
             this.keyPair
         );

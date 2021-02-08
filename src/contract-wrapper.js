@@ -119,8 +119,7 @@ class ContractWrapper {
         initialBalance = 10000000000,
         _randomNonce = false,
         keyPair = undefined,
-        onlyDeriveAddress = false,
-        giverRequired = true
+        onlyDeriveAddress = false
     ) {
         const deployParams = [
             this.imageBase64,
@@ -130,39 +129,35 @@ class ContractWrapper {
         ];
 
         // Derive future contract address from the deploy message
-        const {
-            address: futureAddress,
-        } = await this.createDeployMessage(...deployParams);
+        const futureAddress = (await this.createDeployMessage(...deployParams)).address;
 
         // - Don't deploy contract, just return it's future address
         if (onlyDeriveAddress) {
             return futureAddress;
         }
 
-        if (giverRequired) {
-            // Send grams from giver to pay for contract deployment
-            const giverContract = new ContractWrapper(
-                this.tonWrapper,
-                this.tonWrapper.giverConfig.abi,
-                null,
-                this.tonWrapper.giverConfig.address,
-            );
+        // Send grams from giver to pay for contract deployment
+        const giverContract = new ContractWrapper(
+            this.tonWrapper,
+            this.tonWrapper.giverConfig.abi,
+            null,
+            this.tonWrapper.giverConfig.address,
+        );
 
-            await giverContract.run('sendGrams', {
-                dest: futureAddress,
-                amount: initialBalance,
-            }, null);
+        await giverContract.run('sendGrams', {
+            dest: futureAddress,
+            amount: initialBalance,
+        }, null);
 
-            // Wait for receiving grams
-            await this.tonWrapper.ton.net.wait_for_collection({
-                collection: 'accounts',
-                filter: {
-                    id: { eq: futureAddress },
-                    balance: { gt: `0x0` }
-                },
-                result: 'balance'
-            });
-        }
+        // Wait for receiving grams
+        await this.tonWrapper.ton.net.wait_for_collection({
+            collection: 'accounts',
+            filter: {
+                id: { eq: futureAddress },
+                balance: { gt: `0x0` }
+            },
+            result: 'balance'
+        });
 
         let error;
         for (const attempt in _.range(NETWORK_ATTEMPTS)) {
