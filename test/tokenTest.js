@@ -206,9 +206,10 @@ describe('Test for TIP-3 token', async function() {
                 wallet2.keyPair
             )).balance.toNumber();
             let res = (await callbackSC.getResult());
-            console.log(res);
+            let balanceDelta = res.amount.toNumber();
             expect(balance1).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.user - 30);
             expect(balance2).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.swap + 30);
+            expect(balanceDelta).to.be.a('Number').and.equal(30);
             logger.success(`Transaction check completed.`);
         });
     });
