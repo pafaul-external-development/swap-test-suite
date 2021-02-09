@@ -70,10 +70,10 @@ class RootContract {
             this.keyPair
         );
 
-        let balance = Number((await walletObject.walletContract.run(
+        let balance = (await walletObject.walletContract.runLocal(
             'getDetails', {},
             walletObject.keyPair
-        )).decoded.output.value0.balance);
+        )).balance.toNumber();
         return balance;
     }
 

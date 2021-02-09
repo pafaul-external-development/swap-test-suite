@@ -18,6 +18,17 @@ class Wallet {
     }
 
     /**
+     * Load contract. Requires .code, .base64, .abi.json, .tvc(probably)
+     */
+    async loadContract() {
+        this.walletContract = await freeton.requireContract(this.tonInstance, 'TONTokenWallet');
+
+        expect(this.walletContract.address).to.equal(undefined, 'Address should be undefined');
+        expect(this.walletContract.code).not.to.equal(undefined, 'Code should be available');
+        expect(this.walletContract.abi).not.to.equal(undefined, 'ABI should be available');
+    }
+
+    /**
      * Set wallet address
      * @param {String} walletAddress 
      */
@@ -39,27 +50,33 @@ class Wallet {
     }
 
     /**
-     * Load contract. Requires .code, .base64, .abi.json, .tvc(probably)
-     */
-    async loadContract() {
-        this.walletContract = await freeton.requireContract(this.tonInstance, 'TONTokenWallet');
-
-        expect(this.walletContract.address).to.equal(undefined, 'Address should be undefined');
-        expect(this.walletContract.code).not.to.equal(undefined, 'Code should be available');
-        expect(this.walletContract.abi).not.to.equal(undefined, 'ABI should be available');
-    }
-
-    /**
      * Transfer tokens
      * @param {String} address
-     * @param {Number} tokenAmount 
+     * @param {Number} tokens 
      */
-    async transfer(address, tokenAmount) {
+    async transfer(address, tokens) {
         await this.walletContract.run(
             'transfer', {
                 to: address,
-                tokens: tokenAmount,
+                tokens: tokens,
                 grams: freeton.utils.convertCrystal('0.2', 'nano')
+            },
+            this.keyPair
+        );
+    }
+
+    /**
+     * Token transfer with notify of callback contract
+     * @param {String} address 
+     * @param {Number} tokens 
+     */
+    async transferWithNotify(address, tokens) {
+        await this.walletContract.run(
+            'transferWithNotify', {
+                to: address,
+                tokens: tokens,
+                grams: freeton.utils.convertCrystal('0.2', 'nano'),
+                payload: ''
             },
             this.keyPair
         );

@@ -145,8 +145,7 @@ describe('Test for TIP-3 token', async function() {
             this.timeout(DEFAULT_TIMEOUT);
             await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
             await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
-            logger.log('Root balance: ', await ton.getBalance(rootSC.rootContract.address));
-            logger.log('Root address: ', (await dw.walletDeployContract.run('getRoot', {})).decoded.output.value0);
+            logger.success('Wallets deployed');
         });
 
         it('Calculate future wallet addresses', async function() {
@@ -170,6 +169,8 @@ describe('Test for TIP-3 token', async function() {
             await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
             await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
             await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
+            await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
+            logger.success('Ton crystal distribution finished');
         });
 
         it('Minting tokens to contracts', async function() {
@@ -180,21 +181,32 @@ describe('Test for TIP-3 token', async function() {
             logger.success(`Tokens minted successfully`);
         });
 
+        it('Setting up smart contracts for callback testing', async function() {
+            logger.log('#####################################');
+            logger.log('Setting callback address');
+            this.timeout(DEFAULT_TIMEOUT);
+            await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
+            await wallet2.setCallbackAddress(callbackSC.callbackContract.address);
+            logger.success('Callback address set');
+        })
+
         it('Transactions with callback test', async function() {
             logger.log('#####################################');
             logger.log('Transactions test');
             this.timeout(DEFAULT_TIMEOUT);
 
             await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
-            await wallet1.transfer(wallet2.walletContract.address, 30);
-            let balance1 = Number((await wallet1.walletContract.run(
+            await wallet1.transferWithNotify(wallet2.walletContract.address, 30);
+            let balance1 = (await wallet1.walletContract.runLocal(
                 'getDetails', {},
                 wallet1.keyPair
-            )).decoded.output.value0.balance);
-            let balance2 = Number((await wallet2.walletContract.run(
+            )).balance.toNumber();
+            let balance2 = (await wallet2.walletContract.runLocal(
                 'getDetails', {},
                 wallet2.keyPair
-            )).decoded.output.value0.balance);
+            )).balance.toNumber();
+            let res = (await callbackSC.getResult());
+            console.log(res);
             expect(balance1).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.user - 30);
             expect(balance2).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.swap + 30);
             logger.success(`Transaction check completed.`);

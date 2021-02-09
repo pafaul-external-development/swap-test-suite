@@ -38,11 +38,10 @@ class CallbackContract {
      * Get result of callback call
      */
     async getResult() {
-        let result = await this.callbackContract.run(
+        return await this.callbackContract.runLocal(
             'getResult', {},
             this.keyPair
         );
-        return result;
     }
 }
 
