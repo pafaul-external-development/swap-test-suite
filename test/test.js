@@ -10,6 +10,7 @@ const ton = new freeton.TonWrapper({
     },
     network: 'http://localhost',
     seed: "melody clarify hand pause kit economy bind behind grid witness cheap tomorrow",
+    debug: true,
 });
 
 
@@ -35,25 +36,27 @@ describe('Test TON testing suite', async function() {
         });
 
         it('Get future address', async function() {
-            const address = await SimpleContract.deploy({
+            const address = await SimpleContract.getFutureAddress({
+                constructorParams: {
                     _state: 123
-                }, {},
-                freeton.utils.convertCrystal('10', 'nano'),
-                true,
-                undefined,
-                true,
-            );
+                },
+                initParams: {
+                    _randomNonce: 123,
+                },
+            });
 
             expect(address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad future address');
         });
 
         it('Deploy contract', async function() {
             await SimpleContract.deploy({
+                constructorParams: {
                     _state: 123
-                }, {},
-                freeton.utils.convertCrystal('10', 'nano'),
-                true,
-            );
+                },
+                initParams: {},
+                _randomNonce: true,
+                initialBalance: freeton.utils.convertCrystal('10', 'nano')
+            });
 
             expect(SimpleContract.address).to.be.a('string').and.satisfy(s => s.startsWith('0:'), 'Bad deployed address');
 
@@ -88,6 +91,23 @@ describe('Test TON testing suite', async function() {
             const events = await SimpleContract.getEvents('StateChange');
 
             expect(events).to.have.lengthOf(2, 'Wrong events amount emitted');
+        });
+    });
+
+    describe('Random mnemonic', async function() {
+        it('Test random mnemonic derivation', async function() {
+            const ton1 = new freeton.TonWrapper({
+                network: 'http://localhost',
+            });
+
+            const ton2 = new freeton.TonWrapper({
+                network: 'http://localhost',
+            });
+
+            await ton1.setup();
+            await ton2.setup();
+
+            expect(ton1.config.seed).to.not.equal(ton2.config.seed, 'Same random mnemonics');
         });
     });
 });
