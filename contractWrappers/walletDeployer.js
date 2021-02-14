@@ -48,13 +48,15 @@ class WalletDeployer {
      * @param {String} rootAddress Address of wallet's root contract
      */
     async deployContract(rootAddress) {
-        return await this.walletDeployContract.deploy({}, {
+        return await this.walletDeployContract.deploy({
+            constructorParams: {},
+            initParams: {
                 root: rootAddress,
             },
-            freeton.utils.convertCrystal('4', 'nano'),
-            true,
-            this.keyPair,
-        );
+            initialBalance: freeton.utils.convertCrystal('4', 'nano'),
+            _randomNonce: true,
+            keyPair: this.keyPair,
+        });
     }
 }
 

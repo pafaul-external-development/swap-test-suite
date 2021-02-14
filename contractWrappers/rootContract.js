@@ -30,14 +30,20 @@ class RootContract {
      * @returns {Promise<String>}
      */
     async _deployRoot(onlyAddress) {
-        return await this.rootContract.deploy(
-            this.constructorParams,
-            this.initParams,
-            freeton.utils.convertCrystal('60', 'nano'),
-            true,
-            this.keyPair,
-            onlyAddress
-        );
+        if (onlyAddress)
+            return await this.rootContract.getFutureAddress({
+                constructorParams: this.constructorParams,
+                initParams: this.initParams,
+                keyPair: this.keyPair
+            })
+        else
+            return await this.rootContract.deploy({
+                constructorParams: this.constructorParams,
+                initParams: this.initParams,
+                initialBalance: freeton.utils.convertCrystal('60', 'nano'),
+                _randomNonce: true,
+                keyPair: this.keyPair
+            });
     }
 
     /**

@@ -25,13 +25,13 @@ class CallbackContract {
     }
 
     async deployContract() {
-        return await this.callbackContract.deploy(
-            this.constructorParams,
-            this.initParams,
-            freeton.utils.convertCrystal('4', 'nano'),
-            true,
-            this.keyPair
-        );
+        return await this.callbackContract.deploy({
+            constructorParams: this.constructorParams,
+            initParams: this.initParams,
+            initialBalance: freeton.utils.convertCrystal('4', 'nano'),
+            _randomNonce: true,
+            keyPair: this.keyPair
+        });
     }
 
     /**

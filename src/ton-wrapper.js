@@ -5,8 +5,6 @@ const { libNode } = require("@tonclient/lib-node");
 TonClient.useBinaryLibrary(libNode);
 
 const utils = require('./utils');
-
-
 class TonWrapper {
     constructor({
         giverConfig,

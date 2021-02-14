@@ -39,16 +39,23 @@ class RootSwapPairContract {
 
     /**
      * Deploy root contract to net
+     * @param {Boolean} onlyAddress
      */
-    async deployContract() {
-        return await this.rootSwapPairContract.deploy(
-            this.constructorParams,
-            this.initialParams,
-            freeton.utils.convertCrystal('4', 'nano'),
-            true,
-            this.keyPair,
-            false
-        );
+    async deployContract(onlyAddress = false) {
+        if (onlyAddress)
+            return await this.rootSwapPairContract.getFutureAddress({
+                constructorParams: this.constructorParams,
+                initParams: this.initialParams,
+                keyPair: this.keyPair
+            })
+        else
+            return await this.rootSwapPairContract.deploy({
+                constructorParams: this.constructorParams,
+                initParams: this.initialParams,
+                initialBalance: freeton.utils.convertCrystal('4', 'nano'),
+                _randomNonce: true,
+                keyPair: this.keyPair,
+            });
     }
 
     /**
