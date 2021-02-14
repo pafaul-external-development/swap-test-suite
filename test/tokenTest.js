@@ -1,15 +1,15 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('./config/constants');
+const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
 
-const testScenario = require('./config/testScenario');
-const giverConfig = require('./config/giverConfig');
-const networkConfig = require('./config/networkConfig');
-const seedPhrase = require('./config/seedPhraseConfig');
+const testScenario = require('../config/general/testScenario');
+const networkConfig = require('../config/general/networkConfig');
+const seedPhrase = require('../config/general/seedPhraseConfig');
 
-let rootContractParameters = require('./config/rootContractParameters');
-let walletParameters = require('./config/walletParameters');
+const giverConfig = require('../config/contracts/giverConfig');
+let rootContractParameters = require('../config/contracts/rootContractParameters');
+let walletParameters = require('../config/contracts/walletParameters');
 
 const RootContract = require('../contractWrappers/rootContract');
 const Wallet = require('../contractWrappers/walletContract');
