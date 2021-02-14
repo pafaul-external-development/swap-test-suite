@@ -23,6 +23,10 @@ let walletsDeployParameters = {
             config: exampleRootConfig,
             keys: {},
         },
+        tokensAmount: {
+            user: 300,
+            swap: 300
+        },
         callbackAddress: '',
     }, {
         wallet1: {
@@ -36,6 +40,10 @@ let walletsDeployParameters = {
         root: {
             config: exampleRootConfig,
             keys: {},
+        },
+        tokensAmount: {
+            user: 300,
+            swap: 300
         },
         callbackAddress: '',
     }]
