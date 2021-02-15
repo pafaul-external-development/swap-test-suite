@@ -89,6 +89,21 @@ class RootSwapPairContract {
     }
 
     /**
+     * Get info about deployed pair
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     */
+    async getPairInfo(rootContract1, rootContract2) {
+        return await this.rootSwapPairContract.runLocal(
+            'getPairInfo', {
+                tokenRootContract1: rootContract1,
+                tokenRootContract2: rootContract2
+            },
+            this.keyPair
+        );
+    }
+
+    /**
      * Get information about deployed root contract
      */
     async getServiceInformation() {

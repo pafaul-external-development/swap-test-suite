@@ -47,7 +47,7 @@ let walletsDeployParameters = {
         },
         callbackAddress: '',
     }]
-}
+};
 
 walletsDeployParameters.pair[0].root.config.initParams.name = toHex('rsc1');
 walletsDeployParameters.pair[1].root.config.initParams.name = toHex('rsc2');
