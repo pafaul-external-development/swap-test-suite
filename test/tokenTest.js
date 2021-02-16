@@ -1,7 +1,7 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('./config/constants');
+const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
 
 const testScenario = require('../config/general/testScenario');
 const giverConfig = require('../config/contracts/giverConfig');
