@@ -52,7 +52,7 @@ class RootSwapPairContract {
             return await this.rootSwapPairContract.deploy({
                 constructorParams: this.constructorParams,
                 initParams: this.initParams,
-                initialBalance: freeton.utils.convertCrystal('4', 'nano'),
+                initialBalance: freeton.utils.convertCrystal('30', 'nano'),
                 _randomNonce: true,
                 keyPair: this.keyPair,
             });
@@ -66,6 +66,16 @@ class RootSwapPairContract {
     async deploySwapPair(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.run(
             'deploySwapPair', {
+                tokenRootContract1: rootContract1,
+                tokenRootContract2: rootContract2
+            },
+            this.keyPair
+        );
+    }
+
+    async getXOR(rootContract1, rootContract2) {
+        return await this.rootSwapPairContract.runLocal(
+            'getXOR', {
                 tokenRootContract1: rootContract1,
                 tokenRootContract2: rootContract2
             },

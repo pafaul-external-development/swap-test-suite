@@ -59,17 +59,25 @@ async function sendGrams(giver, address, amount) {
  */
 function initialTokenSetup(tonInstance, walletConfig, callbackAddress) {
     let i = 0;
+    let updatedConfig = {
+        pairs: []
+    };
+
     for (let pair of walletConfig.pairs) {
         pair.wallet1.keys = tonInstance.keys[i * 3 + 0];
-        pair.wallet1.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i * 3 + 0].public;
+        pair.wallet1.config.initParams.wallet_public_key = '0x' + pair.wallet1.keys.public;
         pair.wallet2.keys = tonInstance.keys[i * 3 + 1];
-        pair.wallet2.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i * 3 + 1].public;
+        pair.wallet2.config.initParams.wallet_public_key = '0x' + pair.wallet2.keys.public;
         pair.root.keys = tonInstance.keys[i * 3 + 2];
+        pair.root.config.initParams.root_public_key = '0x' + pair.root.keys.public;
 
         pair.callbackAddress = callbackAddress;
         i += 1;
+
+        updatedConfig.pairs.push(pair);
     }
-    return walletConfig;
+
+    return updatedConfig;
 }
 
 /**
@@ -99,39 +107,32 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
     let rootSC = new RootContract(tonInstance, pairConfig.root.config, pairConfig.root.keys);
     let dw = new WalletDeployer(tonInstance, { initParams: {}, constructorParams: {} }, pairConfig.root.keys);
 
-    logger.log('#####################################');
     logger.log('Loading wallet contracts');
     await wallet1.loadContract();
     await wallet2.loadContract();
 
-    logger.log('#####################################');
     logger.log('Loading root contract');
-    pairConfig.root.config.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
     pairConfig.root.config.initParams.wallet_code = wallet1.walletContract.code;
     rootSC.setConfig(pairConfig.root.config);
     await rootSC.loadContract();
 
-    logger.log('#####################################');
     logger.log('Deploying root contract');
 
     await rootSC.deployContract();
     pairsConfig
     await dw.loadContract();
 
-    logger.log('#####################################');
     logger.log('Deploy proxy contract');
 
     await dw.deployContract(rootSC.rootContract.address);
     logger.success(`DW address: ${dw.walletDeployContract.address}`);
 
-    logger.log('#####################################');
     logger.log('Deploying wallets');
 
     await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
     await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
     logger.success('Wallets deployed');
 
-    logger.log('#####################################');
     logger.log('Calculating future wallet addresses');
 
     let w1address = await rootSC.calculateFutureWalletAddress(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
@@ -140,7 +141,6 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
     wallet1.walletContract.address = w1address;
     wallet2.walletContract.address = w2address;
 
-    logger.log('#####################################');
     logger.log('Distributing tons');
 
     await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
@@ -148,12 +148,10 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
     await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
     logger.success('tonInstance crystal distribution finished');
 
-    logger.log('#####################################');
     logger.log('Setting callback address');
     await wallet1.setCallbackAddress(pairConfig.callbackAddress);
     await wallet2.setCallbackAddress(pairConfig.callbackAddress);
 
-    logger.log('#####################################');
     logger.log('Minting tokens');
 
     await rootSC.mintTokensToWallets(wallet1, wallet2, pairConfig.tokensAmount);
@@ -204,6 +202,7 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT);
         await rootSwapContract.deployContract();
+        logger.log(`Contract address: ${rootSwapContract.rootSwapPairContract.address}`)
         logger.success('Contract deployed')
     })
 
@@ -221,7 +220,6 @@ describe('Test of swap pairs', async function() {
         logger.log('Getting service information');
         this.timeout(DEFAULT_TIMEOUT);
         let serviceInfo = await rootSwapContract.getServiceInformation();
-        logger.log(JSON.stringify(serviceInfo, null, '\t'));
         logger.success('Service information received');
     })
 
@@ -241,6 +239,15 @@ describe('Test of swap pairs', async function() {
         await rootSwapContract.deploySwapPair(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         logger.success('Pair deployed');
     });
+
+    it('Get XOR', async function() {
+        logger.log('#####################################');
+        logger.log('Getting XOR');
+        this.timeout(DEFAULT_TIMEOUT);
+        logger.log(await rootSwapContract.getXOR(pair1.rc.rootContract.address, pair2.rc.rootContract.address));
+        logger.log(await rootSwapContract.getXOR(pair1.rc.rootContract.address, pair2.rc.rootContract.address));
+        logger.success('asdf');
+    })
 
     it('Trying to deploy already deployed pair', async function() {
         logger.log('#####################################');

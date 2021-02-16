@@ -9,18 +9,22 @@ function toHex(str) {
     return Buffer.from(str, 'utf8').toString('hex');
 }
 
+function copyJSON(json) {
+    return JSON.parse(JSON.stringify(json));
+}
+
 let walletsDeployParameters = {
     pairs: [{
         wallet1: {
-            config: wallet,
+            config: copyJSON(wallet),
             keys: {},
         },
         wallet2: {
-            config: wallet,
+            config: copyJSON(wallet),
             keys: {},
         },
         root: {
-            config: rootParameters,
+            config: copyJSON(rootParameters),
             keys: {},
         },
         tokensAmount: {
@@ -30,15 +34,15 @@ let walletsDeployParameters = {
         callbackAddress: '',
     }, {
         wallet1: {
-            config: wallet,
+            config: copyJSON(wallet),
             keys: {},
         },
         wallet2: {
-            config: wallet,
+            config: copyJSON(wallet),
             keys: {},
         },
         root: {
-            config: rootParameters,
+            config: copyJSON(rootParameters),
             keys: {},
         },
         tokensAmount: {
