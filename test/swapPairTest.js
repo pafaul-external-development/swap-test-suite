@@ -119,7 +119,9 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
     logger.log('Deploying root contract');
 
     await rootSC.deployContract();
-    pairsConfig
+
+    logger.log('Load proxy contract');
+
     await dw.loadContract();
 
     logger.log('Deploy proxy contract');
@@ -253,7 +255,12 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
         logger.log('This must fail :)');
         this.timeout(DEFAULT_TIMEOUT);
-        await rootSwapContract.deploySwapPair(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
+        try {
+            await rootSwapContract.deploySwapPair(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
+            throw new Error('Contract finished successfully, but had to fail');
+        } catch (e) {
+            logger.success('Task successfully failed');
+        }
     });
 
     it('Check if pair exists after deploy', async function() {
@@ -261,7 +268,6 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT);
         let pe1 = await rootSwapContract.checkIfPairExists(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         await rootSwapContract.checkIfPairExists(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-        logger.log(JSON.stringify(pe1, null, '\t'));
         logger.success('Hooray!')
     });
 
@@ -270,7 +276,6 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT);
         let pi1 = await rootSwapContract.getPairInfo(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         await rootSwapContract.getPairInfo(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-        logger.log(JSON.stringify(pi1, null, '\t'));
-        logger.success('fckn finally');
+        logger.success('Got pair info');
     });
 })
