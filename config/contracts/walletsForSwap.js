@@ -1,5 +1,5 @@
-let exampleWalletConfig = require('./walletParameters');
-let exampleRootConfig = require('./rootContractParameters');
+let wallet = require('./walletParameters');
+let rootParameters = require('./rootContractParameters');
 
 /**
  * Is used to encode text parameters
@@ -12,15 +12,15 @@ function toHex(str) {
 let walletsDeployParameters = {
     pairs: [{
         wallet1: {
-            config: exampleWalletConfig,
+            config: wallet,
             keys: {},
         },
         wallet2: {
-            config: exampleWalletConfig,
+            config: wallet,
             keys: {},
         },
         root: {
-            config: exampleRootConfig,
+            config: rootParameters,
             keys: {},
         },
         tokensAmount: {
@@ -30,15 +30,15 @@ let walletsDeployParameters = {
         callbackAddress: '',
     }, {
         wallet1: {
-            config: exampleWalletConfig,
+            config: wallet,
             keys: {},
         },
         wallet2: {
-            config: exampleWalletConfig,
+            config: wallet,
             keys: {},
         },
         root: {
-            config: exampleRootConfig,
+            config: rootParameters,
             keys: {},
         },
         tokensAmount: {
@@ -49,7 +49,7 @@ let walletsDeployParameters = {
     }]
 };
 
-walletsDeployParameters.pair[0].root.config.initParams.name = toHex('rsc1');
-walletsDeployParameters.pair[1].root.config.initParams.name = toHex('rsc2');
+walletsDeployParameters.pairs[0].root.config.initParams.name = toHex('rsc1');
+walletsDeployParameters.pairs[1].root.config.initParams.name = toHex('rsc2');
 
 module.exports = walletsDeployParameters;

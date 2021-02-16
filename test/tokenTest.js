@@ -3,10 +3,10 @@ const { expect } = require('chai');
 const logger = require('mocha-logger');
 const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('./config/constants');
 
-const testScenario = require('./config/testScenario');
-const giverConfig = require('./config/giverConfig');
-const networkConfig = require('./config/networkConfig');
-const seedPhrase = require('./config/seedPhraseConfig');
+const testScenario = require('../general/config/testScenario');
+const giverConfig = require('../config/contracts/giverConfig');
+const networkConfig = require('../config/general/networkConfig');
+const seedPhrase = require('../config/general/seedPhraseConfig');
 
 let rootContractParameters = require('./config/rootContractParameters');
 let walletParameters = require('./config/walletParameters');

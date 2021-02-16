@@ -7,14 +7,14 @@ class RootSwapPairContract {
      * 
      * @param {freeton.TonWrapper} tonInstance 
      * @param {JSON} config 
-     * @param {JSON} config.initialParams
+     * @param {JSON} config.initParams
      * @param {JSON} config.constructorParams
      * @param {JSON} keyPair 
      */
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;
         this.keyPair = keyPair;
-        this.initialParams = config.initialParams;
+        this.initParams = config.initParams;
         this.constructorParams = config.constructorParams;
         this.rootSwapPairContract = undefined;
     }
@@ -33,7 +33,7 @@ class RootSwapPairContract {
      * @param {JSON} config.constructorParams 
      */
     setConfig(config) {
-        this.initialParams = config.initialParams;
+        this.initParams = config.initParams;
         this.constructorParams = config.constructorParams;
     }
 
@@ -45,13 +45,13 @@ class RootSwapPairContract {
         if (onlyAddress)
             return await this.rootSwapPairContract.getFutureAddress({
                 constructorParams: this.constructorParams,
-                initParams: this.initialParams,
+                initParams: this.initParams,
                 keyPair: this.keyPair
             })
         else
             return await this.rootSwapPairContract.deploy({
                 constructorParams: this.constructorParams,
-                initParams: this.initialParams,
+                initParams: this.initParams,
                 initialBalance: freeton.utils.convertCrystal('4', 'nano'),
                 _randomNonce: true,
                 keyPair: this.keyPair,

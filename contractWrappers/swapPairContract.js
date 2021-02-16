@@ -1,3 +1,5 @@
+const freeton = require('../src');
+
 class SwapPairContract {
     /**
      * 
@@ -19,7 +21,7 @@ class SwapPairContract {
      * Loads contract files from file system
      */
     async loadContract() {
-        this.rootSwapPairContract = await freeton.requireContract(this.tonInstance, 'RootSwapPairContract');
+        this.swapPairContract = await freeton.requireContract(this.tonInstance, 'RootSwapPairContract');
     }
 
     /**
@@ -28,13 +30,13 @@ class SwapPairContract {
      */
     async deployContract(onlyAddress = false) {
         if (onlyAddress)
-            return await this.rootSwapPairContract.getFutureAddress({
+            return await this.swapPairContract.getFutureAddress({
                 constructorParams: this.constructorParams,
                 initParams: this.initialParams,
                 keyPair: this.keyPair
             });
         else
-            return await this.rootSwapPairContract.deploy({
+            return await this.swapPairContract.deploy({
                 constructorParams: this.constructorParams,
                 initParams: this.initialParams,
                 initialBalance: freeton.utils.convertCrystal('4', 'nano'),

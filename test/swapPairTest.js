@@ -37,6 +37,21 @@ var giverSC = new freeton.ContractWrapper(
 );
 
 /**
+ * Send grams to address
+ * @param {freeton.ContractWrapper} giver 
+ * @param {String} address 
+ * @param {Number} amount 
+ */
+async function sendGrams(giver, address, amount) {
+    await giver.run(
+        'sendGrams', {
+            dest: address,
+            amount: amount
+        }, null
+    );
+}
+
+/**
  * 
  * @param {freeton.TonWrapper} tonInstance 
  * @param {JSON} walletConfig 
@@ -46,9 +61,9 @@ function initialTokenSetup(tonInstance, walletConfig, callbackAddress) {
     let i = 0;
     for (let pair of walletConfig.pairs) {
         pair.wallet1.keys = tonInstance.keys[i * 3 + 0];
-        pair.wallet1.config.initParams.wallet_public_key = tonInstance.keys[i * 3 + 0].public;
+        pair.wallet1.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i * 3 + 0].public;
         pair.wallet2.keys = tonInstance.keys[i * 3 + 1];
-        pair.wallet2.config.initParams.wallet_public_key = tonInstance.keys[i * 3 + 1].public;
+        pair.wallet2.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i * 3 + 1].public;
         pair.root.keys = tonInstance.keys[i * 3 + 2];
 
         pair.callbackAddress = callbackAddress;
@@ -80,9 +95,9 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
     logger.log('Initial stage');
 
     let wallet1 = new Wallet(tonInstance, pairConfig.wallet1.config, pairConfig.wallet1.keys);
-    let wallet2 = new Wallet(tonInstance, pairConfig.wallet2.config, pairConfig.wallet1.keys);
-    let rootSC = new RootContract(tonInstance, pairConfig.rootParameters, pairConfig.rootParameters.keys);
-    let dw = new WalletDeployer(tonInstance, { initParams: {}, constructorParams: {} }, pairConfig.rootParameters.keys);
+    let wallet2 = new Wallet(tonInstance, pairConfig.wallet2.config, pairConfig.wallet2.keys);
+    let rootSC = new RootContract(tonInstance, pairConfig.root.config, pairConfig.root.keys);
+    let dw = new WalletDeployer(tonInstance, { initParams: {}, constructorParams: {} }, pairConfig.root.keys);
 
     logger.log('#####################################');
     logger.log('Loading wallet contracts');
@@ -91,9 +106,9 @@ async function deployTIP3(tonInstance, pairConfig, giverSC) {
 
     logger.log('#####################################');
     logger.log('Loading root contract');
-    rootContractParameters.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
-    rootContractParameters.initParams.wallet_code = wallet1.walletContract.code;
-    rootSC.setConfig(rootContractParameters);
+    pairConfig.root.config.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
+    pairConfig.root.config.initParams.wallet_code = wallet1.walletContract.code;
+    rootSC.setConfig(pairConfig.root.config);
     await rootSC.loadContract();
 
     logger.log('#####################################');
@@ -156,7 +171,7 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
         logger.log('Setting up ton instance');
         await ton.setup(10);
-        swapConfig = setupSwapKeys(tonInstance, swapConfig);
+        swapConfig = setupSwapKeys(ton, swapConfig);
         logger.success('TON instance set up');
     });
 
@@ -168,26 +183,34 @@ describe('Test of swap pairs', async function() {
 
         let futureSwapPairAddress = await swapPairContract.deployContract(true);
 
-        swapConfig.root.initParams.swapPairCode = swapPairContract.swapPairContract.code;
-        swapConfig.root.initParams.swapPairCodeVersion = {
-            contractCodeVersion: 1
-        };
-
-        pairsConfig = initialTokenSetup(tonInstance, pairsConfig, futureSwapPairAddress);
+        pairsConfig = initialTokenSetup(ton, pairsConfig, futureSwapPairAddress);
         logger.success('Swap pair loaded');
     });
 
     it('Load root swap pair contract', async function() {
         logger.log('#####################################');
         logger.log('Loading root swap pair contract');
-        rootSwapContract = new RootSwapPairContarct(tonInstance, swapConfig.root, swapConfig.root.keys);
+        swapConfig.root.initParams.swapPairCode = swapPairContract.swapPairContract.code;
+        swapConfig.root.initParams.swapPairCodeVersion = {
+            contractCodeVersion: 1
+        };
+        swapConfig.root.initParams.ownerPubkey = '0x' + ton.keys[0].public;
+        rootSwapContract = new RootSwapPairContarct(ton, swapConfig.root, swapConfig.root.keys);
         await rootSwapContract.loadContract();
         logger.success('Contract loaded');
     });
 
+    it('Deploy root swap pair contract', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+        await rootSwapContract.deployContract();
+        logger.success('Contract deployed')
+    })
+
     it('Deploying TIP-3 pairs', async function() {
         logger.log('#####################################');
         logger.log('Creating TIP-3 tokens');
+        this.timeout(DEFAULT_TIMEOUT);
         pair1 = await deployTIP3(ton, pairsConfig.pairs[0], giverSC);
         pair2 = await deployTIP3(ton, pairsConfig.pairs[1], giverSC);
         logger.success('TIP-3 tokens created successfully');
@@ -196,6 +219,7 @@ describe('Test of swap pairs', async function() {
     it(`Checking root function 'getServiceInformation'`, async function() {
         logger.log('#####################################');
         logger.log('Getting service information');
+        this.timeout(DEFAULT_TIMEOUT);
         let serviceInfo = await rootSwapContract.getServiceInformation();
         logger.log(JSON.stringify(serviceInfo, null, '\t'));
         logger.success('Service information received');
@@ -203,6 +227,7 @@ describe('Test of swap pairs', async function() {
 
     it(`Checking root function 'checkIfPairExists'`, async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
         let pe1 = await rootSwapContract.checkIfPairExists(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         let pe2 = await rootSwapContract.checkIfPairExists(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
         logger.log(JSON.stringify(pe1, null, '\t'));
@@ -212,6 +237,7 @@ describe('Test of swap pairs', async function() {
     it('Deploying pair', async function() {
         logger.log('#####################################');
         logger.log('Deploying swap pair from root contract');
+        this.timeout(DEFAULT_TIMEOUT);
         await rootSwapContract.deploySwapPair(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         logger.success('Pair deployed');
     });
@@ -219,11 +245,13 @@ describe('Test of swap pairs', async function() {
     it('Trying to deploy already deployed pair', async function() {
         logger.log('#####################################');
         logger.log('This must fail :)');
+        this.timeout(DEFAULT_TIMEOUT);
         await rootSwapContract.deploySwapPair(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
     });
 
     it('Check if pair exists after deploy', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
         let pe1 = await rootSwapContract.checkIfPairExists(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         await rootSwapContract.checkIfPairExists(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
         logger.log(JSON.stringify(pe1, null, '\t'));
@@ -232,6 +260,7 @@ describe('Test of swap pairs', async function() {
 
     it('Get information about pair', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
         let pi1 = await rootSwapContract.getPairInfo(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
         await rootSwapContract.getPairInfo(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
         logger.log(JSON.stringify(pi1, null, '\t'));
