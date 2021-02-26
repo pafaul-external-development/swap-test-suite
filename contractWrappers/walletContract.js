@@ -1,6 +1,5 @@
 const freeton = require('../src');
 const { expect } = require('chai');
-const logger = require('mocha-logger');
 
 class Wallet {
     /**

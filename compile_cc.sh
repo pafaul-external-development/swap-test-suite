@@ -14,3 +14,5 @@ bash ${COMPILE_SH} ${SC_DIR}/RIP-3/tests DeployEmptyWalletFor $TARGET_DIR
 
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair RootSwapPairContract $TARGET_DIR
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair SwapPairContract $TARGET_DIR
+
+bash ${COMPILE_SH} ${SC_DIR}/testContracts testSetCode $TARGET_DIR
