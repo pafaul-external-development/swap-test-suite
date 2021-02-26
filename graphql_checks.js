@@ -1,6 +1,6 @@
-const giverConfig = require('./test/config/giverConfig');
-const networkConfig = require('./test/config/networkConfig');
-const seedPhraseConfig = require('./test/config/seedPhraseConfig');
+const giverConfig = require('./config/contracts/giverConfig');
+const networkConfig = require('./config/general/networkConfig');
+const seedPhraseConfig = require('./config/general/seedPhraseConfig');
 
 const freeton = require('./src');
 
@@ -28,7 +28,7 @@ async function main() {
     await ton.ton.net.query_collection({
         collection: 'messages',
         filter: {
-            dst: { eq: futureAddress }
+            src: { eq: futureAddress }
         },
         result: "msg_type status src dst value"
     }).then(s => console.log(JSON.stringify(s, null, '\t'))).catch(console.log);

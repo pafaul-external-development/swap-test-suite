@@ -4,7 +4,7 @@ class SwapPairContract {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance 
-     * @param {JSON} rootParameters 
+     * @param {JSON} swapPairParameters 
      * @param {JSON} keyPair 
      */
     constructor(tonInstance, swapPairParameters, keyPair) {

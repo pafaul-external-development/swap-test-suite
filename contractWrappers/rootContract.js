@@ -114,6 +114,10 @@ class RootContract {
         logger.success(`Contract address: ${this.rootContract.address}`);
     }
 
+    async getDetails() {
+        return this.rootContract.runLocal('getDetails', {});
+    }
+
     /**
      * Mint tokens to specified addresses
      * @param {Wallet} userWallet Wallet of user 
