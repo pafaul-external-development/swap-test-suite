@@ -1,4 +1,4 @@
-const freeton = require('../src');
+const freeton = require('../../src');
 
 class RootSwapPairContract {
     /**
