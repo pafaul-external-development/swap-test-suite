@@ -6,12 +6,13 @@ let swapPairConfig = {
     root: {
         initParams: {
             swapPairCode: '', // Must be not initialized code of contract
-            swapPairCodeVersion: '', // Swap pair code version
+            swapPairCodeVersion: 1, // Swap pair code version
             ownerPubkey: '',
             minMessageValue: 0, // Minimal msg.value
             contractServicePayment: 0 // How much will be charged in favor of contract
         },
-        constructorParams: {}
+        constructorParams: {},
+        keyPair: {}
     },
     pair: {
         initParams: {
@@ -20,7 +21,8 @@ let swapPairConfig = {
             swapPairRootContract: '', // root contract that deployed swap pair
             swapPairID: '',
         },
-        constructorParams: {}
+        constructorParams: {},
+        keyPair: {}
     }
 }
 

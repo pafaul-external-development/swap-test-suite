@@ -37,10 +37,10 @@ class RootSwapPairContract {
 
     /**
      * Deploy root contract to net
-     * @param {Boolean} onlyAddress
+     * @param {Boolean} deployRequired true -> deploy, false -> only get address
      */
-    async deployContract(onlyAddress = false) {
-        if (onlyAddress)
+    async deployContract(deployRequired = false) {
+        if (!deployRequired)
             return await this.rootSwapPairContract.getFutureAddress({
                 constructorParams: this.constructorParams,
                 initParams: this.initParams,
@@ -56,20 +56,7 @@ class RootSwapPairContract {
             });
     }
 
-    /**
-     * Deploy swap pair with known root contract addresses
-     * @param {String} rootContract1 
-     * @param {String} rootContract2 
-     */
-    async deploySwapPair(rootContract1, rootContract2) {
-        return await this.rootSwapPairContract.run(
-            'deploySwapPair', {
-                tokenRootContract1: rootContract1,
-                tokenRootContract2: rootContract2
-            },
-            this.keyPair
-        );
-    }
+    //========================Getters========================//
 
     async getXOR(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
@@ -79,21 +66,6 @@ class RootSwapPairContract {
             },
             this.keyPair
         );
-    }
-
-    /**
-     * Check if swap pair already deployed
-     * @param {String} rootContract1 
-     * @param {String} rootContract2 
-     */
-    async checkIfPairExists(rootContract1, rootContract2) {
-        return await this.rootSwapPairContract.runLocal(
-            'checkIfPairExists', {
-                tokenRootContract1: rootContract1,
-                tokenRootContract2: rootContract2
-            },
-            this.keyPair
-        )
     }
 
     /**
@@ -119,6 +91,38 @@ class RootSwapPairContract {
             'getServiceInformation', {},
             this.keyPair
         )
+    }
+
+    /**
+     * Check if swap pair already deployed
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     */
+    async checkIfPairExists(rootContract1, rootContract2) {
+        return await this.rootSwapPairContract.runLocal(
+            'checkIfPairExists', {
+                tokenRootContract1: rootContract1,
+                tokenRootContract2: rootContract2
+            },
+            this.keyPair
+        )
+    }
+
+    //========================Actual Functions========================//
+
+    /**
+     * Deploy swap pair with known root contract addresses
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     */
+    async deploySwapPair(rootContract1, rootContract2) {
+        return await this.rootSwapPairContract.run(
+            'deploySwapPair', {
+                tokenRootContract1: rootContract1,
+                tokenRootContract2: rootContract2
+            },
+            this.keyPair
+        );
     }
 
     /**

@@ -132,6 +132,16 @@ class RootContract {
     }
 
     /**
+     * Mint tokens to specified address
+     * @param {Wallet} wallet Wallet to mint tokens to
+     * @param {JSON} tokensAmount Tokens amount
+     */
+    async mintTokensToWallet(wallet, tokensAmount) {
+        let balance = await this._mintToWallet(wallet, tokensAmount);
+        expect(balance).to.be.a('Number').and.equal(tokensAmount);
+    }
+
+    /**
      * Calculate address of smart contract wallet
      * @param {String} pubkey 
      * @param {String} address 

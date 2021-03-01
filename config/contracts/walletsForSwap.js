@@ -15,11 +15,7 @@ function copyJSON(json) {
 
 let walletsDeployParameters = {
     pairs: [{
-        wallet1: {
-            config: copyJSON(wallet),
-            keys: {},
-        },
-        wallet2: {
+        wallet: {
             config: copyJSON(wallet),
             keys: {},
         },
@@ -27,17 +23,11 @@ let walletsDeployParameters = {
             config: copyJSON(rootParameters),
             keys: {},
         },
-        tokensAmount: {
-            user: 300,
-            swap: 300
-        },
+        walletsAmount: 6,
+        tokensAmount: 300,
         callbackAddress: '',
     }, {
-        wallet1: {
-            config: copyJSON(wallet),
-            keys: {},
-        },
-        wallet2: {
+        wallet: {
             config: copyJSON(wallet),
             keys: {},
         },
@@ -45,10 +35,8 @@ let walletsDeployParameters = {
             config: copyJSON(rootParameters),
             keys: {},
         },
-        tokensAmount: {
-            user: 300,
-            swap: 300
-        },
+        walletsAmount: 4,
+        tokensAmount: 800,
         callbackAddress: '',
     }]
 };

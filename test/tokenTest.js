@@ -4,17 +4,10 @@ const logger = require('mocha-logger');
 const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
 
 const testScenario = require('../config/general/testScenario');
-<<<<<<< HEAD
-const networkConfig = require('../config/general/networkConfig');
-const seedPhrase = require('../config/general/seedPhraseConfig');
-
-const giverConfig = require('../config/contracts/giverConfig');
-=======
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
 
->>>>>>> 73540c5491350f3405911af73ae7b360cb493999
 let rootContractParameters = require('../config/contracts/rootContractParameters');
 let walletParameters = require('../config/contracts/walletParameters');
 
