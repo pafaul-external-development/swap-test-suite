@@ -13,6 +13,8 @@ class SwapPairContract {
         this.initParams = config.initParams;
         this.constructorParams = config.constructorParams;
         this.swapPairContract = undefined;
+
+        this.tokenWallets = [];
     }
 
     /**

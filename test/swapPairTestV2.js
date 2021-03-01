@@ -16,6 +16,7 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
+const wallet = require('../config/contracts/walletParameters');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -29,6 +30,7 @@ var tip3Tokens;
 var tip3TokensConfig;
 
 var keysRequired = 0;
+var transferAmount = [];
 
 var giverSC = new freeton.ContractWrapper(
     ton,
@@ -280,10 +282,49 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
 
         try {
+            let output = swapPairContract.getPairInfo();
+
+            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
+            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
+            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
+
+            swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
+
+            logger.success('Information check passed');
+        } catch (err) {
+            logger.error(err);
+            process.exit(1);
+        }
+    })
+
+    it('Transferring tokens to swap pair wallet', async function() {
+        logger.log('#####################################');
+
+        try {
+            transferAmount = [];
+            for (let tokenId = 0; tokenId < tip3TokensConfig.pairs.length; tokenId++)
+                transferAmount.push(tip3TokensConfig.pairs[tokenId].tokensAmount);
+
+            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
+                logger.log(`Transferring ${tokenId} tokens to swap pair wallet`);
+                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
+                    logger.log(`transferring tokens from № ${walletId} wallet`)
+                    await tip3Tokens[tokenId].wallets[walletId].transfer(
+                        swapPairContract.tokenWallets[tokenId],
+                        transferAmount[tokenId]
+                    )
+                }
+            }
+
+            logger.success('Transfer finished');
 
         } catch (err) {
             logger.error(err);
             process.exit(1);
         }
+    });
+
+    it('Checking if all tokens are credited to virtual balance', async function() {
+
     })
 })
