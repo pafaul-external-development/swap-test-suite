@@ -1,6 +1,6 @@
 const freeton = require('../../src');
 
-const { CRYSTAL_AMOUNT, ZERO_ADDRESS } = require('../config/general/constants');
+const { CRYSTAL_AMOUNT, ZERO_ADDRESS } = require('../general/constants');
 
 let swapPairConfig = {
     root: {

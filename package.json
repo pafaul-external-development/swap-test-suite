@@ -1,21 +1,22 @@
 {
     "name": "ton-testing-suite",
-    "version": "1.2.1",
+    "version": "1.2.1-svoi.dev",
     "description": "",
     "main": "src/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "tokenTest": "mocha test/tokenTest.js",
+        "swapPairTest": "mocha test/swapPairTest.js"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/broxus/ton-testing-suite.git"
+        "url": "git+https://github.com/SVOIcom/ton-testing-suite.git"
     },
-    "author": "pavlovdog_ <pavlovdog.moscow@gmail.com>",
+    "author": "Paul Mikhailov <paulmihailov2013@gmail.com>",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/broxus/ton-testing-suite/issues"
+        "url": "https://github.com/SVOIcom/ton-testing-suite/issues"
     },
-    "homepage": "https://github.com/broxus/ton-testing-suite#readme",
+    "homepage": "https://github.com/SVOIcom/ton-testing-suite#readme",
     "dependencies": {
         "@tonclient/core": "^1.5.2",
         "@tonclient/lib-node": "^1.5.2",
