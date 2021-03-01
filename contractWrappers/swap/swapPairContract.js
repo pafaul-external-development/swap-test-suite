@@ -54,6 +54,12 @@ class SwapPairContract {
         )
     }
 
+    async getUserLPBalance(userKeys) {
+        return await this.swapPairContract.runLocal(
+            '_getUserLiquidityPoolTokens', {}, userKeys
+        )
+    }
+
     /**
      * get exchange rate if amount is exchanged
      * @param {String} rootToken address of token root
@@ -118,7 +124,48 @@ class SwapPairContract {
                 firstTokenAmount: amount1,
                 secondTokenAmount: amount2
             },
-            this.keyPair
+            keyPair
+        )
+    }
+
+    /**
+     * Add tokens to liquidity pool from user's virtual balance
+     * @param {Number} amount1 token1 amount to add to liquidity pool
+     * @param {Number} amount2 token2 amount to add to liquidity pool
+     * @param {JSON} keyPair user's keypair
+     */
+    async removeLiquidity(amount1, amount2, keyPair) {
+        return await this.swapPairContract.run(
+            'removeLiquidity', {
+                firstTokenAmount: amount1,
+                secondTokenAmount: amount2
+            },
+            keyPair
+        )
+    }
+
+    //========================Debug========================//
+
+    /**
+     * Get liquidity pool tokens
+     */
+    async getLPTokens() {
+        return await this.swapPairContract.runLocal(
+            '_getLiquidityPoolTokens', {}, {}
+        )
+    }
+
+    /**
+     * Get exchange rate
+     */
+    async getER(token1Amount, token2Amount, token1Swap, token2Swap) {
+        return await this.swapPairContract.runLocal(
+            '_getExchangeRateSimulation', {
+                token1: token1Amount,
+                token2: token2Amount,
+                swapToken1: token1Swap,
+                swapToken2: token2Swap
+            }, {}
         )
     }
 }

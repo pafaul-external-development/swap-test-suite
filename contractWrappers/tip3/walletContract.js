@@ -36,6 +36,16 @@ class Wallet {
     }
 
     /**
+     * Get wallet details, e.g. token balance
+     */
+    async getDetails() {
+        return await this.walletContract.runLocal(
+            'getDetails', {},
+            this.keyPair
+        );
+    }
+
+    /**
      * Set callback address for deployed wallet
      * @param {String} address Callback contract address
      */
