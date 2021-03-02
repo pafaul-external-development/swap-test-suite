@@ -1,5 +1,5 @@
 const freeton = require('../../src');
-const Giver = require('../giverContract');
+const giverConfig = require('../../config/contracts/giverConfig');
 
 class GiverContract {
     /**
@@ -10,11 +10,8 @@ class GiverContract {
      */
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;
-        this.keyPair = {
-            public: 'c29089f9d734ee23fafc8938f8c2f0ced7b47e6ea625511ce837cdba2a3289c8',
-            secret: '60db8ac5bb9fb0e3d0f1e127c32e5af022596906c10af6d3c8e2031bb58a1cdc'
-        };
-        this.address = '0:8748d82ad85a2122343d1ab0f954173242f0926333b3385869f973e40fc0136a';
+        this.keyPair = giverConfig.keyPair;
+        this.address = giverConfig.address;
         this.giverContract = undefined;
     }
 

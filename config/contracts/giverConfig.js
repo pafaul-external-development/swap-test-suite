@@ -39,11 +39,11 @@ let devnetConfig = {
         "data": [],
         "events": []
     },
-    address: '0:8748d82ad85a2122343d1ab0f954173242f0926333b3385869f973e40fc0136a',
+    address: '0:224440fcd39ee41309cf5aa550fd5f9870835dad925eb70828dc065960cb4403',
     keyPair: {
         public: 'c29089f9d734ee23fafc8938f8c2f0ced7b47e6ea625511ce837cdba2a3289c8',
         secret: '60db8ac5bb9fb0e3d0f1e127c32e5af022596906c10af6d3c8e2031bb58a1cdc'
     }
 }
 
-module.exports = devnetConfig;
+module.exports = giverConfig;

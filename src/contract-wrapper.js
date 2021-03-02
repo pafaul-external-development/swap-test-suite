@@ -168,7 +168,7 @@ class ContractWrapper {
         } = await this.createDeployMessage(...deployParams);
 
         if (initialBalance > 0) {
-            console.log('Init balance');
+            this.debugLog('Sending initial balance to contract');
 
             // Send grams from giver to pay for contract deployment
             const giverContract = new ContractWrapper(
@@ -178,10 +178,12 @@ class ContractWrapper {
                 this.tonWrapper.giverConfig.address,
             );
 
+            this.debugLog(`${JSON.stringify(giverContract.abi)}`);
+
             await giverContract.run('sendGrams', {
                 dest: futureAddress,
                 amount: initialBalance,
-            }, keyPair);
+            }, this.tonWrapper.giverConfig.keyPair);
 
             // Wait for receiving grams
             await this.tonWrapper.ton.net.wait_for_collection({
@@ -322,6 +324,7 @@ class ContractWrapper {
     async run(functionName, input = {}, _keyPair) {
         let error;
 
+        this.debugLog(`executing function ${functionName}`);
         for (const attempt in _.range(this.tonWrapper.runAttempts)) {
             this.debugLog(`Run attempt #${attempt}`);
 
@@ -334,6 +337,7 @@ class ContractWrapper {
 
                 return status;
             } catch (e) {
+                this.debugLog(JSON.stringify(e));
                 error = e;
             }
         }

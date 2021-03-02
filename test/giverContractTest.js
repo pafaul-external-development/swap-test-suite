@@ -17,10 +17,11 @@ const ton = new freeton.TonWrapper({
 
 async function main() {
     await ton.setup(1);
+    ton.debug = true;
     let gc = new GiverContract(ton, {}, {});
     await gc.loadContract();
     await gc.setAllowedPubkeys(ton.keys);
-    console.log(await gc.sendGrams('0:817673ee4ed2fb5c5406d9425bfa9dd209e92a3086d115253ba7f62c9070ddc1', freeton.utils.convertCrystal('0.1', 'nano'), ton.keys[0]));
+    console.log(await gc.sendGrams('0:5ab52a7856d40a2c73023ed409ff3288906b967b2b5c1ddbc694167d13950b72', freeton.utils.convertCrystal('50', 'nano'), ton.keys[0]));
     //process.exit(0);
 }
 

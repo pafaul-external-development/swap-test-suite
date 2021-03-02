@@ -25,12 +25,12 @@ const ton = new freeton.TonWrapper({
     seed: seedPhrase
 });
 
-let giverSC = new freeton.ContractWrapper(
-    ton,
-    giverConfig.abi,
-    null,
-    giverConfig.address,
-);
+// let giverSC = new freeton.ContractWrapper(
+//     ton,
+//     giverConfig.abi,
+//     null,
+//     giverConfig.address,
+// );
 
 let rootSC;
 let wallet1;
@@ -57,10 +57,14 @@ async function tokenTest() {
 
 describe('Test for TIP-3 token', async function() {
     it('Setup', async function() {
-        await ton.setup(4);
 
-        let giverContract = new GiverContract(ton, {}, {});
-        await giverContract.setAllowedPubkeys(ton.keys);
+        this.timeout(DEFAULT_TIMEOUT);
+        await ton.setup(4);
+        ton.debug = true;
+
+        //let giverContract = new GiverContract(ton, {}, {});
+        //await giverContract.loadContract();
+        //await giverContract.setAllowedPubkeys(ton.keys);
 
         expect(ton.keys).to.have.lengthOf(4, 'Wrong keys amount');
     });
@@ -103,20 +107,20 @@ describe('Test for TIP-3 token', async function() {
         await rootSC.loadContract();
     });
 
-    it('Load callback contract', async function() {
-        logger.log('#####################################');
-        logger.log('Loading callback contract');
-        this.timeout(DEFAULT_TIMEOUT);
-        await callbackSC.loadContract();
-    });
+    // it('Load callback contract', async function() {
+    //     logger.log('#####################################');
+    //     logger.log('Loading callback contract');
+    //     this.timeout(DEFAULT_TIMEOUT);
+    //     await callbackSC.loadContract();
+    // });
 
-    it('Callback contract deploy', async function() {
-        logger.log('#####################################');
-        logger.log('Deploying callback contract');
-        this.timeout(DEFAULT_TIMEOUT);
-        await callbackSC.deployContract();
-        logger.success(`callback SC address: ${callbackSC.callbackContract.address}`);
-    });
+    // it('Callback contract deploy', async function() {
+    //     logger.log('#####################################');
+    //     logger.log('Deploying callback contract');
+    //     this.timeout(DEFAULT_TIMEOUT);
+    //     await callbackSC.deployContract();
+    //     logger.success(`callback SC address: ${callbackSC.callbackContract.address}`);
+    // });
 
     it('Deploy of root contract', async function() {
         logger.log('#####################################');
@@ -179,9 +183,9 @@ describe('Test for TIP-3 token', async function() {
         logger.log('Distributing tons');
         this.timeout(DEFAULT_TIMEOUT);
         // await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
-        await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
-        await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
-        await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
+        // await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
+        // await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
+        // await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
         logger.success('Ton crystal distribution finished');
     });
 
