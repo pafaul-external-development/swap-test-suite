@@ -17,6 +17,8 @@ const Giver = require('../contractWrappers/giverContract');
 const CallbackContract = require('../contractWrappers/callbackContract');
 const WalletDeployer = require('../contractWrappers/walletDeployer');
 
+let GiverContract = require('../contractWrappers/util/giverContract');
+
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
     network: networkConfig.network,
@@ -56,6 +58,9 @@ async function tokenTest() {
 describe('Test for TIP-3 token', async function() {
     it('Setup', async function() {
         await ton.setup(4);
+
+        let giverContract = new GiverContract(ton, {}, {});
+        await giverContract.setAllowedPubkeys(ton.keys);
 
         expect(ton.keys).to.have.lengthOf(4, 'Wrong keys amount');
     });
@@ -163,13 +168,17 @@ describe('Test for TIP-3 token', async function() {
 
         logger.log(`wallet1 address: ${w1address}`);
         logger.log(`wallet2 address: ${w2address}`);
+        logger.log(`Root contract address: ${rootSC.rootContract.address}`);
+        logger.log(`Root contract keys: ${JSON.stringify(rootSC.keyPair)}`);
+        logger.log(`W1 keypair: ${JSON.stringify(wallet1.keyPair)}`);
+        logger.log(`W2 keypair: ${JSON.stringify(wallet2.keyPair)}`);
     });
 
     it('Ton crystal distribution', async function() {
         logger.log('#####################################');
         logger.log('Distributing tons');
         this.timeout(DEFAULT_TIMEOUT);
-        await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
+        // await sendGrams(giverSC, callbackSC.callbackContract.address, CRYSTAL_AMOUNT);
         await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
         await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
         await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
@@ -184,35 +193,35 @@ describe('Test for TIP-3 token', async function() {
         logger.success(`Tokens minted successfully`);
     });
 
-    it('Setting up smart contracts for callback testing', async function() {
-        logger.log('#####################################');
-        logger.log('Setting callback address');
-        this.timeout(DEFAULT_TIMEOUT);
-        await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
-        await wallet2.setCallbackAddress(callbackSC.callbackContract.address);
-        logger.success('Callback address set');
-    })
+    // it('Setting up smart contracts for callback testing', async function() {
+    //     logger.log('#####################################');
+    //     logger.log('Setting callback address');
+    //     this.timeout(DEFAULT_TIMEOUT);
+    //     await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
+    //     await wallet2.setCallbackAddress(callbackSC.callbackContract.address);
+    //     logger.success('Callback address set');
+    // })
 
-    it('Transactions with callback test', async function() {
-        logger.log('#####################################');
-        logger.log('Transactions test');
-        this.timeout(DEFAULT_TIMEOUT);
+    // it('Transactions with callback test', async function() {
+    //     logger.log('#####################################');
+    //     logger.log('Transactions test');
+    //     this.timeout(DEFAULT_TIMEOUT);
 
-        await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
-        await wallet1.transferWithNotify(wallet2.walletContract.address, 30);
-        let balance1 = (await wallet1.walletContract.runLocal(
-            'getDetails', {},
-            wallet1.keyPair
-        )).balance.toNumber();
-        let balance2 = (await wallet2.walletContract.runLocal(
-            'getDetails', {},
-            wallet2.keyPair
-        )).balance.toNumber();
-        let res = (await callbackSC.getResult());
-        let balanceDelta = res.amount.toNumber();
-        expect(balance1).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.user - 30);
-        expect(balance2).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.swap + 30);
-        expect(balanceDelta).to.be.a('Number').and.equal(30);
-        logger.success(`Transaction check completed.`);
-    });
+    //     await wallet1.setCallbackAddress(callbackSC.callbackContract.address);
+    //     await wallet1.transferWithNotify(wallet2.walletContract.address, 30);
+    //     let balance1 = (await wallet1.walletContract.runLocal(
+    //         'getDetails', {},
+    //         wallet1.keyPair
+    //     )).balance.toNumber();
+    //     let balance2 = (await wallet2.walletContract.runLocal(
+    //         'getDetails', {},
+    //         wallet2.keyPair
+    //     )).balance.toNumber();
+    //     let res = (await callbackSC.getResult());
+    //     let balanceDelta = res.amount.toNumber();
+    //     expect(balance1).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.user - 30);
+    //     expect(balance2).to.be.a('Number').and.equal(testScenario.pair1.tokensAmount.swap + 30);
+    //     expect(balanceDelta).to.be.a('Number').and.equal(30);
+    //     logger.success(`Transaction check completed.`);
+    // });
 });

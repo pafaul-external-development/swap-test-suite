@@ -40,7 +40,7 @@ class RootContract {
             return await this.rootContract.deploy({
                 constructorParams: this.constructorParams,
                 initParams: this.initParams,
-                initialBalance: freeton.utils.convertCrystal('60', 'nano'),
+                initialBalance: freeton.utils.convertCrystal('15', 'nano'),
                 _randomNonce: true,
                 keyPair: this.keyPair
             });

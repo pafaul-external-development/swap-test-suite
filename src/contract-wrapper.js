@@ -167,30 +167,32 @@ class ContractWrapper {
             address: futureAddress,
         } = await this.createDeployMessage(...deployParams);
 
+        if (initialBalance > 0) {
+            console.log('Init balance');
 
-        // Send grams from giver to pay for contract deployment
-        const giverContract = new ContractWrapper(
-            this.tonWrapper,
-            this.tonWrapper.giverConfig.abi,
-            null,
-            this.tonWrapper.giverConfig.address,
-        );
+            // Send grams from giver to pay for contract deployment
+            const giverContract = new ContractWrapper(
+                this.tonWrapper,
+                this.tonWrapper.giverConfig.abi,
+                null,
+                this.tonWrapper.giverConfig.address,
+            );
 
-        await giverContract.run('sendGrams', {
-            dest: futureAddress,
-            amount: initialBalance,
-        }, null);
+            await giverContract.run('sendGrams', {
+                dest: futureAddress,
+                amount: initialBalance,
+            }, keyPair);
 
-        // Wait for receiving grams
-        await this.tonWrapper.ton.net.wait_for_collection({
-            collection: 'accounts',
-            filter: {
-                id: { eq: futureAddress },
-                balance: { gt: `0x0` }
-            },
-            result: 'balance'
-        });
-
+            // Wait for receiving grams
+            await this.tonWrapper.ton.net.wait_for_collection({
+                collection: 'accounts',
+                filter: {
+                    id: { eq: futureAddress },
+                    balance: { gt: `0x0` }
+                },
+                result: 'balance'
+            });
+        }
 
         let error;
         for (const attempt in _.range(this.tonWrapper.deployAttempts)) {
