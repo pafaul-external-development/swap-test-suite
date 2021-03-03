@@ -1,5 +1,9 @@
-let networkConfig = {
+let tonOSSE = {
     network: 'http://localhost:3333'
 }
 
-module.exports = networkConfig;
+let devnet = {
+    network: 'https://net.ton.dev/'
+}
+
+module.exports = devnet;

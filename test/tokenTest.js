@@ -11,11 +11,11 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 let rootContractParameters = require('../config/contracts/rootContractParameters');
 let walletParameters = require('../config/contracts/walletParameters');
 
-const RootContract = require('../contractWrappers/rootContract');
-const Wallet = require('../contractWrappers/walletContract');
+const RootContract = require('../contractWrappers/tip3/rootContract');
+const Wallet = require('../contractWrappers/tip3/walletContract');
 const Giver = require('../contractWrappers/giverContract');
-const CallbackContract = require('../contractWrappers/callbackContract');
-const WalletDeployer = require('../contractWrappers/walletDeployer');
+const CallbackContract = require('../contractWrappers/tip3/callbackContract');
+const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 
 let GiverContract = require('../contractWrappers/util/giverContract');
 
@@ -62,9 +62,15 @@ describe('Test for TIP-3 token', async function() {
         await ton.setup(4);
         ton.debug = true;
 
-        //let giverContract = new GiverContract(ton, {}, {});
-        //await giverContract.loadContract();
-        //await giverContract.setAllowedPubkeys(ton.keys);
+        if (!ton.giverConfig.keyPair.public) {
+            logger.log('Using ton OS SE giver');
+            ton.giverConfig.keyPair = ton.keys[0];
+        } else {
+            logger.log('Using devnet giver');
+            let giverContract = new GiverContract(ton, {}, {});
+            await giverContract.loadContract();
+            await giverContract.setAllowedPubkeys(ton.keys);
+        }
 
         expect(ton.keys).to.have.lengthOf(4, 'Wrong keys amount');
     });
@@ -127,7 +133,7 @@ describe('Test for TIP-3 token', async function() {
         logger.log('Deploying root contract');
         this.timeout(DEFAULT_TIMEOUT);
         await rootSC.deployContract();
-        logger.log('Root balance: ', await ton.getBalance(rootSC.rootContract.address));
+        // logger.log('Root balance: ', await ton.getBalance(rootSC.rootContract.address));
     });
 
     it('Root contract basic checks', async function() {

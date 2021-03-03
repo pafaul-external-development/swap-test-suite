@@ -176,6 +176,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying TIP-3', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
         try {
             for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
                 logger.log(`Deploying ${tokenId} TIP-3 token`);
@@ -189,12 +190,13 @@ describe('Test of swap pairs', async function() {
 
     it('Initial config of swap contracts', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
         swapConfig = initialSwapSetup(ton, swapConfig, tip3Tokens);
     })
 
     it('Loading contracts', async function() {
         logger.log('#####################################');
-
+        this.timeout(DEFAULT_TIMEOUT * 2);
         try {
             logger.log('Loading swap pair contract');
             swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keyPair);
@@ -212,6 +214,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying root contract', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             await rootSwapContract.deployContract(true);
@@ -224,6 +227,7 @@ describe('Test of swap pairs', async function() {
 
     it('Get root swap pait contract information', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
@@ -238,6 +242,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploy swap pair contract from root contract', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             await rootSwapContract.deploySwapPair(
@@ -262,6 +267,7 @@ describe('Test of swap pairs', async function() {
 
     it('Getting information about deployed pair', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let output = await rootSwapContract.getPairInfo(
@@ -289,6 +295,7 @@ describe('Test of swap pairs', async function() {
 
     it('Getting information about swap pair from swap pair', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let output = swapPairContract.getPairInfo();
@@ -308,6 +315,7 @@ describe('Test of swap pairs', async function() {
 
     it('Transferring tokens to swap pair wallet', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
 
         try {
             transferAmount = [];
@@ -335,6 +343,7 @@ describe('Test of swap pairs', async function() {
 
     it('Checking if all tokens are credited to virtual balance', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
@@ -355,6 +364,8 @@ describe('Test of swap pairs', async function() {
 
     it('Adding liquidity to pool', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
         totalLPTokens = [0, 0];
         try {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
@@ -375,6 +386,7 @@ describe('Test of swap pairs', async function() {
 
     it('Check tokens amount in liquidity pool', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let output = await swapPairContract.getLPTokens();
@@ -394,6 +406,8 @@ describe('Test of swap pairs', async function() {
 
     it('Remove liquidity', async function() {
         logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
         try {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
                 let fieldVB = `tokenBalance${tokenId+1}`;
@@ -426,7 +440,7 @@ describe('Test of swap pairs', async function() {
 
     it('Withdraw tokens from pair', async function() {
         logger.log('#####################################');
-
+        this.timeout(DEFAULT_TIMEOUT * 5);
         try {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
                 let field = `tokenBalance${tokenId+1}`;

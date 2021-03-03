@@ -46,4 +46,4 @@ let devnetConfig = {
     }
 }
 
-module.exports = giverConfig;
+module.exports = devnetConfig;
