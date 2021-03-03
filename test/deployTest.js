@@ -24,17 +24,21 @@ let giverSC = new freeton.ContractWrapper(
 
 async function main() {
     await ton.setup(2);
-    // freeton.requireContract(ton, 'testSetCode').then(console.log).catch(console.log);
-    let testC = await freeton.requireContract(ton, 'GiverContract');
-    console.log(await testC.deploy({
-        constructorParams: {},
-        initParams: {},
-        initialBalance: -1,
-        _randomNonce: false,
-        keyPair: ton.keys[1]
-    }));
+    // freeton.requireContract(ton, 'TestContract').then(console.log).catch(console.log);
+    let testC = await freeton.requireContract(ton, 'TestContract', '0:18ef223498dfcffbe7b194988b02ac37dee15e315f34343adc37e9a77033da00');
+    // console.log(await testC.deploy({
+    //     constructorParams: {},
+    //     initParams: {},
+    //     initialBalance: freeton.utils.convertCrystal('1', 'nano'),
+    //     _randomNonce: false,
+    //     keyPair: ton.keys[1]
+    // }));
+    // process.exit(0);
+    //.then(console.log).catch(console.log);
     console.log(ton.keys[1]);
-    process.exit(0);
+
+    //testC.run('setTestAddress', { ta: ZERO_ADDRESS }, ton.keys[1]).then(console.log).catch(console.log);
+    console.log(await testC.runLocal('checkIfAddressesAreEqual', { ta: ZERO_ADDRESS }, ton.keys[1]));
 }
 
 main();
