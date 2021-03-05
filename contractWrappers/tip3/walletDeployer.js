@@ -52,7 +52,7 @@ class WalletDeployer {
             initParams: {
                 root: rootAddress,
             },
-            initialBalance: freeton.utils.convertCrystal('4', 'nano'),
+            initialBalance: freeton.utils.convertCrystal('15', 'nano'),
             _randomNonce: true,
             keyPair: this.keyPair,
         });

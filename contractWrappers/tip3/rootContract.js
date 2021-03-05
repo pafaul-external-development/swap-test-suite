@@ -1,7 +1,7 @@
 const freeton = require('../../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const Wallet = require('../walletContract');
+const Wallet = require('./walletContract');
 
 class RootContract {
     /**

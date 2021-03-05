@@ -181,12 +181,11 @@ class ContractWrapper {
             this.debugLog(`${JSON.stringify(giverContract.abi)}`);
 
             await giverContract.run('sendGrams', {
-                dest: futureAddress,
-                amount: initialBalance,
-            }, {
-                public: 'c29089f9d734ee23fafc8938f8c2f0ced7b47e6ea625511ce837cdba2a3289c8',
-                secret: '60db8ac5bb9fb0e3d0f1e127c32e5af022596906c10af6d3c8e2031bb58a1cdc'
-            }); //this.tonWrapper.giverConfig.keyPair.public ? this.tonWrapper.giverConfig.keyPair : {});
+                    dest: futureAddress,
+                    amount: initialBalance,
+                }
+                //this.tonWrapper.giverConfig.keyPair.public ? this.tonWrapper.giverConfig.keyPair : undefined
+            );
 
             // Wait for receiving grams
             await this.tonWrapper.ton.net.wait_for_collection({
