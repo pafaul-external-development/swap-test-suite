@@ -178,8 +178,6 @@ class ContractWrapper {
                 this.tonWrapper.giverConfig.address,
             );
 
-            this.debugLog(`${JSON.stringify(giverContract.abi)}`);
-
             await giverContract.run('sendGrams', {
                     dest: futureAddress,
                     amount: initialBalance,

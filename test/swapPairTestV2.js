@@ -18,6 +18,7 @@ var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
 const wallet = require('../config/contracts/walletParameters');
 const { root } = require('../config/contracts/swapPairContractsConfig');
+const { sleep } = require('../src/utils');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -312,6 +313,12 @@ describe('Test of swap pairs', async function() {
             expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
+            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
+                output = await swapPairContract.getPairInfo();
+                console.log(output.tokenWallet1 == ZERO_ADDRESS ? output.tokenWallet1 : output.tokenWallet2);
+                await sleep(2000);
+            }
+
             swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
 
             logger.success('Information check passed');
@@ -332,9 +339,10 @@ describe('Test of swap pairs', async function() {
                 transferAmount.push(tip3TokensConfig[tokenId].tokensAmount);
 
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                logger.log(`Transferring ${tokenId} tokens to swap pair wallet`);
+                console.log(tip3TokensConfig[tokenId].tokensAmount);
+                logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    logger.log(`transferring tokens from № ${walletId} wallet`)
+                    logger.log(`transferring tokens from ${walletId} wallet`)
                     await tip3Tokens[tokenId].wallets[walletId].transfer(
                         swapPairContract.tokenWallets[tokenId],
                         transferAmount[tokenId]

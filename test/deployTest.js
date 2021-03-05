@@ -26,16 +26,16 @@ async function main() {
     await ton.setup(2);
     ton.debug = true;
     // freeton.requireContract(ton, 'TestContract').then(console.log).catch(console.log);
-    let testC = await freeton.requireContract(ton, 'RootSwapPairContract'); //, '0:260113554a966f69573a83a47c8b53325eca7729e7a34988ccec044747600279');
+    let testC = await freeton.requireContract(ton, 'test'); //, '0:260113554a966f69573a83a47c8b53325eca7729e7a34988ccec044747600279');
     testC.deploy({
         constructorParams: {
-            spCode: '',
-            spCodeVersion: 1,
-            minMsgValue: 0,
-            contractSP: 0
+            // spCode: '',
+            // spCodeVersion: 1,
+            // minMsgValue: 0,
+            // contractSP: 0
         },
         initParams: {
-            ownerPubkey: '0x' + ton.keys[1].public,
+            //ownerPubkey: '0x' + ton.keys[1].public,
         },
         initialBalance: freeton.utils.convertCrystal('1', 'nano'),
         _randomNonce: true,

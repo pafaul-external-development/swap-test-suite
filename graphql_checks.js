@@ -31,7 +31,7 @@ async function main() {
             src: { eq: futureAddress }
         },
         result: "msg_type status src dst value"
-    }).then(s => console.log(JSON.stringify(s, null, '\t'))).catch(console.log);
+    }).then(async s => console.log(s)).catch(console.log);
 
     process.exit(0);
 }
