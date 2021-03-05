@@ -343,7 +343,7 @@ describe('Test of swap pairs', async function() {
                 logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     logger.log(`transferring tokens from ${walletId} wallet`)
-                    await tip3Tokens[tokenId].wallets[walletId].transfer(
+                    await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
                         swapPairContract.tokenWallets[tokenId],
                         transferAmount[tokenId]
                     )
@@ -368,7 +368,8 @@ describe('Test of swap pairs', async function() {
                 let field = `tokenBalance${tokenId+1}`;
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
-                    let output = swapPairContract.getUserBalance(wallet.walletContract.keyPair);
+                    let output = await swapPairContract.getUserBalance(wallet.walletContract.keyPair);
+                    console.log(output);
                     expect(output[field].toNumber()).to.be('Number').and.equal(transferAmount[tokenId]);
                 }
             }
