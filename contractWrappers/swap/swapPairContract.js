@@ -50,7 +50,9 @@ class SwapPairContract {
      */
     async getUserBalance(userKeys) {
         return await this.swapPairContract.runLocal(
-            'getUserBalance', {}, userKeys
+            'getUserBalance', {
+                pubkey: '0x' + userKeys.public,
+            }, userKeys
         )
     }
 

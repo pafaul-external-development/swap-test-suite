@@ -350,6 +350,7 @@ describe('Test of swap pairs', async function() {
                 }
             }
 
+            logger.log(`Last address: ${await swapPairContract.swapPairContract.runLocal('_getT', {}, {})}`);
             logger.success('Transfer finished');
 
         } catch (err) {
@@ -368,9 +369,8 @@ describe('Test of swap pairs', async function() {
                 let field = `tokenBalance${tokenId+1}`;
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
-                    let output = await swapPairContract.getUserBalance(wallet.walletContract.keyPair);
-                    console.log(output);
-                    expect(output[field].toNumber()).to.be('Number').and.equal(transferAmount[tokenId]);
+                    let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                    expect(output[field].toNumber()).to.be('Number').and.equal(transferAmount[tokenId], 'Invalid balance');
                 }
             }
 
