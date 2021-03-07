@@ -10,7 +10,9 @@ const ton = new freeton.TonWrapper({
     seed: seedPhraseConfig
 });
 
-futureAddress = process.argv[2];
+a1 = process.argv[2];
+a2 = process.argv[3];
+
 
 async function main() {
 
@@ -28,7 +30,8 @@ async function main() {
     await ton.ton.net.query_collection({
         collection: 'messages',
         filter: {
-            dst: { eq: futureAddress }
+            src: { eq: a1 },
+            dst: { eq: a2 }
         },
         result: "msg_type status src dst value boc body"
     }).then(async s => s.result.forEach(async(el) =>
