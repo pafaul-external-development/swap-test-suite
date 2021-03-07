@@ -81,24 +81,6 @@ class SwapPairContract {
     //========================Actual Functions========================//
 
     /**
-     * withdraw tokens from pair
-     * @param {String} rootToken address of token root
-     * @param {String} wallet address of wallet to send tokens to
-     * @param {Number} amount amount of tokens to withdraw
-     * @param {JSON} keyPair user's keypair
-     */
-    async withdrawToken(rootToken, wallet, amount, keyPair) {
-        return await this.swapPairContract.run(
-            'withdrawToken', {
-                withdrawalTokenRoot: rootToken,
-                receiveTokenWallet: wallet,
-                amount: amount
-            },
-            keyPair
-        )
-    }
-
-    /**
      * swap amount of tokens
      * @param {String} rootToken address of token root
      * @param {Number} amount amount of tokens to swap
@@ -120,31 +102,32 @@ class SwapPairContract {
      * @param {Number} amount2 token2 amount to add to liquidity pool
      * @param {JSON} keyPair user's keypair
      */
-    async addLiquidity(amount1, amount2, keyPair) {
+    async provideLiquidity(amount1, amount2, keyPair) {
         return await this.swapPairContract.run(
-            'addLiquidity', {
-                firstTokenAmount: amount1,
-                secondTokenAmount: amount2
+            'provideLiquidity', {
+                maxFirstTokenAmount: amount1,
+                maxSecondTokenAmount: amount2
             },
             keyPair
         )
     }
 
     /**
-     * Add tokens to liquidity pool from user's virtual balance
-     * @param {Number} amount1 token1 amount to add to liquidity pool
-     * @param {Number} amount2 token2 amount to add to liquidity pool
+     * withdraw tokens from pair
+     * @param {Number} amountT1 amount of first token to withdraw 
+     * @param {Number} amountT2 amount of second token to withdraw
      * @param {JSON} keyPair user's keypair
      */
-    async removeLiquidity(amount1, amount2, keyPair) {
+    async withdrawLiquidity(amountT1, amountT2, keyPair) {
         return await this.swapPairContract.run(
-            'removeLiquidity', {
-                firstTokenAmount: amount1,
-                secondTokenAmount: amount2
+            'withdrawToken', {
+                minFirstTokenAmount: amountT1,
+                minSecondTokenAmount: amountT2
             },
             keyPair
         )
     }
+
 
     //========================Debug========================//
 
