@@ -8,3 +8,4 @@ node_modules/
 free-ton/migration-log.json
 free-ton/keys
 package-lock.json
+.vscode/
