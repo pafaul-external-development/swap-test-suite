@@ -9,6 +9,7 @@ const Giver = require('../contractWrappers/giverContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
+const TONHandler = require('../contractWrappers/util/tonHandler');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
@@ -28,6 +29,7 @@ const ton = new freeton.TonWrapper({
 
 var rootSwapContract;
 var swapPairContract;
+var tonHandlers = [];
 var tip3Tokens = [];
 var tip3TokensConfig = [];
 
@@ -183,6 +185,27 @@ describe('Test of swap pairs', async function() {
         }
     })
 
+    it('Deploying ton handlers', async function() {
+        logger.log('#####################################');
+        logger.log('Loading contracts');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+        try {
+            for (let index = 0; index < ton.keys.length; index++) {
+                tonHandlers.push(new TONHandler(ton, {}, ton.keys[index]));
+                await tonHandlers[index].loadContract();
+            }
+
+            logger.log('Deploying contracts');
+            for (let index = 0; index < tonHandlers.length; index++) {
+                await tonHandlers[index].deploy();
+            }
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
     it('Deploying TIP-3', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT * 5);
@@ -330,6 +353,37 @@ describe('Test of swap pairs', async function() {
 
             logger.success('Information check passed');
         } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Transferring tons to swap pair wallet', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
+        try {
+            for (let contractIndex = 0; contractIndex < tonHandlers.length; contractIndex++) {
+                await tonHandlers[contractIndex].sendTONto(
+                    swapPairContract.swapPairContract.address,
+                    freeton.utils.convertCrystal('1', 'nano')
+                );
+
+                let output = 0;
+                let counter = 0;
+                while (output == 0) {
+                    if (counter > RETRIES)
+                        throw new Error(
+                            `Swap pair did not receive TONs in ${RETRIES} retries. ` +
+                            `Contract address: ${tonHandlers[contractIndex].tonHandlerContract.address}`
+                        );
+                    counter++;
+                    output = (await swapPairContract.getUserTONBalance(ton.keys[contractIndex])).userBalance;
+                    await sleep(2000);
+                }
+            }
+        } catch (err) {
+            console.log(err);
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
