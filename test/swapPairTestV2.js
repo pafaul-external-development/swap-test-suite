@@ -1,7 +1,7 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
+const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../config/general/constants');
 
 const RootContract = require('../contractWrappers/tip3/rootContract');
 const Wallet = require('../contractWrappers/tip3/walletContract');
@@ -188,7 +188,7 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT * 5);
         try {
             for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
-                logger.log(`Deploying ${tokenId} TIP-3 token`);
+                logger.log(`Deploying ${tokenId+1} TIP-3 token`);
                 tip3Tokens.push(await deployTIP3(ton, tip3TokensConfig[tokenId], giverSC));
             }
         } catch (err) {
@@ -307,6 +307,7 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT);
 
+        let counter = 0;
         try {
             let output = await swapPairContract.getPairInfo();
             logger.log(JSON.stringify(output, null, '\t'));
@@ -315,6 +316,12 @@ describe('Test of swap pairs', async function() {
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
             while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
+                if (counter > RETRIES) {
+                    throw new Error(
+                        `Cannot receive wallet address in ${RETRIES} retries`
+                    )
+                }
+                counter++;
                 output = await swapPairContract.getPairInfo();
                 await sleep(2000);
             }
@@ -340,7 +347,7 @@ describe('Test of swap pairs', async function() {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
                 logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    logger.log(`transferring tokens from ${walletId} wallet`)
+                    logger.log(`transferring tokens from ${walletId+1} wallet`)
                     await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
                         swapPairContract.tokenWallets[tokenId],
                         transferAmount[tokenId]
@@ -390,13 +397,14 @@ describe('Test of swap pairs', async function() {
             for (let walletId = 0; walletId < walletsCount; walletId++) {
                 let wallet = tip3Tokens[0].wallets[walletId];
                 let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`Wallet ${walletId+1} providing: ${output.tokenBalance1}, ${output.tokenBalance2}`);
                 await swapPairContract.provideLiquidity(
                     output.tokenBalance1,
                     output.tokenBalance2,
                     wallet.keyPair
                 );
-                totalLPTokens[0] += output.tokenBalance1;
-                totalLPTokens[1] += output.tokenBalance2;
+                totalLPTokens[0] += Number(output.tokenBalance1);
+                totalLPTokens[1] += Number(output.tokenBalance2);
             }
         } catch (err) {
             console.log(err);
@@ -411,8 +419,9 @@ describe('Test of swap pairs', async function() {
 
         try {
             let output = await swapPairContract.getLPTokens();
-            expect(output.token1LPAmount.toNumber).to.be('Number').and.equal(totalLPTokens[0]);
-            expect(output.token2LPAmount.toNumber).to.be('Number').and.equal(totalLPTokens[1]);
+            logger.log(`Tokens in LPs: ${Number(output.token1LPAmount)}, ${Number(output.token2LPAmount)}`);
+            expect(Number(output.token1LPAmount)).equal(totalLPTokens[0]);
+            expect(Number(output.token2LPAmount)).equal(totalLPTokens[1]);
             logger.success('LP tokens amount is equal to tokens added to pool');
         } catch (err) {
             console.log(err);
@@ -431,22 +440,27 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT * 5);
 
         try {
-            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                let fieldVB = `tokenBalance${tokenId+1}`;
-                let fieldLPB = `token${tokenId+1}LPAmount`;
-                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallet.length; walletId++) {
-                    let wallet = tip3Tokens[tokenId].wallet[walletId];
-                    let userVBalance = (await swapPairContract.getUserBalance(wallet.walletContract.keyPair))[fieldVB].toNumber();
-                    let output = (await swapPairContract.getUserLPBalance(wallet.walletContract.keyPair))[fieldLPB].toNumber();
-                    let expectedBalance = userVBalance + output;
-                    await swapPairContract.removeLiquidity(
-                        tokenId == 0 ? output : 0,
-                        tokenId == 0 ? 0 : output,
-                        wallet.keyPair
-                    )
-                    userVBalance = (await swapPairContract.getUserBalance(wallet.walletContract.keyPair)).fieldVB.toNumber();
-                    expect(userVBalance).equal(expectedBalance);
-                }
+            for (let walletId = 0; walletId < walletsCount; walletId++) {
+                logger.log(`Wallet #${walletId+1}`)
+                let wallet = tip3Tokens[0].wallets[walletId];
+                let userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`User balance befor withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
+                let output = await swapPairContract.getUserLPBalance(wallet.keyPair);
+                let expectedBalance = {
+                    t1: Number(userVBalance.tokenBalance1) + Number(output.tokenBalance1),
+                    t2: Number(userVBalance.tokenBalance2) + Number(output.tokenBalance2)
+                };
+
+                let tokensWithdrawed = (await swapPairContract.withdrawLiquidity(
+                    Number(output.tokenBalance1),
+                    Number(output.tokenBalance2),
+                    wallet.keyPair
+                )).decoded.output;
+                logger.log(`Withdrawed: ${tokensWithdrawed.withdrawedFirstTokenAmount}, ${tokensWithdrawed.withdrawedSecondTokenAmount}`);
+                userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
+                expect(userVBalance.tokenBalance1.toNumber()).equal(expectedBalance.t1);
+                expect(userVBalance.tokenBalance2.toNumber()).equal(expectedBalance.t2);
             }
 
             let output = await swapPairContract.getLPTokens();
@@ -465,21 +479,41 @@ describe('Test of swap pairs', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT * 5);
         try {
+            let spi = await swapPairContract.getPairInfo();
+            let counter = 0;
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                let field = `tokenBalance${tokenId+1}`;
+                let rootTokenField = `tokenRoot${tokenId+1}`;
+                let balanceField = `tokenBalance${tokenId+1}`;
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    let wallet = tip3Tokens[tokenId].wallet[walletId];
+                    logger.log(`Transferring tokens to #${walletId+1} wallet of ${tokenId+1} token`);
+                    let wallet = tip3Tokens[tokenId].wallets[walletId];
                     let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                    let walletBalance = (await wallet.getDetails()).balance.toNumber();
-                    let resultBalance = walletBalance + output[field].toNumber();
-                    output = await swapPairContract.withdrawTokens(
-                        swapPairContract.wallets[tokenId],
-                        wallet.walletContract.address,
-                        output[field],
-                        wallet.keyPair
-                    );
-                    walletBalance = (await wallet.getDetails()).balance.toNumber();
-                    expect(walletBalance).to.be('Number').and.equal(resultBalance);
+                    logger.log(`Output of call: ${JSON.stringify(output)}`);
+                    if (output[balanceField] > 0) {
+                        let walletBalance = (await wallet.getDetails()).balance.toNumber();
+                        let resultBalance = walletBalance + output[balanceField].toNumber();
+                        output = await swapPairContract.withdrawTokens(
+                            spi[rootTokenField],
+                            wallet.walletContract.address,
+                            output[balanceField],
+                            wallet.keyPair
+                        );
+                        walletBalance = 0;
+                        counter = 0;
+                        while (walletBalance == 0) {
+                            if (counter > 10) {
+                                throw new Error(
+                                    `Target wallet did not receive tokens. Wallet address: ${wallet.walletContract.address}, `
+                                    `token root: ${spi[rootTokenField]}, `
+                                    `swap pair wallet: ${spi['tokenWallet'+(tokenId+1)]}`
+                                );
+                            }
+                            counter++;
+                            walletBalance = (await wallet.getDetails()).balance.toNumber();
+                            await sleep(2000);
+                        }
+                        expect(walletBalance).equal(resultBalance);
+                    }
                 }
             }
         } catch (err) {
