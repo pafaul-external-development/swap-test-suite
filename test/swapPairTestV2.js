@@ -503,14 +503,16 @@ describe('Test of swap pairs', async function() {
                         while (walletBalance == 0) {
                             if (counter > 10) {
                                 throw new Error(
-                                    `Target wallet did not receive tokens. Wallet address: ${wallet.walletContract.address}, `
-                                    `token root: ${spi[rootTokenField]}, `
+                                    `Target wallet did not receive tokens. Wallet address: ${wallet.walletContract.address}, ` +
+                                    `token root: ${spi[rootTokenField]}, ` +
                                     `swap pair wallet: ${spi['tokenWallet'+(tokenId+1)]}`
                                 );
                             }
                             counter++;
-                            walletBalance = (await wallet.getDetails()).balance.toNumber();
-                            await sleep(2000);
+                            output = await wallet.getDetails();
+                            logger.log(`balance: ${output.balance }`);
+                            walletBalance = output.balance.toNumber();
+                            await sleep(5000);
                         }
                         expect(walletBalance).equal(resultBalance);
                     }
@@ -524,6 +526,6 @@ describe('Test of swap pairs', async function() {
     })
 
     it('Yaaaay', async function() {
-        logger.success(`Approximate time of execution - 20+ minutes`);
+        logger.success(`Approximate time of execution at TON OS SE - 2+ minutes`);
     })
 })
