@@ -1,6 +1,6 @@
 const freeton = require('../../src');
 
-class TONHandler {
+class TONStorage {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance 
@@ -10,21 +10,21 @@ class TONHandler {
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;
         this.keyPair = keyPair;
-        this.tonHandlerContract = undefined;
+        this.tonStorageContract = undefined;
     }
 
     /**
      * Loads contract files from file system
      */
     async loadContract() {
-        this.tonHandlerContract = await freeton.requireContract(this.tonInstance, 'TonHandler', this.address);
+        this.tonStorageContract = await freeton.requireContract(this.tonInstance, 'TONStorage', this.address);
     }
 
     /**
      * Deploy contract
      */
     async deploy() {
-        return await this.tonHandlerContract.deploy({
+        return await this.tonStorageContract.deploy({
             constructorParams: {},
             initParams: {},
             initialBalance: freeton.utils.convertCrystal('2', 'nano'),
@@ -39,7 +39,7 @@ class TONHandler {
      * @param {Number} amount 
      */
     async sendTONTo(address, amount) {
-        await this.tonHandlerContract.run(
+        await this.tonStorageContract.run(
             'sendTONTo', {
                 dest: address,
                 amount: amount
@@ -49,4 +49,4 @@ class TONHandler {
     }
 }
 
-module.exports = TONHandler;
+module.exports = TONStorage;

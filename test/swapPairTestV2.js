@@ -9,7 +9,7 @@ const Giver = require('../contractWrappers/giverContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
-const TONHandler = require('../contractWrappers/util/tonHandler');
+const TONStorage = require('../contractWrappers/util/tonStorage');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
@@ -29,7 +29,7 @@ const ton = new freeton.TonWrapper({
 
 var rootSwapContract;
 var swapPairContract;
-var tonHandlers = [];
+var tonStorages = [];
 var tip3Tokens = [];
 var tip3TokensConfig = [];
 
@@ -191,13 +191,13 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT * 5);
         try {
             for (let index = 0; index < ton.keys.length; index++) {
-                tonHandlers.push(new TONHandler(ton, {}, ton.keys[index]));
-                await tonHandlers[index].loadContract();
+                tonStorages.push(new TONStorage(ton, {}, ton.keys[index]));
+                await tonStorages[index].loadContract();
             }
 
             logger.log('Deploying contracts');
-            for (let index = 0; index < tonHandlers.length; index++) {
-                await tonHandlers[index].deploy();
+            for (let index = 0; index < tonStorages.length; index++) {
+                await tonStorages[index].deploy();
             }
         } catch (err) {
             console.log(err);
@@ -363,8 +363,8 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT * 5);
 
         try {
-            for (let contractIndex = 0; contractIndex < tonHandlers.length; contractIndex++) {
-                await tonHandlers[contractIndex].sendTONto(
+            for (let contractIndex = 0; contractIndex < tonStorages.length; contractIndex++) {
+                await tonStorages[contractIndex].sendTONto(
                     swapPairContract.swapPairContract.address,
                     freeton.utils.convertCrystal('1', 'nano')
                 );
@@ -375,7 +375,7 @@ describe('Test of swap pairs', async function() {
                     if (counter > RETRIES)
                         throw new Error(
                             `Swap pair did not receive TONs in ${RETRIES} retries. ` +
-                            `Contract address: ${tonHandlers[contractIndex].tonHandlerContract.address}`
+                            `Contract address: ${tonStorages[contractIndex].tonStorageContract.address}`
                         );
                     counter++;
                     output = (await swapPairContract.getUserTONBalance(ton.keys[contractIndex])).userBalance;
