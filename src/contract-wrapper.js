@@ -178,13 +178,19 @@ class ContractWrapper {
                 this.tonWrapper.giverConfig.address,
             );
 
-            await giverContract.run('sendGrams', {
-                    dest: futureAddress,
-                    amount: initialBalance,
-                }
-                //this.tonWrapper.giverConfig.keyPair.public ? this.tonWrapper.giverConfig.keyPair : undefined
-            );
-
+            if (giverContract.abi.functions.find((element) => element.name == 'sendGrams'))
+                await giverContract.run('sendGrams', {
+                        dest: futureAddress,
+                        amount: initialBalance,
+                    },
+                    this.tonWrapper.giverConfig.keyPair
+                );
+            else
+                await giverContract.run('grant', {
+                        addr: futureAddress
+                    },
+                    this.tonWrapper.giverConfig.keyPair
+                );
             // Wait for receiving grams
             await this.tonWrapper.ton.net.wait_for_collection({
                 collection: 'accounts',

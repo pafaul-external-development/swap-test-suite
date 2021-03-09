@@ -15,6 +15,9 @@ bash ${COMPILE_SH} ${SC_DIR}/RIP-3/tests CallbackTestContract $TARGET_DIR
 bash ${COMPILE_SH} ${SC_DIR}/RIP-3/tests DeployEmptyWalletFor $TARGET_DIR
 
 bash ${COMPILE_SH} ${SC_DIR}/additional/ GiverContract ${TARGET_DIR}
+bash ${COMPILE_SH} ${SC_DIR}/additional/ DevNetGiver ${TARGET_DIR}
+bash ${COMPILE_SH} ${SC_DIR}/additional/ PairDeployer ${TARGET_DIR}
+bash ${COMPILE_SH} ${SC_DIR}/additional/ TONStorage ${TARGET_DIR}
 
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair RootSwapPairContract $TARGET_DIR
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair SwapPairContract $TARGET_DIR
