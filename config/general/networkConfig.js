@@ -3,7 +3,7 @@ let tonOSSE = {
 }
 
 let devnet = {
-    network: 'https://net.ton.dev/'
+    network: 'https://net.ton.dev'
 }
 
-module.exports = tonOSSE;
+module.exports = devnet;

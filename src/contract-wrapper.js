@@ -352,7 +352,7 @@ class ContractWrapper {
     }
 
     async getRunMessage(functionName, input = {}, _keyPair) {
-        const keyPair = _keyPair === undefined ? this.tonWrapper.keys[0] : _keyPair;
+        const keyPair = _keyPair; // === undefined ? this.tonWrapper.keys[0] : _keyPair;
 
         let encodeParams = {
             address: this.address,
