@@ -39,12 +39,18 @@ class TONStorage {
      * @param {Number} amount 
      */
     async sendTONTo(address, amount) {
-        await this.tonStorageContract.run(
+        return await this.tonStorageContract.run(
             'sendTONTo', {
                 dest: address,
                 amount: amount
             },
             this.keyPair
+        )
+    }
+
+    async getPk() {
+        return await this.tonStorageContract.runLocal(
+            'getPk', {}, {}
         )
     }
 }
