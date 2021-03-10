@@ -45,6 +45,10 @@ var giverSC = new freeton.ContractWrapper(
     giverConfig.address,
 );
 
+function toHex(str) {
+    return Buffer.from(str, 'utf8').toString('hex');
+}
+
 /**
  * Copy JSON
  * @param {JSON} json 
@@ -198,7 +202,25 @@ describe('Test of swap pairs', async function() {
             logger.log('Deploying contracts');
             for (let index = 0; index < tonStorages.length; index++) {
                 await tonStorages[index].deploy();
+                logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
+                logger.log(`${tonStorages[index].keyPair.public}`);
+                logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
+                // let th = tonStorages[0];
+                // output = await th.sendTONTo(th.tonStorageContract.address, freeton.utils.convertCrystal('0.1', 'nano'));
+                // logger.log(JSON.stringify(output, null, '\t'));
+                // await sleep(10000);
+                // l = await th.tonStorageContract.run('t', {}, th.keyPair);
+                // logger.log(`${JSON.stringify(l.decoded.output, null, '\t')}`);
+                // output = await th.tonStorageContract.runLocal('getPkCell', {}, {});
+                // logger.log(`${JSON.stringify(output)}`);
+                // output = (await th.tonStorageContract.runLocal('tf', { tc: output }, {}));
+                // logger.log(`${JSON.stringify(output)}`);
+                // output = JSON.parse(JSON.stringify(output));
+                // output = await th.tonStorageContract.runLocal('stoiTest', { a: toHex(Buffer.from(output.data).toString()) }, {});
+                // logger.log(`${JSON.stringify(output)}`);
+                // process.exit(0);
             }
+
         } catch (err) {
             console.log(err);
             logger.error(JSON.stringify(err, null, '\t'));
@@ -257,7 +279,7 @@ describe('Test of swap pairs', async function() {
         }
     })
 
-    it('Get root swap pait contract information', async function() {
+    it('Get root swap pair contract information', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT);
 
@@ -364,7 +386,7 @@ describe('Test of swap pairs', async function() {
 
         try {
             for (let contractIndex = 0; contractIndex < tonStorages.length; contractIndex++) {
-                await tonStorages[contractIndex].sendTONto(
+                await tonStorages[contractIndex].sendTONTo(
                     swapPairContract.swapPairContract.address,
                     freeton.utils.convertCrystal('1', 'nano')
                 );
@@ -378,7 +400,9 @@ describe('Test of swap pairs', async function() {
                             `Contract address: ${tonStorages[contractIndex].tonStorageContract.address}`
                         );
                     counter++;
-                    output = (await swapPairContract.getUserTONBalance(ton.keys[contractIndex])).userBalance;
+                    output = await swapPairContract.getUserTONBalance(ton.keys[contractIndex]);
+                    console.log(output);
+                    output = output.toNumber();
                     await sleep(2000);
                 }
             }
@@ -409,7 +433,6 @@ describe('Test of swap pairs', async function() {
                 }
             }
 
-            logger.log(`Last address: ${await swapPairContract.swapPairContract.runLocal('_getT', {}, {})}`);
             logger.success('Transfer finished');
 
         } catch (err) {
@@ -435,6 +458,7 @@ describe('Test of swap pairs', async function() {
 
             logger.success('Tokens credited successfully');
         } catch (err) {
+            console.log(err);
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
