@@ -32,10 +32,10 @@ let giverSC = new freeton.ContractWrapper(
 
 async function main() {
     await ton.setup(1);
-    let lilbot = await freeton.requireContract(ton, 'testBot');
+    let lilbot = await freeton.requireContract(ton, 'debot');
     await lilbot.deploy({
         constructorParams: {
-            botAbi: toHex(JSON.stringify(lilbot.abi))
+            swapDebotAbi: toHex(JSON.stringify(lilbot.abi))
         },
         initParams: {},
         initialBalance: freeton.utils.convertCrystal(10, 'nano'),

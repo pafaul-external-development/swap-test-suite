@@ -22,4 +22,6 @@ bash ${COMPILE_SH} ${SC_DIR}/additional/ TONStorage ${TARGET_DIR}
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair RootSwapPairContract $TARGET_DIR
 bash ${COMPILE_SH} ${SC_DIR}/SwapPair SwapPairContract $TARGET_DIR
 
+bash ${COMPILE_SH} ${SC_DIR}/debots debot ${TARGET_DIR}
+
 # bash ${COMPILE_SH} ${SC_DIR}/ test $TARGET_DIR
