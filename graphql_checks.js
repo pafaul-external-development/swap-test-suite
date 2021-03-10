@@ -30,7 +30,7 @@ async function main() {
         await ton.ton.net.query_collection({
             collection: 'messages',
             filter: {
-                id: { eq: a1 },
+                src: { eq: a1 },
                 //account_addr: { eq: a1 },
                 // dst: { eq: a2 }
             },
