@@ -167,30 +167,40 @@ class ContractWrapper {
             address: futureAddress,
         } = await this.createDeployMessage(...deployParams);
 
+        if (initialBalance > 0) {
+            this.debugLog('Sending initial balance to contract');
 
-        // Send grams from giver to pay for contract deployment
-        const giverContract = new ContractWrapper(
-            this.tonWrapper,
-            this.tonWrapper.giverConfig.abi,
-            null,
-            this.tonWrapper.giverConfig.address,
-        );
+            // Send grams from giver to pay for contract deployment
+            const giverContract = new ContractWrapper(
+                this.tonWrapper,
+                this.tonWrapper.giverConfig.abi,
+                null,
+                this.tonWrapper.giverConfig.address,
+            );
 
-        await giverContract.run('sendGrams', {
-            dest: futureAddress,
-            amount: initialBalance,
-        }, null);
-
-        // Wait for receiving grams
-        await this.tonWrapper.ton.net.wait_for_collection({
-            collection: 'accounts',
-            filter: {
-                id: { eq: futureAddress },
-                balance: { gt: `0x0` }
-            },
-            result: 'balance'
-        });
-
+            if (giverContract.abi.functions.find((element) => element.name == 'sendGrams'))
+                await giverContract.run('sendGrams', {
+                        dest: futureAddress,
+                        amount: initialBalance,
+                    },
+                    this.tonWrapper.giverConfig.keyPair
+                );
+            else
+                await giverContract.run('grant', {
+                        addr: futureAddress
+                    },
+                    this.tonWrapper.giverConfig.keyPair
+                );
+            // Wait for receiving grams
+            await this.tonWrapper.ton.net.wait_for_collection({
+                collection: 'accounts',
+                filter: {
+                    id: { eq: futureAddress },
+                    balance: { gt: `0x0` }
+                },
+                result: 'balance'
+            });
+        }
 
         let error;
         for (const attempt in _.range(this.tonWrapper.deployAttempts)) {
@@ -320,6 +330,7 @@ class ContractWrapper {
     async run(functionName, input = {}, _keyPair) {
         let error;
 
+        this.debugLog(`executing function ${functionName}`);
         for (const attempt in _.range(this.tonWrapper.runAttempts)) {
             this.debugLog(`Run attempt #${attempt}`);
 
@@ -332,6 +343,7 @@ class ContractWrapper {
 
                 return status;
             } catch (e) {
+                this.debugLog(JSON.stringify(e));
                 error = e;
             }
         }
@@ -340,7 +352,7 @@ class ContractWrapper {
     }
 
     async getRunMessage(functionName, input = {}, _keyPair) {
-        const keyPair = _keyPair === undefined ? this.tonWrapper.keys[0] : _keyPair;
+        const keyPair = _keyPair; // === undefined ? this.tonWrapper.keys[0] : _keyPair;
 
         let encodeParams = {
             address: this.address,

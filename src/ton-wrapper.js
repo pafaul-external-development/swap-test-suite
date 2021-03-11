@@ -34,7 +34,7 @@ class TonWrapper {
 
         if (tonAfterRunSleepMs === undefined) {
             if (this.config.network === 'https://net.ton.dev') {
-                await utils.sleep(4000);
+                await utils.sleep(15000);
             } else { // Default
                 await utils.sleep(100);
             }
