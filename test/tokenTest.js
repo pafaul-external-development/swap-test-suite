@@ -6,8 +6,6 @@ const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/gen
 const testScenario = require('../config/general/testScenario');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
-
-const giverConfig = require('../config/contracts/giverConfig');
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
