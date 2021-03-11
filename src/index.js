@@ -5,9 +5,9 @@ const { Migration } = require('./migration');
 const utils = require('./utils');
 
 module.exports = {
-  ContractWrapper,
-  TonWrapper,
-  Migration,
-  requireContract,
-  utils,
+    ContractWrapper,
+    TonWrapper,
+    Migration,
+    requireContract,
+    utils,
 };
