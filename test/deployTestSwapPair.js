@@ -5,7 +5,6 @@ const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../c
 
 const RootContract = require('../contractWrappers/tip3/rootContract');
 const Wallet = require('../contractWrappers/tip3/walletContract');
-const Giver = require('../contractWrappers/giverContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
@@ -17,8 +16,6 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const wallet = require('../config/contracts/walletParameters');
-const { root } = require('../config/contracts/swapPairContractsConfig');
 const { sleep } = require('../src/utils');
 
 const ton = new freeton.TonWrapper({
@@ -35,8 +32,6 @@ var tip3TokensConfig = [];
 
 var keysRequired = 0;
 var transferAmount = [];
-var totalLPTokens = [];
-var walletsCount = 0;
 
 var giverSC = new freeton.ContractWrapper(
     ton,
@@ -44,11 +39,6 @@ var giverSC = new freeton.ContractWrapper(
     null,
     giverConfig.address,
 );
-
-function toHex(str) {
-    return Buffer.from(str, 'utf8').toString('hex');
-}
-
 /**
  * Copy JSON
  * @param {JSON} json 
@@ -205,20 +195,6 @@ describe('Test of swap pairs', async function() {
                 logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
                 logger.log(`${tonStorages[index].keyPair.public}`);
                 logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
-                // let th = tonStorages[0];
-                // output = await th.sendTONTo(th.tonStorageContract.address, freeton.utils.convertCrystal('0.1', 'nano'));
-                // logger.log(JSON.stringify(output, null, '\t'));
-                // await sleep(10000);
-                // l = await th.tonStorageContract.run('t', {}, th.keyPair);
-                // logger.log(`${JSON.stringify(l.decoded.output, null, '\t')}`);
-                // output = await th.tonStorageContract.runLocal('getPkCell', {}, {});
-                // logger.log(`${JSON.stringify(output)}`);
-                // output = (await th.tonStorageContract.runLocal('tf', { tc: output }, {}));
-                // logger.log(`${JSON.stringify(output)}`);
-                // output = JSON.parse(JSON.stringify(output));
-                // output = await th.tonStorageContract.runLocal('stoiTest', { a: toHex(Buffer.from(output.data).toString()) }, {});
-                // logger.log(`${JSON.stringify(output)}`);
-                // process.exit(0);
             }
 
         } catch (err) {
@@ -285,7 +261,6 @@ describe('Test of swap pairs', async function() {
 
         try {
             let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
-            // TODO: здесь должны быть нормальные проверки на полученную информацию
             logger.log(`Swap pair info: ${rootSwapPairInfo.rootContract}`);
         } catch (err) {
             logger.error(JSON.stringify(err, null, '\t'));
@@ -307,8 +282,6 @@ describe('Test of swap pairs', async function() {
                 swapConfig.pair.initParams.token1,
                 swapConfig.pair.initParams.token2
             );
-
-            // expect(output).equal(true);
 
             logger.success('Pair created');
 
@@ -332,9 +305,9 @@ describe('Test of swap pairs', async function() {
                 throw new Error(`Strange output of getPairInfo function: ${JSON.stringify(output)}`)
             }
 
-            // expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1, 'Invalid token1 address');
-            // expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2, 'Invalid token2 address');
-            // expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address, 'Invalid root address');
+            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1, 'Invalid token1 address');
+            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2, 'Invalid token2 address');
+            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address, 'Invalid root address');
 
             logger.log(`Swap pair address: ${output.swapPairAddress}`);
             swapPairContract.swapPairContract.address = output.swapPairAddress;
@@ -356,9 +329,9 @@ describe('Test of swap pairs', async function() {
         try {
             let output = await swapPairContract.getPairInfo();
             logger.log(JSON.stringify(output, null, '\t'));
-            // expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
-            // expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
-            // expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
+            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
+            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
+            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
             while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
                 if (counter > RETRIES) {
@@ -453,7 +426,7 @@ describe('Test of swap pairs', async function() {
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
                     let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                    // expect(Number(output[field])).equal(transferAmount[tokenId], 'Invalid balance');
+                    expect(Number(output[field])).equal(transferAmount[tokenId], 'Invalid balance');
                 }
             }
 
@@ -483,39 +456,7 @@ describe('Test of swap pairs', async function() {
         }
     })
 
-    it('Getting information about swap pair from swap pair', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        let counter = 0;
-        try {
-            let output = await swapPairContract.getPairInfo();
-            logger.log(JSON.stringify(output, null, '\t'));
-            // expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
-            // expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
-            // expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
-
-            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
-                if (counter > RETRIES) {
-                    throw new Error(
-                        `Cannot receive wallet address in ${RETRIES} retries`
-                    )
-                }
-                counter++;
-                output = await swapPairContract.getPairInfo();
-                await sleep(2000);
-            }
-
-            swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
-
-            logger.success('Information check passed');
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
     it('Yaaaay', async function() {
-        logger.success(`Approximate time of execution at TON OS SE - 2+ minutes`);
+        logger.success(`Approximate time of execution at TON OS SE - 1 minute`);
     })
 })

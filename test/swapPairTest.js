@@ -1,14 +1,15 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
+const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../config/general/constants');
 
-const RootContract = require('../contractWrappers/rootContract');
-const Wallet = require('../contractWrappers/walletContract');
+const RootContract = require('../contractWrappers/tip3/rootContract');
+const Wallet = require('../contractWrappers/tip3/walletContract');
 const Giver = require('../contractWrappers/giverContract');
-const WalletDeployer = require('../contractWrappers/walletDeployer');
-const RootSwapPairContarct = require('../contractWrappers/rootSwapPairContract');
-const SwapPairContract = require('../contractWrappers/swapPairContract');
+const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
+const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
+const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
+const TONStorage = require('../contractWrappers/util/tonStorage');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
@@ -16,6 +17,9 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
+const wallet = require('../config/contracts/walletParameters');
+const { root } = require('../config/contracts/swapPairContractsConfig');
+const { sleep } = require('../src/utils');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -25,9 +29,14 @@ const ton = new freeton.TonWrapper({
 
 var rootSwapContract;
 var swapPairContract;
-var pair1;
-var pair2;
+var tonStorages = [];
+var tip3Tokens = [];
+var tip3TokensConfig = [];
 
+var keysRequired = 0;
+var transferAmount = [];
+var totalLPTokens = [];
+var walletsCount = 0;
 
 var giverSC = new freeton.ContractWrapper(
     ton,
@@ -35,6 +44,18 @@ var giverSC = new freeton.ContractWrapper(
     null,
     giverConfig.address,
 );
+
+function toHex(str) {
+    return Buffer.from(str, 'utf8').toString('hex');
+}
+
+/**
+ * Copy JSON
+ * @param {JSON} json 
+ */
+function copyJSON(json) {
+    return JSON.parse(JSON.stringify(json));
+}
 
 /**
  * Send grams to address
@@ -52,230 +73,537 @@ async function sendGrams(giver, address, amount) {
 }
 
 /**
- * 
+ * Initial token config creation
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} walletConfig 
- * @param {String} callbackAddress
+ * @param {JSON} config 
  */
-function initialTokenSetup(tonInstance, walletConfig, callbackAddress) {
-    let i = 0;
-    let updatedConfig = {
-        pairs: []
-    };
+function initialTokenSetup(tonInstance, config) {
+    let tokenConfig = copyJSON(config);
+    tokenConfig.walletsConfig = [];
 
-    for (let pair of walletConfig.pairs) {
-        pair.wallet1.keys = tonInstance.keys[i * 3 + 0];
-        pair.wallet1.config.initParams.wallet_public_key = '0x' + pair.wallet1.keys.public;
-        pair.wallet2.keys = tonInstance.keys[i * 3 + 1];
-        pair.wallet2.config.initParams.wallet_public_key = '0x' + pair.wallet2.keys.public;
-        pair.root.keys = tonInstance.keys[i * 3 + 2];
-        pair.root.config.initParams.root_public_key = '0x' + pair.root.keys.public;
+    tokenConfig.root.keys = ton.keys[0];
+    tokenConfig.root.config.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
 
-        pair.callbackAddress = callbackAddress;
-        i += 1;
-
-        updatedConfig.pairs.push(pair);
+    for (let i = 0; i < config.walletsAmount; i++) {
+        let walletConfig = copyJSON(config.wallet);
+        walletConfig.keys = ton.keys[i];
+        walletConfig.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i].public;
+        tokenConfig.walletsConfig.push(walletConfig);
     }
 
-    return updatedConfig;
+    return tokenConfig;
 }
 
 /**
- * 
+ * Initial swap config
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} walletConfig 
+ * @param {JSON} config 
+ * @param {Array} tokens
  */
-function setupSwapKeys(tonInstance, swapConfig) {
-    swapConfig.root.keys = tonInstance.keys[0];
-    swapConfig.pair.keys = tonInstance.keys[1];
-    return swapConfig;
+function initialSwapSetup(tonInstance, config, tokens) {
+    config.root.keyPair = tonInstance.keys[0];
+    config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
+
+    config.pair.keyPair = tonInstance.keys[1];
+    config.pair.initParams.token1 = tokens[0].root.rootContract.address;
+    config.pair.initParams.token2 = tokens[1].root.rootContract.address;
+
+    return config;
 }
 
 /**
- * deploy TIP-3 token and 2 wallets
+ * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} pairConfig 
- * @param {Giver} giverSC 
+ * @param {JSON} tokenConfig 
+ * @param {freeton.ContractWrapper} giverSC
  */
-async function deployTIP3(tonInstance, pairConfig, giverSC) {
+async function deployTIP3(tonInstance, tokenConfig, giverSC) {
+    let rootSC;
+    let proxyContract;
+    let wallets = [];
 
     logger.log('#####################################');
     logger.log('Initial stage');
 
-    let wallet1 = new Wallet(tonInstance, pairConfig.wallet1.config, pairConfig.wallet1.keys);
-    let wallet2 = new Wallet(tonInstance, pairConfig.wallet2.config, pairConfig.wallet2.keys);
-    let rootSC = new RootContract(tonInstance, pairConfig.root.config, pairConfig.root.keys);
-    let dw = new WalletDeployer(tonInstance, { initParams: {}, constructorParams: {} }, pairConfig.root.keys);
+    for (let contractId = 0; contractId < tokenConfig.walletsAmount; contractId++) {
+        let walletConfig = tokenConfig.walletsConfig[contractId];
+        wallets.push(new Wallet(tonInstance, walletConfig.config, walletConfig.keys));
+        await wallets[contractId].loadContract();
+    }
 
-    logger.log('Loading wallet contracts');
-    await wallet1.loadContract();
-    await wallet2.loadContract();
-
-    logger.log('Loading root contract');
-    pairConfig.root.config.initParams.wallet_code = wallet1.walletContract.code;
-    rootSC.setConfig(pairConfig.root.config);
+    tokenConfig.root.config.initParams.wallet_code = wallets[0].walletContract.code;
+    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
     await rootSC.loadContract();
 
     logger.log('Deploying root contract');
-
     await rootSC.deployContract();
 
-    logger.log('Load proxy contract');
+    logger.log('Loading and deploying proxy contract');
+    proxyContract = new WalletDeployer(tonInstance, {
+        initParams: {},
+        constructorParams: {}
+    }, tokenConfig.root.keys);
+    await proxyContract.loadContract();
+    await proxyContract.deployContract(rootSC.rootContract.address);
 
-    await dw.loadContract();
+    logger.log('Deploying wallet contracts and sending them tons');
+    for (let contractId = 0; contractId < wallets.length; contractId++) {
+        let walletConfig = wallets[contractId].initParams;
+        await proxyContract.deployWallet(walletConfig.wallet_public_key, walletConfig.owner_address);
 
-    logger.log('Deploy proxy contract');
+        let calculatedAddress = await rootSC.calculateFutureWalletAddress(walletConfig.wallet_public_key, walletConfig.owner_address);
+        wallets[contractId].walletContract.address = calculatedAddress;
 
-    await dw.deployContract(rootSC.rootContract.address);
-    logger.success(`DW address: ${dw.walletDeployContract.address}`);
+        await sendGrams(giverSC, calculatedAddress, CRYSTAL_AMOUNT);
+    }
 
-    logger.log('Deploying wallets');
-
-    await dw.deployWallet(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
-    await dw.deployWallet(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
-    logger.success('Wallets deployed');
-
-    logger.log('Calculating future wallet addresses');
-
-    let w1address = await rootSC.calculateFutureWalletAddress(wallet1.initParams.wallet_public_key, wallet1.initParams.owner_address);
-    let w2address = await rootSC.calculateFutureWalletAddress(wallet2.initParams.wallet_public_key, wallet2.initParams.owner_address);
-
-    wallet1.walletContract.address = w1address;
-    wallet2.walletContract.address = w2address;
-
-    logger.log('Distributing tons');
-
-    await sendGrams(giverSC, wallet1.walletContract.address, CRYSTAL_AMOUNT);
-    await sendGrams(giverSC, wallet2.walletContract.address, CRYSTAL_AMOUNT);
-    await sendGrams(giverSC, rootSC.rootContract.address, CRYSTAL_AMOUNT);
-    logger.success('tonInstance crystal distribution finished');
-
-    logger.log('Setting callback address');
-    await wallet1.setCallbackAddress(pairConfig.callbackAddress);
-    await wallet2.setCallbackAddress(pairConfig.callbackAddress);
-
-    logger.log('Minting tokens');
-
-    await rootSC.mintTokensToWallets(wallet1, wallet2, pairConfig.tokensAmount);
-    logger.success(`Tokens minted successfully`);
+    logger.log('Minting tokens to wallets');
+    for (let contractId = 0; contractId < wallets.length; contractId++) {
+        await rootSC.mintTokensToWallet(wallets[contractId], tokenConfig.tokensAmount);
+    }
 
     return {
-        w1: wallet1,
-        w2: wallet2,
-        rc: rootSC
+        wallets: wallets,
+        root: rootSC
     }
 }
 
 describe('Test of swap pairs', async function() {
-    it('Initial setup', async function() {
+    it('Preinit stage', async function() {
+        for (let i = 0; i < pairsConfig.pairs.length; i++)
+            if (pairsConfig.pairs[i].walletsAmount > keysRequired)
+                keysRequired = pairsConfig.pairs[i].walletsAmount;
+    })
+
+    it('Initial stage', async function() {
         logger.log('#####################################');
         logger.log('Setting up ton instance');
-        await ton.setup(10);
-        swapConfig = setupSwapKeys(ton, swapConfig);
-        logger.success('TON instance set up');
-    });
-
-    it('Load swap pair contract', async function() {
-        logger.log('#####################################');
-        logger.log('Loading swap pair contract and configuring configs')
-        swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keys);
-        await swapPairContract.loadContract();
-
-        let futureSwapPairAddress = await swapPairContract.deployContract(true);
-
-        pairsConfig = initialTokenSetup(ton, pairsConfig, futureSwapPairAddress);
-        logger.success('Swap pair loaded');
-    });
-
-    it('Load root swap pair contract', async function() {
-        logger.log('#####################################');
-        logger.log('Loading root swap pair contract');
-        swapConfig.root.initParams.swapPairCode = swapPairContract.swapPairContract.code;
-        swapConfig.root.initParams.swapPairCodeVersion = {
-            contractCodeVersion: 1
-        };
-        swapConfig.root.initParams.ownerPubkey = '0x' + ton.keys[0].public;
-        rootSwapContract = new RootSwapPairContarct(ton, swapConfig.root, swapConfig.root.keys);
-        await rootSwapContract.loadContract();
-        logger.success('Contract loaded');
-    });
-
-    it('Deploy root swap pair contract', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-        await rootSwapContract.deployContract();
-        logger.log(`Contract address: ${rootSwapContract.rootSwapPairContract.address}`)
-        logger.success('Contract deployed')
-    })
-
-    it('Deploying TIP-3 pairs', async function() {
-        logger.log('#####################################');
-        logger.log('Creating TIP-3 tokens');
-        this.timeout(DEFAULT_TIMEOUT);
-        pair1 = await deployTIP3(ton, pairsConfig.pairs[0], giverSC);
-        pair2 = await deployTIP3(ton, pairsConfig.pairs[1], giverSC);
-        logger.success('TIP-3 tokens created successfully');
-    });
-
-    it(`Checking root function 'getServiceInformation'`, async function() {
-        logger.log('#####################################');
-        logger.log('Getting service information');
-        this.timeout(DEFAULT_TIMEOUT);
-        let serviceInfo = await rootSwapContract.getServiceInformation();
-        logger.success('Service information received');
-    })
-
-    it(`Checking root function 'checkIfPairExists'`, async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-        let pe1 = await rootSwapContract.checkIfPairExists(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
-        let pe2 = await rootSwapContract.checkIfPairExists(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-        logger.log(JSON.stringify(pe1, null, '\t'));
-        logger.success('check for checkIfPairExists finished');
-    });
-
-    it('Deploying pair', async function() {
-        logger.log('#####################################');
-        logger.log('Deploying swap pair from root contract');
-        this.timeout(DEFAULT_TIMEOUT);
-        await rootSwapContract.deploySwapPair(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
-        logger.success('Pair deployed');
-    });
-
-    it('Get XOR', async function() {
-        logger.log('#####################################');
-        logger.log('Getting XOR');
-        this.timeout(DEFAULT_TIMEOUT);
-        logger.log(await rootSwapContract.getXOR(pair1.rc.rootContract.address, pair2.rc.rootContract.address));
-        logger.log(await rootSwapContract.getXOR(pair1.rc.rootContract.address, pair2.rc.rootContract.address));
-        logger.success('asdf');
-    })
-
-    it('Trying to deploy already deployed pair', async function() {
-        logger.log('#####################################');
-        logger.log('This must fail :)');
-        this.timeout(DEFAULT_TIMEOUT);
         try {
-            await rootSwapContract.deploySwapPair(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-            throw new Error('Contract finished successfully, but had to fail');
-        } catch (e) {
-            logger.success('Task successfully failed');
+            await ton.setup(keysRequired);
+            ton.debug = true;
+            for (let tokenId = 0; tokenId < pairsConfig.pairs.length; tokenId++)
+                tip3TokensConfig.push(initialTokenSetup(ton, pairsConfig.pairs[tokenId]));
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
         }
-    });
+    })
 
-    it('Check if pair exists after deploy', async function() {
+    it('Deploying ton handlers', async function() {
+        logger.log('#####################################');
+        logger.log('Loading contracts');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+        try {
+            for (let index = 0; index < ton.keys.length; index++) {
+                tonStorages.push(new TONStorage(ton, {}, ton.keys[index]));
+                await tonStorages[index].loadContract();
+            }
+
+            logger.log('Deploying contracts');
+            for (let index = 0; index < tonStorages.length; index++) {
+                await tonStorages[index].deploy();
+                logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
+                logger.log(`${tonStorages[index].keyPair.public}`);
+                logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
+                // let th = tonStorages[0];
+                // output = await th.sendTONTo(th.tonStorageContract.address, freeton.utils.convertCrystal('0.1', 'nano'));
+                // logger.log(JSON.stringify(output, null, '\t'));
+                // await sleep(10000);
+                // l = await th.tonStorageContract.run('t', {}, th.keyPair);
+                // logger.log(`${JSON.stringify(l.decoded.output, null, '\t')}`);
+                // output = await th.tonStorageContract.runLocal('getPkCell', {}, {});
+                // logger.log(`${JSON.stringify(output)}`);
+                // output = (await th.tonStorageContract.runLocal('tf', { tc: output }, {}));
+                // logger.log(`${JSON.stringify(output)}`);
+                // output = JSON.parse(JSON.stringify(output));
+                // output = await th.tonStorageContract.runLocal('stoiTest', { a: toHex(Buffer.from(output.data).toString()) }, {});
+                // logger.log(`${JSON.stringify(output)}`);
+                // process.exit(0);
+            }
+
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Deploying TIP-3', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+        try {
+            for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
+                logger.log(`Deploying ${tokenId+1} TIP-3 token`);
+                tip3Tokens.push(await deployTIP3(ton, tip3TokensConfig[tokenId], giverSC));
+            }
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Initial config of swap contracts', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT);
-        let pe1 = await rootSwapContract.checkIfPairExists(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
-        await rootSwapContract.checkIfPairExists(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-        logger.success('Hooray!')
-    });
+        swapConfig = initialSwapSetup(ton, swapConfig, tip3Tokens);
+    })
 
-    it('Get information about pair', async function() {
+    it('Loading contracts', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 2);
+        try {
+            logger.log('Loading swap pair contract');
+            swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keyPair);
+            await swapPairContract.loadContract();
+
+            logger.log('Loading root swap pair contract');
+            swapConfig.root.constructorParams.spCode = swapPairContract.swapPairContract.code;
+            rootSwapContract = new RootSwapPairContarct(ton, swapConfig.root, swapConfig.root.keyPair);
+            await rootSwapContract.loadContract();
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Deploying root contract', async function() {
         logger.log('#####################################');
         this.timeout(DEFAULT_TIMEOUT);
-        let pi1 = await rootSwapContract.getPairInfo(pair1.rc.rootContract.address, pair2.rc.rootContract.address);
-        await rootSwapContract.getPairInfo(pair2.rc.rootContract.address, pair1.rc.rootContract.address);
-        logger.success('Got pair info');
-    });
+
+        try {
+            await rootSwapContract.deployContract(true);
+            logger.success(`Root swap pair address: ${rootSwapContract.rootSwapPairContract.address}`);
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Get root swap pair contract information', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        try {
+            let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
+            // TODO: здесь должны быть нормальные проверки на полученную информацию
+            logger.log(`Swap pair info: ${rootSwapPairInfo.rootContract}`);
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Deploy swap pair contract from root contract', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        try {
+            await rootSwapContract.deploySwapPair(
+                swapConfig.pair.initParams.token1,
+                swapConfig.pair.initParams.token2
+            );
+
+            let output = await rootSwapContract.checkIfPairExists(
+                swapConfig.pair.initParams.token1,
+                swapConfig.pair.initParams.token2
+            );
+
+            expect(output).equal(true);
+
+            logger.success('Pair created');
+
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Getting information about deployed pair', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        try {
+            let output = await rootSwapContract.getPairInfo(
+                swapConfig.pair.initParams.token1,
+                swapConfig.pair.initParams.token2
+            );
+
+            if (!output.swapPairAddress) {
+                throw new Error(`Strange output of getPairInfo function: ${JSON.stringify(output)}`)
+            }
+
+            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1, 'Invalid token1 address');
+            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2, 'Invalid token2 address');
+            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address, 'Invalid root address');
+
+            logger.log(`Swap pair address: ${output.swapPairAddress}`);
+            swapPairContract.swapPairContract.address = output.swapPairAddress;
+
+            logger.success('Information check passed');
+
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Getting information about swap pair from swap pair', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        let counter = 0;
+        try {
+            let output = await swapPairContract.getPairInfo();
+            logger.log(JSON.stringify(output, null, '\t'));
+            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
+            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
+            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
+
+            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
+                if (counter > RETRIES) {
+                    throw new Error(
+                        `Cannot receive wallet address in ${RETRIES} retries`
+                    )
+                }
+                counter++;
+                output = await swapPairContract.getPairInfo();
+                await sleep(2000);
+            }
+
+            swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
+
+            logger.success('Information check passed');
+        } catch (err) {
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Transferring tons to swap pair wallet', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
+        try {
+            for (let contractIndex = 0; contractIndex < tonStorages.length; contractIndex++) {
+                await tonStorages[contractIndex].sendTONTo(
+                    swapPairContract.swapPairContract.address,
+                    freeton.utils.convertCrystal('1', 'nano')
+                );
+
+                let output = 0;
+                let counter = 0;
+                while (output == 0) {
+                    if (counter > RETRIES)
+                        throw new Error(
+                            `Swap pair did not receive TONs in ${RETRIES} retries. ` +
+                            `Contract address: ${tonStorages[contractIndex].tonStorageContract.address}`
+                        );
+                    counter++;
+                    output = await swapPairContract.getUserTONBalance(ton.keys[contractIndex]);
+                    console.log(output);
+                    output = output.toNumber();
+                    await sleep(2000);
+                }
+            }
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Transferring tokens to swap pair wallet', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
+        try {
+            transferAmount = [];
+            for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++)
+                transferAmount.push(tip3TokensConfig[tokenId].tokensAmount);
+
+            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
+                logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
+                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
+                    logger.log(`transferring tokens from ${walletId+1} wallet`)
+                    await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
+                        swapPairContract.tokenWallets[tokenId],
+                        transferAmount[tokenId]
+                    )
+                }
+            }
+
+            logger.success('Transfer finished');
+
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Checking if all tokens are credited to virtual balance', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        try {
+            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
+                let field = `tokenBalance${tokenId+1}`;
+                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
+                    let wallet = tip3Tokens[tokenId].wallets[walletId];
+                    let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                    expect(Number(output[field])).equal(transferAmount[tokenId], 'Invalid balance');
+                }
+            }
+
+            logger.success('Tokens credited successfully');
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Adding liquidity to pool', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
+        totalLPTokens = [0, 0];
+        walletsCount = tip3Tokens[0].wallets.length < tip3Tokens[1].wallets.length ? tip3Tokens[0].wallets.length : tip3Tokens[1].wallets.length;
+        logger.log(`Wallets for providing liquidity: ${walletsCount}`);
+        try {
+            for (let walletId = 0; walletId < walletsCount; walletId++) {
+                let wallet = tip3Tokens[0].wallets[walletId];
+                let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`Wallet ${walletId+1} providing: ${output.tokenBalance1}, ${output.tokenBalance2}`);
+                await swapPairContract.provideLiquidity(
+                    output.tokenBalance1,
+                    output.tokenBalance2,
+                    wallet.keyPair
+                );
+                totalLPTokens[0] += Number(output.tokenBalance1);
+                totalLPTokens[1] += Number(output.tokenBalance2);
+            }
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Check tokens amount in liquidity pool', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT);
+
+        try {
+            let output = await swapPairContract.getLPTokens();
+            logger.log(`Tokens in LPs: ${Number(output.token1LPAmount)}, ${Number(output.token2LPAmount)}`);
+            expect(Number(output.token1LPAmount)).equal(totalLPTokens[0]);
+            expect(Number(output.token2LPAmount)).equal(totalLPTokens[1]);
+            logger.success('LP tokens amount is equal to tokens added to pool');
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Swap tokens', async function() {
+        logger.log('#####################################');
+        //TODO: token swap checks
+    })
+
+    it('Remove liquidity', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+
+        try {
+            for (let walletId = 0; walletId < walletsCount; walletId++) {
+                logger.log(`Wallet #${walletId+1}`)
+                let wallet = tip3Tokens[0].wallets[walletId];
+                let userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`User balance befor withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
+                let output = await swapPairContract.getUserLPBalance(wallet.keyPair);
+                let expectedBalance = {
+                    t1: Number(userVBalance.tokenBalance1) + Number(output.tokenBalance1),
+                    t2: Number(userVBalance.tokenBalance2) + Number(output.tokenBalance2)
+                };
+
+                let tokensWithdrawed = (await swapPairContract.withdrawLiquidity(
+                    Number(output.tokenBalance1),
+                    Number(output.tokenBalance2),
+                    wallet.keyPair
+                )).decoded.output;
+                logger.log(`Withdrawed: ${tokensWithdrawed.withdrawedFirstTokenAmount}, ${tokensWithdrawed.withdrawedSecondTokenAmount}`);
+                userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
+                logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
+                expect(userVBalance.tokenBalance1.toNumber()).equal(expectedBalance.t1);
+                expect(userVBalance.tokenBalance2.toNumber()).equal(expectedBalance.t2);
+            }
+
+            let output = await swapPairContract.getLPTokens();
+            expect(output.token1LPAmount.toNumber()).equal(0);
+            expect(output.token2LPAmount.toNumber()).equal(0);
+
+            logger.success('Liquidity removed from liquidity pair');
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Withdraw tokens from pair', async function() {
+        logger.log('#####################################');
+        this.timeout(DEFAULT_TIMEOUT * 5);
+        try {
+            let spi = await swapPairContract.getPairInfo();
+            let counter = 0;
+            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
+                let rootTokenField = `tokenRoot${tokenId+1}`;
+                let balanceField = `tokenBalance${tokenId+1}`;
+                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
+                    logger.log(`Transferring tokens to #${walletId+1} wallet of ${tokenId+1} token`);
+                    let wallet = tip3Tokens[tokenId].wallets[walletId];
+                    let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                    logger.log(`Output of call: ${JSON.stringify(output)}`);
+                    if (output[balanceField] > 0) {
+                        let walletBalance = (await wallet.getDetails()).balance.toNumber();
+                        let resultBalance = walletBalance + output[balanceField].toNumber();
+                        output = await swapPairContract.withdrawTokens(
+                            spi[rootTokenField],
+                            wallet.walletContract.address,
+                            output[balanceField],
+                            wallet.keyPair
+                        );
+                        walletBalance = 0;
+                        counter = 0;
+                        while (walletBalance == 0) {
+                            if (counter > 10) {
+                                throw new Error(
+                                    `Target wallet did not receive tokens. Wallet address: ${wallet.walletContract.address}, ` +
+                                    `token root: ${spi[rootTokenField]}, ` +
+                                    `swap pair wallet: ${spi['tokenWallet'+(tokenId+1)]}`
+                                );
+                            }
+                            counter++;
+                            output = await wallet.getDetails();
+                            logger.log(`balance: ${output.balance }`);
+                            walletBalance = output.balance.toNumber();
+                            await sleep(5000);
+                        }
+                        expect(walletBalance).equal(resultBalance);
+                    }
+                }
+            }
+        } catch (err) {
+            console.log(err);
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Yaaaay', async function() {
+        logger.success(`Approximate time of execution at TON OS SE - 2+ minutes`);
+    })
 })

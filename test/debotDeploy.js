@@ -1,13 +1,8 @@
 const freeton = require('../src');
-const { expect } = require('chai');
-const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS } = require('../config/general/constants');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
-
-let pairsConfig = require('../config/contracts/walletsForSwap');
 
 /**
  * Is used to encode text parameters
@@ -23,19 +18,12 @@ const ton = new freeton.TonWrapper({
     seed: seedPhrase
 });
 
-let giverSC = new freeton.ContractWrapper(
-    ton,
-    giverConfig.abi,
-    null,
-    giverConfig.address,
-);
-
 async function main() {
     await ton.setup(1);
-    let lilbot = await freeton.requireContract(ton, 'debot');
-    await lilbot.deploy({
+    let debot = await freeton.requireContract(ton, 'debot');
+    await debot.deploy({
         constructorParams: {
-            swapDebotAbi: toHex(JSON.stringify(lilbot.abi))
+            swapDebotAbi: toHex(JSON.stringify(debot.abi))
         },
         initParams: {},
         initialBalance: freeton.utils.convertCrystal(10, 'nano'),
@@ -43,7 +31,7 @@ async function main() {
         keyPair: ton.keys[0],
     });
 
-    console.log(await lilbot.address);
+    console.log(await debot.address);
     console.log(ton.keys[0]);
     process.exit(0);
 }
