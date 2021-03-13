@@ -1,3 +1,11 @@
+# Introduction
+![photo_2020-12-15_20-21-41](https://user-images.githubusercontent.com/18599919/111032509-ac9fbd80-841d-11eb-9639-843ef2d758b3.jpg)
+Hello there! 
+
+# Links
+[![Channel on Telegram](https://img.shields.io/badge/-TON%20Swap%20TG%20chat-blue)](https://t.me/tonswap) 
+
+
 # TON testing suite
 
 Set of tools for making testing smart contracts on TON easier.
@@ -64,5 +72,6 @@ For testing purposes we created some accounts with finished preparation stage:
 3. They are fully functional :)
 
 Keypair with addresses are in file: [secret file](files/testProfiles.md)
+They will totally work at our site [tonswap.com](https://tonswap.com) too!
 
-Please consider using them for tests. If you want to perform all of above by yourself, please check file [for deploying test swap pair](test/deployTestSwapPair.js) and contact me in TG (@pafaul) if you have any questions about full cycle of interaction with swap pair.
+Please consider using them for tests. If you want to perform all of above by yourself, please check file [for deploying test swap pair](test/deployTestSwapPair.js) and contact our team in [Telegram](https://t.me/tonswap) (or contact me in direct messages @pafaul) if you have any questions about full cycle of interaction with swap pair.
