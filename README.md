@@ -4,7 +4,7 @@ Hello there!
 
 # Links
 [![Channel on Telegram](https://img.shields.io/badge/-TON%20Swap%20TG%20chat-blue)](https://t.me/tonswap) 
-
+Repository with smart contracts - [https://github.com/SVOIcom/tonswap-SC](https://github.com/SVOIcom/tonswap-SC)
 
 # TON testing suite
 
