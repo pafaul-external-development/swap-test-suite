@@ -2,6 +2,7 @@ const freeton = require('../../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
 const Wallet = require('./walletContract');
+const { sleep } = require('../../src/utils');
 
 class RootContract {
     /**
@@ -80,6 +81,13 @@ class RootContract {
             'getDetails', {},
             walletObject.keyPair
         )).balance.toNumber();
+        while (balance == 0) {
+            balance = (await walletObject.walletContract.runLocal(
+                'getDetails', {},
+                walletObject.keyPair
+            )).balance.toNumber();
+            await sleep(1000);
+        }
         return balance;
     }
 

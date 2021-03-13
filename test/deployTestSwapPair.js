@@ -206,7 +206,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying TIP-3', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
+        this.timeout(DEFAULT_TIMEOUT * 10);
         try {
             for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
                 logger.log(`Deploying ${tokenId+1} TIP-3 token`);
@@ -226,7 +226,7 @@ describe('Test of swap pairs', async function() {
 
     it('Loading contracts', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 2);
+        this.timeout(DEFAULT_TIMEOUT * 3);
         try {
             logger.log('Loading swap pair contract');
             swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keyPair);
@@ -244,7 +244,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying root contract', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
+        this.timeout(DEFAULT_TIMEOUT * 2);
 
         try {
             await rootSwapContract.deployContract(true);
@@ -257,7 +257,7 @@ describe('Test of swap pairs', async function() {
 
     it('Get root swap pair contract information', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
+        this.timeout(DEFAULT_TIMEOUT * 2);
 
         try {
             let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
@@ -270,7 +270,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploy swap pair contract from root contract', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
+        this.timeout(DEFAULT_TIMEOUT * 3);
 
         try {
             await rootSwapContract.deploySwapPair(
@@ -293,7 +293,7 @@ describe('Test of swap pairs', async function() {
 
     it('Getting information about deployed pair', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
+        this.timeout(DEFAULT_TIMEOUT * 2);
 
         try {
             let output = await rootSwapContract.getPairInfo(
@@ -333,14 +333,15 @@ describe('Test of swap pairs', async function() {
             expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
-            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
-                if (counter > RETRIES) {
-                    throw new Error(
-                        `Cannot receive wallet address in ${RETRIES} retries`
-                    )
-                }
+            while (output.tokenWallet1 == ZERO_ADDRESS || output.tokenWallet2 == ZERO_ADDRESS) {
+                // if (counter > RETRIES) {
+                //     throw new Error(
+                //         `Cannot receive wallet address in ${RETRIES} retries`
+                //     )
+                // }
                 counter++;
                 output = await swapPairContract.getPairInfo();
+                logger.log(`Try #${counter}: ${JSON.stringify(output, null, '\t')}`);
                 await sleep(15000);
             }
 
@@ -375,7 +376,6 @@ describe('Test of swap pairs', async function() {
                         );
                     counter++;
                     output = await swapPairContract.getUserTONBalance(ton.keys[contractIndex]);
-                    console.log(output);
                     output = output.toNumber();
                     await sleep(2000);
                 }
@@ -426,6 +426,11 @@ describe('Test of swap pairs', async function() {
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
                     let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                    while (output[field] < transferAmount[tokenId]) {
+                        logger.log(`output: ${output[field]}`);
+                        output = await swapPairContract.getUserBalance(wallet.keyPair);
+                        sleep(15000);
+                    }
                     expect(Number(output[field])).equal(transferAmount[tokenId], 'Invalid balance');
                 }
             }
