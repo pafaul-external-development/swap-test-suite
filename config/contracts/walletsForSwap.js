@@ -15,33 +15,49 @@ function copyJSON(json) {
 
 let walletsDeployParameters = {
     pairs: [{
-        wallet: {
-            config: copyJSON(wallet),
-            keys: {},
+            wallet: {
+                config: copyJSON(wallet),
+                keys: {},
+            },
+            root: {
+                config: copyJSON(rootParameters),
+                keys: {},
+            },
+            walletsAmount: 1,
+            // 1134274556403128300000000000000000
+            tokensAmount: 11340,
+            callbackAddress: '',
+        }, {
+            wallet: {
+                config: copyJSON(wallet),
+                keys: {},
+            },
+            root: {
+                config: copyJSON(rootParameters),
+                keys: {},
+            },
+            walletsAmount: 1,
+            tokensAmount: 11340,
+            callbackAddress: '',
         },
-        root: {
-            config: copyJSON(rootParameters),
-            keys: {},
-        },
-        walletsAmount: 6,
-        tokensAmount: 300,
-        callbackAddress: '',
-    }, {
-        wallet: {
-            config: copyJSON(wallet),
-            keys: {},
-        },
-        root: {
-            config: copyJSON(rootParameters),
-            keys: {},
-        },
-        walletsAmount: 4,
-        tokensAmount: 800,
-        callbackAddress: '',
-    }]
+        /* {
+                wallet: {
+                    config: copyJSON(wallet),
+                    keys: {},
+                },
+                root: {
+                    config: copyJSON(rootParameters),
+                    keys: {},
+                },
+                walletsAmount: 1,
+                tokensAmount: 30000000,
+                callbackAddress: '',
+            }*/
+    ]
 };
 
-walletsDeployParameters.pairs[0].root.config.initParams.name = toHex('rsc1');
-walletsDeployParameters.pairs[1].root.config.initParams.name = toHex('rsc2');
+walletsDeployParameters.pairs[0].root.config.initParams.name = toHex('NeSlavaCoin');
+walletsDeployParameters.pairs[1].root.config.initParams.name = toHex('DevTeamCoin');
+//walletsDeployParameters.pairs[2].root.config.initParams.name = toHex('MyCoin');
 
 module.exports = walletsDeployParameters;

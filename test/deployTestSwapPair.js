@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
@@ -94,7 +96,7 @@ function initialSwapSetup(tonInstance, config, tokens) {
     config.root.keyPair = tonInstance.keys[0];
     config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
 
-    config.pair.keyPair = tonInstance.keys[1];
+    config.pair.keyPair = tonInstance.keys[0];
     config.pair.initParams.token1 = tokens[0].root.rootContract.address;
     config.pair.initParams.token2 = tokens[1].root.rootContract.address;
 
@@ -170,7 +172,7 @@ describe('Test of swap pairs', async function() {
         logger.log('Setting up ton instance');
         try {
             await ton.setup(keysRequired);
-            ton.debug = true;
+            ton.debug = false;
             for (let tokenId = 0; tokenId < pairsConfig.pairs.length; tokenId++)
                 tip3TokensConfig.push(initialTokenSetup(ton, pairsConfig.pairs[tokenId]));
         } catch (err) {
@@ -192,9 +194,6 @@ describe('Test of swap pairs', async function() {
             logger.log('Deploying contracts');
             for (let index = 0; index < tonStorages.length; index++) {
                 await tonStorages[index].deploy();
-                logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
-                logger.log(`${tonStorages[index].keyPair.public}`);
-                logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
             }
 
         } catch (err) {
@@ -334,11 +333,6 @@ describe('Test of swap pairs', async function() {
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
             while (output.tokenWallet1 == ZERO_ADDRESS || output.tokenWallet2 == ZERO_ADDRESS) {
-                // if (counter > RETRIES) {
-                //     throw new Error(
-                //         `Cannot receive wallet address in ${RETRIES} retries`
-                //     )
-                // }
                 counter++;
                 output = await swapPairContract.getPairInfo();
                 logger.log(`Try #${counter}: ${JSON.stringify(output, null, '\t')}`);
@@ -446,14 +440,21 @@ describe('Test of swap pairs', async function() {
     it('Logging useful information: ', async function() {
         logger.log('#####################################');
 
+        let info = '{';
         try {
             for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
+                    info += `wp${walletId}: {\n`;
+                    info += `address: ${wallet.walletContract.address}`;
+                    info += `keyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`;
+                    info += `},`;
                     logger.log(`Address of wallet: ${wallet.walletContract.address}`);
                     logger.log(`KeyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`);
                 }
             }
+            info += '}'
+            fs.writeFile('spRes.json', info, () => {});
         } catch (err) {
             console.log(JSON.stringify(err, null, '\t'));
             logger.error(JSON.stringify(err, null, '\t'));

@@ -76,19 +76,6 @@ class RootContract {
             },
             this.keyPair
         );
-
-        let balance = (await walletObject.walletContract.runLocal(
-            'getDetails', {},
-            walletObject.keyPair
-        )).balance.toNumber();
-        while (balance == 0) {
-            balance = (await walletObject.walletContract.runLocal(
-                'getDetails', {},
-                walletObject.keyPair
-            )).balance.toNumber();
-            await sleep(1000);
-        }
-        return balance;
     }
 
     /**
@@ -135,8 +122,6 @@ class RootContract {
     async mintTokensToWallets(userWallet, swapPairWallet, initialTokens) {
         let userBalance = await this._mintToWallet(userWallet, initialTokens.user);
         let swapBalance = await this._mintToWallet(swapPairWallet, initialTokens.swap);
-        expect(userBalance).to.be.a('Number').and.equal(initialTokens.user);
-        expect(swapBalance).to.be.a('Number').and.equal(initialTokens.swap);
     }
 
     /**
@@ -146,7 +131,6 @@ class RootContract {
      */
     async mintTokensToWallet(wallet, tokensAmount) {
         let balance = await this._mintToWallet(wallet, tokensAmount);
-        expect(balance).to.be.a('Number').and.equal(tokensAmount);
     }
 
     /**
