@@ -100,7 +100,7 @@ For testing purposes we created some accounts with finished preparation stage:
 2. They all have transferred TIP-3 tokens to swap pair contract;
 3. They are fully functional :)
 
-Keypair with addresses are in file: [secret file](files/testProfiles.md)
+Keypair with addresses are in file: [profile file](files/testProfiles.md)
 They will totally work at our site [tonswap.com](https://tonswap.com) too!
 
 Please consider using them for tests. If you want to perform all of above by yourself, please check file [for deploying test swap pair](test/deployTestSwapPair.js) and contact our team in [Telegram](https://t.me/tonswap) (or contact me in direct messages @pafaul) if you have any questions about full cycle of interaction with swap pair.
