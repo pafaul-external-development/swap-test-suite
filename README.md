@@ -30,6 +30,7 @@ To run tests you will need to install required packages and mocha:
 ```shell
 git clone https://github.com/SVOIcom/ton-testing-suite
 cd ton-testing-suite
+git submodule update --init --recursive
 npm install .
 npm install -g mocha 
 ```
@@ -43,6 +44,10 @@ bash compile_cc.sh tonswap-SC/contracts/ build/
 
 Or if you have downloaded compiled smart contracts from [tonswap-SC release page](https://github.com/SVOIcom/tonswap-SC/tags) \
 then you need to unzip archive and copy it's contents to ```build/``` directory.
+If you haven't created ```build``` directory yet, create it by running:
+```shell
+mkdir -p build
+```
 
 ### Setting up network
 
