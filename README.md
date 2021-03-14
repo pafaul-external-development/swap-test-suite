@@ -25,6 +25,7 @@ This is repository containing tests and instruments for smart contract deploymen
 
 ## Requiremnts to run tests
 
+### Clonning repo
 To run tests you will need to install required packages and mocha:
 ```shell
 git clone https://github.com/SVOIcom/ton-testing-suite
@@ -33,11 +34,21 @@ npm install .
 npm install -g mocha 
 ```
 
+### Compiling scripts
 Then you need to build smart contracts (solc v0.36.0 required):
 ```shell
 mkdir -p build
-bash compile_cc.sh contracts/ build/
+bash compile_cc.sh tonswap-SC/contracts/ build/
 ```
+
+Or if you have downloaded compiled smart contracts from [tonswap-SC release page](https://github.com/SVOIcom/tonswap-SC/tags) \
+then you need to unzip archive and copy it's contents to ```build/``` directory.
+
+### Setting up network
+
+If you wish to run tests at ton OS SE, then you need to configure network url. \
+It is stored in file: [```config/general/networkConfig.js```](config/general/networkConfig.js)
+
 
 ## Swap pair test
 After preparations, you can run swap pair test:
@@ -64,12 +75,14 @@ Using debot you can perform following operations:
 
 1. Get user token balance - get token amounts available for providing liquidity or performing swap operation;
 2. Get user LP token balance - get user's tokens that are currently in liquidity pool;
-3. Provide liquidity - add tokens to liquidity pool;
-4. Withdraw liquidity - remove tokens from liquidity pool;
-5. Get current exchange rate;
-6. Swap tokens - swap user's tokens that are currently not in liquidity pool;
-7. Withdraw tokens from swap pair - remove tokens from swap pair by requesting transfer of tokens to specified wallet;
-8. Exit debot :)
+3. Ger user TON balance - get user's TON balance;
+4. Get current LP functions execution cost;
+5. Provide liquidity - add tokens to liquidity pool;
+6. Withdraw liquidity - remove tokens from liquidity pool;
+7. Get current exchange rate;
+8. Swap tokens - swap user's tokens that are currently not in liquidity pool;
+9. Withdraw tokens from swap pair - remove tokens from swap pair by requesting transfer of tokens to specified wallet;
+10. Exit debot :)
 
 For your convinience, check following file that contrains some SC addresses: 
 
