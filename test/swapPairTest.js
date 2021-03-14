@@ -528,11 +528,6 @@ describe('Test of swap pairs', async function() {
                 logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
             }
 
-            let output = await swapPairContract.getLPTokens();
-            logger.log(JSON.stringify(output, null, '\t'));
-            expect(output.token1LPAmount.toNumber()).equal(0);
-            expect(output.token2LPAmount.toNumber()).equal(0);
-
             logger.success('Liquidity removed from liquidity pair');
         } catch (err) {
             console.log(err);
