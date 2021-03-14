@@ -15,6 +15,10 @@ Used ton-solidity compiler - [solidity compiler v0.36.0](https://github.com/tonl
 
 Used tvm-linker - [latest tvm linker](https://github.com/tonlabs/TVM-linker)
 
+# VERY IMPORTANT INFORMATION
+
+All of the instructions were tested on Ubuntu 18.04.
+
 # TON testing suite
 
 Set of tools for making testing smart contracts on TON easier.
