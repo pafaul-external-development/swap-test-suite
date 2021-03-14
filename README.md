@@ -48,6 +48,7 @@ then you need to unzip archive and copy it's contents to ```build/``` directory.
 
 If you wish to run tests at ton OS SE, then you need to configure network url. \
 It is stored in file: [```config/general/networkConfig.js```](config/general/networkConfig.js)
+You need to replace ```tonOSSE.network``` value with url to access your TON OS SE instance.
 
 
 ## Swap pair test
