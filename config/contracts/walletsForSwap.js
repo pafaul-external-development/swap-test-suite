@@ -24,7 +24,7 @@ let walletsDeployParameters = {
             keys: {},
         },
         walletsAmount: 5,
-        tokensAmount: 888800000000000000000,
+        tokensAmount: 88880000000,
         callbackAddress: '',
     }, {
         wallet: {
@@ -36,7 +36,7 @@ let walletsDeployParameters = {
             keys: {},
         },
         walletsAmount: 5,
-        tokensAmount: 888800000000000000000,
+        tokensAmount: 88880000000,
         callbackAddress: '',
     }]
 };

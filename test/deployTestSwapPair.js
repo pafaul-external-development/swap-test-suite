@@ -1,5 +1,3 @@
-const fs = require('fs');
-
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
@@ -7,6 +5,7 @@ const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../c
 
 const RootContract = require('../contractWrappers/tip3/rootContract');
 const Wallet = require('../contractWrappers/tip3/walletContract');
+const Giver = require('../contractWrappers/giverContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
@@ -18,7 +17,10 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
+const wallet = require('../config/contracts/walletParameters');
+const { root } = require('../config/contracts/swapPairContractsConfig');
 const { sleep } = require('../src/utils');
+const { default: BigNumber } = require('bignumber.js');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -34,6 +36,8 @@ var tip3TokensConfig = [];
 
 var keysRequired = 0;
 var transferAmount = [];
+var totalLPTokens = [];
+var walletsCount = 0;
 
 var giverSC = new freeton.ContractWrapper(
     ton,
@@ -41,6 +45,11 @@ var giverSC = new freeton.ContractWrapper(
     null,
     giverConfig.address,
 );
+
+function toHex(str) {
+    return Buffer.from(str, 'utf8').toString('hex');
+}
+
 /**
  * Copy JSON
  * @param {JSON} json 
@@ -151,7 +160,7 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
 
     logger.log('Minting tokens to wallets');
     for (let contractId = 0; contractId < wallets.length; contractId++) {
-        await rootSC.mintTokensToWallet(wallets[contractId], tokenConfig.tokensAmount);
+        await rootSC.mintTokensToWallet(wallets[contractId], (tokenConfig.tokensAmount).toLocaleString('en').replace(/,/g, ''));
     }
 
     return {
@@ -172,10 +181,11 @@ describe('Test of swap pairs', async function() {
         logger.log('Setting up ton instance');
         try {
             await ton.setup(keysRequired);
-            ton.debug = false;
+            ton.debug = true;
             for (let tokenId = 0; tokenId < pairsConfig.pairs.length; tokenId++)
                 tip3TokensConfig.push(initialTokenSetup(ton, pairsConfig.pairs[tokenId]));
         } catch (err) {
+            console.log(err);
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
@@ -194,6 +204,9 @@ describe('Test of swap pairs', async function() {
             logger.log('Deploying contracts');
             for (let index = 0; index < tonStorages.length; index++) {
                 await tonStorages[index].deploy();
+                logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
+                logger.log(`${tonStorages[index].keyPair.public}`);
+                logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
             }
 
         } catch (err) {
@@ -205,13 +218,14 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying TIP-3', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 10);
+        this.timeout(DEFAULT_TIMEOUT * 5);
         try {
             for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
                 logger.log(`Deploying ${tokenId+1} TIP-3 token`);
                 tip3Tokens.push(await deployTIP3(ton, tip3TokensConfig[tokenId], giverSC));
             }
         } catch (err) {
+            console.log(err);
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
@@ -225,7 +239,7 @@ describe('Test of swap pairs', async function() {
 
     it('Loading contracts', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 3);
+        this.timeout(DEFAULT_TIMEOUT * 2);
         try {
             logger.log('Loading swap pair contract');
             swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keyPair);
@@ -243,7 +257,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploying root contract', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 2);
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             await rootSwapContract.deployContract(true);
@@ -256,7 +270,7 @@ describe('Test of swap pairs', async function() {
 
     it('Get root swap pair contract information', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 2);
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
@@ -269,7 +283,7 @@ describe('Test of swap pairs', async function() {
 
     it('Deploy swap pair contract from root contract', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 3);
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             await rootSwapContract.deploySwapPair(
@@ -282,6 +296,8 @@ describe('Test of swap pairs', async function() {
                 swapConfig.pair.initParams.token2
             );
 
+            expect(output).equal(true);
+
             logger.success('Pair created');
 
         } catch (err) {
@@ -292,7 +308,7 @@ describe('Test of swap pairs', async function() {
 
     it('Getting information about deployed pair', async function() {
         logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 2);
+        this.timeout(DEFAULT_TIMEOUT);
 
         try {
             let output = await rootSwapContract.getPairInfo(
@@ -332,18 +348,21 @@ describe('Test of swap pairs', async function() {
             expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
-            while (output.tokenWallet1 == ZERO_ADDRESS || output.tokenWallet2 == ZERO_ADDRESS) {
+            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
+                if (counter > RETRIES) {
+                    throw new Error(
+                        `Cannot receive wallet address in ${RETRIES} retries`
+                    )
+                }
                 counter++;
                 output = await swapPairContract.getPairInfo();
-                logger.log(`Try #${counter}: ${JSON.stringify(output, null, '\t')}`);
-                await sleep(15000);
+                await sleep(2000);
             }
 
             swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
 
             logger.success('Information check passed');
         } catch (err) {
-            console.log(JSON.stringify(err, null, '\t'));
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
@@ -370,6 +389,7 @@ describe('Test of swap pairs', async function() {
                         );
                     counter++;
                     output = await swapPairContract.getUserTONBalance(ton.keys[contractIndex]);
+                    console.log(output);
                     output = output.toNumber();
                     await sleep(2000);
                 }
@@ -396,7 +416,7 @@ describe('Test of swap pairs', async function() {
                     logger.log(`transferring tokens from ${walletId+1} wallet`)
                     await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
                         swapPairContract.tokenWallets[tokenId],
-                        transferAmount[tokenId]
+                        (transferAmount[tokenId]).toLocaleString('en').replace(/,/g, '')
                     )
                 }
             }
@@ -420,12 +440,8 @@ describe('Test of swap pairs', async function() {
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
                     let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                    while (output[field] < transferAmount[tokenId]) {
-                        logger.log(`output: ${output[field]}`);
-                        output = await swapPairContract.getUserBalance(wallet.keyPair);
-                        sleep(15000);
-                    }
-                    expect(Number(output[field])).equal(transferAmount[tokenId], 'Invalid balance');
+                    expect(Number(output[field]).toLocaleString('en').replace(/,/g, '')).
+                    equal((transferAmount[tokenId]).toLocaleString('en').replace(/,/g, ''), 'Invalid balance');
                 }
             }
 
@@ -435,34 +451,5 @@ describe('Test of swap pairs', async function() {
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
-    })
-
-    it('Logging useful information: ', async function() {
-        logger.log('#####################################');
-
-        let info = '{';
-        try {
-            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    let wallet = tip3Tokens[tokenId].wallets[walletId];
-                    info += `wp${walletId}: {\n`;
-                    info += `address: ${wallet.walletContract.address}`;
-                    info += `keyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`;
-                    info += `},`;
-                    logger.log(`Address of wallet: ${wallet.walletContract.address}`);
-                    logger.log(`KeyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`);
-                }
-            }
-            info += '}'
-            fs.writeFile('spRes.json', info, () => {});
-        } catch (err) {
-            console.log(JSON.stringify(err, null, '\t'));
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Yaaaay', async function() {
-        logger.success(`Approximate time of execution at TON OS SE - 1 minute`);
     })
 })
