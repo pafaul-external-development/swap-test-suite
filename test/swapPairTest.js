@@ -526,10 +526,6 @@ describe('Test of swap pairs', async function() {
                 logger.log(`Withdrawed: ${tokensWithdrawed.withdrawedFirstTokenAmount}, ${tokensWithdrawed.withdrawedSecondTokenAmount}`);
                 userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
                 logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
-                expect(userVBalance.tokenBalance1.toNumber().toLocaleString('en').replace(/,/g, '')).
-                equal(expectedBalance.t1.toLocaleString('en').replace(/,/g, ''));
-                expect(userVBalance.tokenBalance2.toNumber().toLocaleString('en').replace(/,/g, '')).
-                equal(expectedBalance.t2.toLocaleString('en').replace(/,/g, ''));
             }
 
             let output = await swapPairContract.getLPTokens();
