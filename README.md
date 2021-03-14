@@ -30,6 +30,7 @@ To run tests you will need to install required packages and mocha:
 ```shell
 git clone https://github.com/SVOIcom/ton-testing-suite
 cd ton-testing-suite
+git submodule update --init --recursive
 npm install .
 npm install -g mocha 
 ```
