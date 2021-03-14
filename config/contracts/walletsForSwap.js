@@ -23,7 +23,7 @@ let walletsDeployParameters = {
                 config: copyJSON(rootParameters),
                 keys: {},
             },
-            walletsAmount: 2,
+            walletsAmount: 1,
             tokensAmount: 888800000000000000000,
             callbackAddress: '',
         }, {
@@ -35,7 +35,7 @@ let walletsDeployParameters = {
                 config: copyJSON(rootParameters),
                 keys: {},
             },
-            walletsAmount: 2,
+            walletsAmount: 1,
             tokensAmount: 888800000000000000000,
             callbackAddress: '',
         },
@@ -48,7 +48,7 @@ let walletsDeployParameters = {
                 config: copyJSON(rootParameters),
                 keys: {},
             },
-            walletsAmount: 2,
+            walletsAmount: 1,
             tokensAmount: 888800000000000000000,
             callbackAddress: '',
         }
@@ -57,6 +57,6 @@ let walletsDeployParameters = {
 
 walletsDeployParameters.pairs[0].root.config.initParams.name = toHex('NeSlavaCoin');
 walletsDeployParameters.pairs[1].root.config.initParams.name = toHex('DevTeamCoin');
-//walletsDeployParameters.pairs[2].root.config.initParams.name = toHex('MyCoin');
+walletsDeployParameters.pairs[2].root.config.initParams.name = toHex('MyCoin');
 
 module.exports = walletsDeployParameters;
