@@ -1,3 +1,6 @@
 [submodule "contracts"]
 	path = contracts
 	url = https://github.com/SVOIcom/tonswap-SC
+[submodule "tonswap-SC"]
+	path = tonswap-SC
+	url = https://github.com/SVOIcom/tonswap-SC
