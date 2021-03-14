@@ -274,7 +274,6 @@ describe('Test of swap pairs', async function() {
 
         try {
             let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
-            // TODO: здесь должны быть нормальные проверки на полученную информацию
             logger.log(`Swap pair info: ${rootSwapPairInfo.rootContract}`);
         } catch (err) {
             logger.error(JSON.stringify(err, null, '\t'));
@@ -519,7 +518,7 @@ describe('Test of swap pairs', async function() {
                 console.log(JSON.stringify(output, null, '\t'));
 
                 let tokensWithdrawed = (await swapPairContract.withdrawLiquidity(
-                    Number(output.userLiquidityTokenBalance),
+                    Number(output.userLiquidityTokenBalance).toLocaleString('en').replace(/,/g, ''),
                     wallet.keyPair
                 )).decoded.output;
                 logger.log(JSON.stringify(tokensWithdrawed, null, '\t'));
@@ -527,16 +526,16 @@ describe('Test of swap pairs', async function() {
                 logger.log(`Withdrawed: ${tokensWithdrawed.withdrawedFirstTokenAmount}, ${tokensWithdrawed.withdrawedSecondTokenAmount}`);
                 userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
                 logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
-                // expect(userVBalance.tokenBalance1.toNumber().toLocaleString('en').replace(/,/g, '')).
-                // equal(expectedBalance.t1.toLocaleString('en').replace(/,/g, ''));
-                // expect(userVBalance.tokenBalance2.toNumber().toLocaleString('en').replace(/,/g, '')).
-                // equal(expectedBalance.t2.toLocaleString('en').replace(/,/g, ''));
+                expect(userVBalance.tokenBalance1.toNumber().toLocaleString('en').replace(/,/g, '')).
+                equal(expectedBalance.t1.toLocaleString('en').replace(/,/g, ''));
+                expect(userVBalance.tokenBalance2.toNumber().toLocaleString('en').replace(/,/g, '')).
+                equal(expectedBalance.t2.toLocaleString('en').replace(/,/g, ''));
             }
 
             let output = await swapPairContract.getLPTokens();
             logger.log(JSON.stringify(output, null, '\t'));
-            // expect(output.token1LPAmount.toNumber()).equal(0);
-            // expect(output.token2LPAmount.toNumber()).equal(0);
+            expect(output.token1LPAmount.toNumber()).equal(0);
+            expect(output.token2LPAmount.toNumber()).equal(0);
 
             logger.success('Liquidity removed from liquidity pair');
         } catch (err) {

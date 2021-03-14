@@ -16,7 +16,7 @@ class TonWrapper {
         this.giverConfig = giverConfig;
         this.debug = debug !== undefined;
         this.runAttempts = runAttempts === undefined ? 10 : runAttempts;
-        this.deployAttempts = deployAttempts === undefined ? 10 : deployAttempts;
+        this.deployAttempts = deployAttempts === undefined ? 20 : deployAttempts;
         this.config = config;
     }
 
@@ -34,7 +34,7 @@ class TonWrapper {
 
         if (tonAfterRunSleepMs === undefined) {
             if (this.config.network === 'https://net.ton.dev') {
-                await utils.sleep(10000);
+                await utils.sleep(5000);
             } else { // Default
                 await utils.sleep(100);
             }
