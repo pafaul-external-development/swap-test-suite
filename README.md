@@ -62,14 +62,20 @@ To deploy swap pair so you can test it on local ton OS SE you need to run:
 ```shell
 mocha test/deployTestSwapPair.js
 ```
-Result of swap pair, TIP-3 and wallets deployment will be in file ```test/spRes.json```
+Result of swap pair, TIP-3 and wallets deployment will be in file ```spRes.json```
+### If there are unexpected errors with no reason
+Try running the same command with additional flag:
+```shell
+mocha --allow-uncaught test/deployTestSwapPair.js
+```
+If this will not resolve existing problem - please contact our team for further investing of your case so we can provide all help that we can :)
 
 ## Deploy swap pair debot
 To deploy ```Swap pair debot``` you will need to run following command: 
 ```shell
 node test/deployDebot.js
 ```
-Result of run with debot address and used keypair will be in file ```test/debotRes.json```
+Result of run with debot address and used keypair will be in file ```debotRes.json```
 
 # Debot functionality
 Using debot you can perform following operations:
