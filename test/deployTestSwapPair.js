@@ -452,4 +452,33 @@ describe('Test of swap pairs', async function() {
             process.exit(1);
         }
     })
+
+    it('Logging useful information: ', async function() {
+        logger.log('#####################################');
+
+        let info = '{';
+        try {
+            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
+                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
+                    let wallet = tip3Tokens[tokenId].wallets[walletId];
+                    info += `wp${walletId}: {\n`;
+                    info += `address: ${wallet.walletContract.address}`;
+                    info += `keyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`;
+                    info += `},`;
+                    logger.log(`Address of wallet: ${wallet.walletContract.address}`);
+                    logger.log(`KeyPair: ${JSON.stringify(wallet.keyPair, null, '\t')}`);
+                }
+            }
+            info += '}'
+            fs.writeFile('spRes.json', info, () => {});
+        } catch (err) {
+            console.log(JSON.stringify(err, null, '\t'));
+            logger.error(JSON.stringify(err, null, '\t'));
+            process.exit(1);
+        }
+    })
+
+    it('Yaaaay', async function() {
+        logger.success(`Approximate time of execution at TON OS SE - 1 minute`);
+    })
 })
