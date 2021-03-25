@@ -14,6 +14,7 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
+const { sleep } = require('../src/utils');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
