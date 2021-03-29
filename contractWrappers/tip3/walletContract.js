@@ -1,5 +1,6 @@
 const freeton = require('../../src');
 const { expect } = require('chai');
+const { ZERO_ADDRESS } = require('../../config/general/constants');
 
 class Wallet {
     /**
@@ -52,7 +53,8 @@ class Wallet {
     async setCallbackAddress(address) {
         return await this.walletContract.run(
             'setReceiveCallback', {
-                receive_callback_: address
+                receive_callback_: address,
+                allow_non_notifiable_: true
             },
             this.keyPair
         );
@@ -68,23 +70,9 @@ class Wallet {
             'transfer', {
                 to: address,
                 tokens: tokens,
-                grams: freeton.utils.convertCrystal('0.2', 'nano')
-            },
-            this.keyPair
-        );
-    }
-
-    /**
-     * Token transfer with notify of callback contract
-     * @param {String} address 
-     * @param {Number} tokens 
-     */
-    async transferWithNotify(address, tokens) {
-        await this.walletContract.run(
-            'transferWithNotify', {
-                to: address,
-                tokens: tokens,
                 grams: freeton.utils.convertCrystal('0.2', 'nano'),
+                send_gas_to: ZERO_ADDRESS,
+                norify_receiver: true,
                 payload: ''
             },
             this.keyPair
