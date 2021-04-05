@@ -72,7 +72,7 @@ class Wallet {
                 tokens: tokens,
                 grams: freeton.utils.convertCrystal('0.2', 'nano'),
                 send_gas_to: ZERO_ADDRESS,
-                norify_receiver: true,
+                notify_receiver: true,
                 payload: ''
             },
             this.keyPair

@@ -15,11 +15,12 @@ let rootParameters = {
         symbol: toHex('TRC'),
         decimals: 9,
         wallet_code: "", // Wallet code is added in tokenTest.js after loading wallet
-        root_public_key: "pubkey",
-        root_owner_address: ZERO_ADDRESS,
         _randomNonce: 0 // This is changed during deploy stage
     },
-    constructorParams: {}
+    constructorParams: {
+        root_public_key_: "pubkey",
+        root_owner_address_: ZERO_ADDRESS,
+    }
 }
 
 module.exports = rootParameters;

@@ -48,7 +48,7 @@ function initialTokenSetup(tonInstance, config) {
     tokenConfig.walletsConfig = [];
 
     tokenConfig.root.keys = tonInstance.keys[0];
-    tokenConfig.root.config.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
+    tokenConfig.root.config.constructorParams.root_public_key_ = '0x' + tonInstance.keys[0].public;
 
     for (let i = 0; i < config.walletsAmount; i++) {
         let walletConfig = copyJSON(config.wallet);
@@ -111,6 +111,7 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
     }, tokenConfig.root.keys);
     await proxyContract.loadContract();
     await proxyContract.deployContract(rootSC.rootContract.address);
+    logger.log(`Proxy contract address: ${proxyContract.walletDeployContract.address}`);
 
     logger.log('Deploying wallet contracts and sending them tons');
     for (let contractId = 0; contractId < wallets.length; contractId++) {

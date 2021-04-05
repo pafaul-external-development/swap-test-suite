@@ -166,6 +166,7 @@ class ContractWrapper {
         const {
             address: futureAddress,
         } = await this.createDeployMessage(...deployParams);
+        this.debugLog(`Future address: ${futureAddress}`);
 
         if (initialBalance > 0) {
             this.debugLog('Sending initial balance to contract');

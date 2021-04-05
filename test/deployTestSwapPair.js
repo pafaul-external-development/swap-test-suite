@@ -5,7 +5,6 @@ const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../c
 
 const RootContract = require('../contractWrappers/tip3/rootContract');
 const Wallet = require('../contractWrappers/tip3/walletContract');
-const Giver = require('../contractWrappers/giverContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
@@ -17,10 +16,8 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 var pairsConfig = require('../config/contracts/walletsForSwap');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const wallet = require('../config/contracts/walletParameters');
-const { root } = require('../config/contracts/swapPairContractsConfig');
 const { sleep } = require('../src/utils');
-const { default: BigNumber } = require('bignumber.js');
+const { deployTIP3 } = require('./util');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -36,8 +33,6 @@ var tip3TokensConfig = [];
 
 var keysRequired = 0;
 var transferAmount = [];
-var totalLPTokens = [];
-var walletsCount = 0;
 
 var giverSC = new freeton.ContractWrapper(
     ton,
@@ -83,7 +78,7 @@ function initialTokenSetup(tonInstance, config) {
     tokenConfig.walletsConfig = [];
 
     tokenConfig.root.keys = ton.keys[0];
-    tokenConfig.root.config.initParams.root_public_key = '0x' + tonInstance.keys[0].public;
+    tokenConfig.root.config.constructorParams.root_public_key_ = '0x' + tonInstance.keys[0].public;
 
     for (let i = 0; i < config.walletsAmount; i++) {
         let walletConfig = copyJSON(config.wallet);
@@ -110,63 +105,6 @@ function initialSwapSetup(tonInstance, config, tokens) {
     config.pair.initParams.token2 = tokens[1].root.rootContract.address;
 
     return config;
-}
-
-/**
- * Deploy TIP-3 token root contract and wallets
- * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} tokenConfig 
- * @param {freeton.ContractWrapper} giverSC
- */
-async function deployTIP3(tonInstance, tokenConfig, giverSC) {
-    let rootSC;
-    let proxyContract;
-    let wallets = [];
-
-    logger.log('#####################################');
-    logger.log('Initial stage');
-
-    for (let contractId = 0; contractId < tokenConfig.walletsAmount; contractId++) {
-        let walletConfig = tokenConfig.walletsConfig[contractId];
-        wallets.push(new Wallet(tonInstance, walletConfig.config, walletConfig.keys));
-        await wallets[contractId].loadContract();
-    }
-
-    tokenConfig.root.config.initParams.wallet_code = wallets[0].walletContract.code;
-    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
-    await rootSC.loadContract();
-
-    logger.log('Deploying root contract');
-    await rootSC.deployContract();
-
-    logger.log('Loading and deploying proxy contract');
-    proxyContract = new WalletDeployer(tonInstance, {
-        initParams: {},
-        constructorParams: {}
-    }, tokenConfig.root.keys);
-    await proxyContract.loadContract();
-    await proxyContract.deployContract(rootSC.rootContract.address);
-
-    logger.log('Deploying wallet contracts and sending them tons');
-    for (let contractId = 0; contractId < wallets.length; contractId++) {
-        let walletConfig = wallets[contractId].initParams;
-        await proxyContract.deployWallet(walletConfig.wallet_public_key, walletConfig.owner_address);
-
-        let calculatedAddress = await rootSC.calculateFutureWalletAddress(walletConfig.wallet_public_key, walletConfig.owner_address);
-        wallets[contractId].walletContract.address = calculatedAddress;
-
-        await sendGrams(giverSC, calculatedAddress, CRYSTAL_AMOUNT);
-    }
-
-    logger.log('Minting tokens to wallets');
-    for (let contractId = 0; contractId < wallets.length; contractId++) {
-        await rootSC.mintTokensToWallet(wallets[contractId], (tokenConfig.tokensAmount).toLocaleString('en').replace(/,/g, ''));
-    }
-
-    return {
-        wallets: wallets,
-        root: rootSC
-    }
 }
 
 describe('Test of swap pairs', async function() {
@@ -344,6 +282,7 @@ describe('Test of swap pairs', async function() {
         try {
             let output = await swapPairContract.getPairInfo();
             logger.log(JSON.stringify(output, null, '\t'));
+            logger.log(swapPairContract.swapPairContract.address);
             expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
             expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
@@ -363,6 +302,7 @@ describe('Test of swap pairs', async function() {
 
             logger.success('Information check passed');
         } catch (err) {
+            console.log(JSON.stringify(err, null, '\t'));
             logger.error(JSON.stringify(err, null, '\t'));
             process.exit(1);
         }
@@ -414,7 +354,7 @@ describe('Test of swap pairs', async function() {
                 logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     logger.log(`transferring tokens from ${walletId+1} wallet`)
-                    await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
+                    await tip3Tokens[tokenId].wallets[walletId].transfer(
                         swapPairContract.tokenWallets[tokenId],
                         (transferAmount[tokenId]).toLocaleString('en').replace(/,/g, '')
                     )
