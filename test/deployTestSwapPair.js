@@ -249,10 +249,25 @@ describe('Test of swap pairs', async function() {
         this.timeout(DEFAULT_TIMEOUT);
 
         try {
+
             let output = await rootSwapContract.getPairInfo(
                 swapConfig.pair.initParams.token1,
                 swapConfig.pair.initParams.token2
             );
+            counter = 0;
+            while (!output.swapPairAddress || output.swapPairAddress == ZERO_ADDRESS) {
+                if (counter > RETRIES) {
+                    throw new Error(
+                        `Cannot receive wallet address in ${RETRIES} retries`
+                    )
+                }
+                output = await rootSwapContract.getPairInfo(
+                    swapConfig.pair.initParams.token1,
+                    swapConfig.pair.initParams.token2
+                );
+                counter++;
+                await sleep(2000);
+            }
 
             if (!output.swapPairAddress) {
                 throw new Error(`Strange output of getPairInfo function: ${JSON.stringify(output)}`)
@@ -287,7 +302,7 @@ describe('Test of swap pairs', async function() {
             expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
             expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
 
-            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
+            while (output.tokenWallet1 == ZERO_ADDRESS || output.tokenWallet2 == ZERO_ADDRESS) {
                 if (counter > RETRIES) {
                     throw new Error(
                         `Cannot receive wallet address in ${RETRIES} retries`
@@ -380,6 +395,15 @@ describe('Test of swap pairs', async function() {
                 for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
                     let wallet = tip3Tokens[tokenId].wallets[walletId];
                     let output = await swapPairContract.getUserBalance(wallet.keyPair);
+                    counter = 0;
+                    while (Number(output[field]) == 0) {
+                        if (counter > RETRIES)
+                            throw new Error(
+                                `Swap pair did not receive TONs in ${RETRIES} retries. ` +
+                                `Contract address: ${tonStorages[contractIndex].tonStorageContract.address}`
+                            );
+                        await sleep(2000);
+                    }
                     expect(Number(output[field]).toLocaleString('en').replace(/,/g, '')).
                     equal((transferAmount[tokenId]).toLocaleString('en').replace(/,/g, ''), 'Invalid balance');
                 }
