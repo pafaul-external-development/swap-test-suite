@@ -46,14 +46,26 @@ class RootSwapPairContract {
                 initParams: this.initParams,
                 keyPair: this.keyPair
             })
-        else
-            return await this.rootSwapPairContract.deploy({
-                constructorParams: this.constructorParams,
-                initParams: this.initParams,
-                initialBalance: freeton.utils.convertCrystal('200', 'nano'),
-                _randomNonce: true,
-                keyPair: this.keyPair,
+        else {
+            let futureAddress = await this.getFutureAddress();
+            let exists = await ton.ton.net.query_collection({
+                collection: 'accounts',
+                filter: {
+                    id: { eq: futureAddress }
+                },
+                result: 'acc_type'
             });
+            if (exists.acc_type == 0) {
+                return await this.rootSwapPairContract.deploy({
+                    constructorParams: this.constructorParams,
+                    initParams: this.initParams,
+                    initialBalance: freeton.utils.convertCrystal('200', 'nano'),
+                    _randomNonce: true,
+                    keyPair: this.keyPair,
+                });
+            }
+            return futureAddress;
+        }
     }
 
     //========================Getters========================//

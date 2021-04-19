@@ -37,6 +37,22 @@ class Wallet {
     }
 
     /**
+     * 
+     * @returns {String} wallet address
+     */
+    getAddress() {
+        return this.walletContract.address;
+    }
+
+    /**
+     * 
+     * @returns {JSON} wallet abi
+     */
+    getAbi() {
+        return this.walletContract.abi;
+    }
+
+    /**
      * Get wallet details, e.g. token balance
      */
     async getDetails() {
