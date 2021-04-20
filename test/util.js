@@ -80,6 +80,32 @@ function initialSwapSetup(tonInstance, config, tokens) {
 /**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
+ * @param {JSON} tokenConfig
+ */
+async function deployTIP3(tonInstance, tokenConfig) {
+    let rootSC;
+    let wallets = [];
+
+    logger.log('#####################################');
+    logger.log('Initial stage');
+
+    for (let contractId = 0; contractId < tokenConfig.walletsAmount; contractId++) {
+        let walletConfig = tokenConfig.walletsConfig[contractId];
+        wallets.push(new Wallet(tonInstance, walletConfig.config, walletConfig.keys));
+        await wallets[contractId].loadContract();
+    }
+
+    tokenConfig.root.config.initParams.wallet_code = wallets[0].walletContract.code;
+    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
+    await rootSC.loadContract();
+
+    logger.log('Deploying root contract');
+    await rootSC.deployContract();
+}
+
+/**
+ * Deploy TIP-3 token root contract and wallets
+ * @param {freeton.TonWrapper} tonInstance 
  * @param {JSON} tokenConfig 
  * @param {freeton.ContractWrapper} giverSC
  */

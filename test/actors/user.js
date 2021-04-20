@@ -21,10 +21,9 @@ class User {
      * 
      * @param {String} public
      * @param {String} private
-     * @param {String} address 
      * @param {freeton.TonWrapper} tonInstance
      */
-    constructor({ public, private }, address, tonInstance) {
+    constructor({ public, private }, tonInstance) {
         this.tonWallet = undefined;
         this.wallets = {};
         this.keyPair = {
@@ -32,7 +31,6 @@ class User {
             private: private
         };
         this.pubkey = '0x' + public;
-        this.address = address;
         this.tonInstance = tonInstance;
         this.giverContract = new ContractWrapper(
             this.tonWrapper,
@@ -106,10 +104,7 @@ class User {
             this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
             this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
         }
-        return {
-            balance: this.wallets[rootTokenAddress].getBalance(),
-            tonBalance: walletAddress: this.wallets[rootTokenAddress].walletContract.address,
-        };
+        return this._getWalletState(wallets[rootTokenAddress].walletContract.address);
     }
 
     /**
