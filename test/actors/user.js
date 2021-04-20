@@ -14,6 +14,7 @@ const {
 } = require('../../config/general/constants');
 const Wallet = require('../../contractWrappers/tip3/walletContract');
 const { sleep } = require('../../src/utils');
+const { initial } = require('underscore');
 
 class User {
     /**
@@ -41,6 +42,9 @@ class User {
         );
     }
 
+    /**
+     * Create multisig for user
+     */
     async createMultisigWallet() {
         this.tonWallet = new MultisigWallet(this.tonInstance, {
             intiParams: {},
@@ -53,7 +57,7 @@ class User {
     }
 
     /**
-     * 
+     * Create tip3 wallet for given tip3 token
      * @param {RootContract} tip3Token 
      * @param {String} tokenAmount 
      */
@@ -102,18 +106,55 @@ class User {
             this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
             this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
         }
-        return this.wallets[rootTokenAddress];
+        return {
+            balance: this.wallets[rootTokenAddress].getBalance(),
+            tonBalance: walletAddress: this.wallets[rootTokenAddress].walletContract.address,
+        };
     }
 
     /**
-     * 
+     * Check tip3 wallet balance
      * @param {String} rootTokenAddress 
      * @returns {Number} balance of tip3 wallet
      */
     async checkWalletBalance(rootTokenAddress) {
-        return Number((await this.wallets[rootTokenAddress].getDetails()).balance);
+        return await this.wallets[rootTokenAddress].getBalance();
     }
 
+    /**
+     * Get wallet state: balance, tonBalance, address
+     * @param {Wallet} wallet 
+     * @returns {JSON}
+     */
+    async _getWalletState(wallet) {
+        let state = {};
+        state['balance'] = await wallet.getBalance();
+        state['tonBalance'] = await this.checkAccountBalance(wallet.walletContract.address);
+        state['address'] = wallet.walletContract.address;
+        return state;
+    }
+
+    /**
+     * 
+     * @param {Array<String>} rootAddresses 
+     * @returns {JSON}
+     */
+    async getWalletsStates(rootAddresses) {
+        let state = {};
+        for (let address of rootAddresses) {
+            state[address] = this.wallets[address] !== undefined ?
+                await this.getWalletState(this.wallets[address]) : {
+                    balance: 0,
+                    tonBalance: 0,
+                    address: ZERO_ADDRESS
+                };
+        }
+        return state;
+    }
+
+    /**
+     * Check ton balances and deposit tons
+     */
     async checkWalletTONBalances() {
         let msigAddress = this.msig.msigContract.address;
         if (await this.checkAccountBalance(msigAddress) < MSIG_RECOMMENDED_BALANCE) {
@@ -133,13 +174,17 @@ class User {
     }
 
     /**
-     * 
+     * provide liquidity for swap pair
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} token1Amount
      * @param {Number} token2Amount
+     * @returns {JSON}
      */
     async provideLiquidity(swapPairInstance, token1Amount, token2Amount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2, res.lpTokenRoot];
+        let initialBalances = await this.getWalletsStates(tokensToCheck);
+        let finalBalances = {};
 
         let provideLiquidityPayload = await swapPairInstance.runLocal('createProvideLiquidityPayload', {}, {});
 
@@ -170,15 +215,26 @@ class User {
         await sleep(2000);
 
         await this.createWallet(res.lpTokenRoot);
+
+        finalBalances = await this.getWalletsStates(tokensToCheck);
+
+        return {
+            start: initialBalances,
+            end: finalBalances
+        };
     }
 
     /**
-     * 
+     * swap tokens with given root contract
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} tokenAmount 
+     * @returns {JSON}
      */
     async swapTokens(swapPairInstance, tokenAmount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2];
+        let initialBalances = await this.getWalletsStates(tokensToCheck);
+        let finalBalances = {};
 
         let swapPayload = await swapPairInstance.runLocal('createProvideLiquidityPayload', {
             sendTokensTo: this.wallets[res.tokenRoot2]
@@ -195,15 +251,27 @@ class User {
                 swapPayload
             )
         );
+
+        await sleep(2000);
+
+        finalBalances = await this.getWalletsStates(tokensToCheck);
+
+        return {
+            start: initialBalances,
+            end: finalBalances
+        };
     }
 
     /**
-     * 
+     * withdraw tip3 tokens from swap pair
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} tokenAmount 
      */
     async withdrawTokens(swapPairInstance, tokenAmount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2, res.lpTokenRoot];
+        let initialBalances = await this.getWalletsStates(tokensToCheck);
+        let finalBalances = {};
 
         let withdrawPayload = await swapPairInstance.runLocal('createWithdrawLiquidityPayload', {
             tokenRoot1: res.tokenRoot1,
@@ -223,6 +291,15 @@ class User {
                 withdrawPayload
             )
         );
+
+        await sleep(2000);
+
+        finalBalances = await this.getWalletsStates(tokensToCheck);
+
+        return {
+            start: initialBalances,
+            end: finalBalances
+        };
     }
 
     /**

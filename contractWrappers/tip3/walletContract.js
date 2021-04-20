@@ -62,6 +62,13 @@ class Wallet {
         );
     }
 
+    async getBalance() {
+        return Number((await this.walletContract.runLocal(
+            'getDetails', {},
+            this.keyPair
+        )).balance);
+    }
+
     /**
      * Set callback address for deployed wallet
      * @param {String} address Callback contract address
