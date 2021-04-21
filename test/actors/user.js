@@ -14,7 +14,6 @@ const {
 } = require('../../config/general/constants');
 const Wallet = require('../../contractWrappers/tip3/walletContract');
 const { sleep } = require('../../src/utils');
-const { initial } = require('underscore');
 
 class User {
     /**

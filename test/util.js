@@ -5,6 +5,7 @@ const { CRYSTAL_AMOUNT } = require('../config/general/constants');
 const RootContract = require('../contractWrappers/tip3/rootContract');
 const Wallet = require('../contractWrappers/tip3/walletContract');
 const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
+const { sleep } = require('../src/utils');
 
 /**
  * String to hex
@@ -80,32 +81,6 @@ function initialSwapSetup(tonInstance, config, tokens) {
 /**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} tokenConfig
- */
-async function deployTIP3(tonInstance, tokenConfig) {
-    let rootSC;
-    let wallets = [];
-
-    logger.log('#####################################');
-    logger.log('Initial stage');
-
-    for (let contractId = 0; contractId < tokenConfig.walletsAmount; contractId++) {
-        let walletConfig = tokenConfig.walletsConfig[contractId];
-        wallets.push(new Wallet(tonInstance, walletConfig.config, walletConfig.keys));
-        await wallets[contractId].loadContract();
-    }
-
-    tokenConfig.root.config.initParams.wallet_code = wallets[0].walletContract.code;
-    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
-    await rootSC.loadContract();
-
-    logger.log('Deploying root contract');
-    await rootSC.deployContract();
-}
-
-/**
- * Deploy TIP-3 token root contract and wallets
- * @param {freeton.TonWrapper} tonInstance 
  * @param {JSON} tokenConfig 
  * @param {freeton.ContractWrapper} giverSC
  */
@@ -161,4 +136,81 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
     }
 }
 
-module.exports = { toHex, copyJSON, sendGrams, initialTokenSetup, initialSwapSetup, deployTIP3 }
+// _______   ________  __       __   ______   _______   __    __ 
+// /       \ /        |/  |  _  /  | /      \ /       \ /  |  /  |
+// $$$$$$$  |$$$$$$$$/ $$ | / \ $$ |/$$$$$$  |$$$$$$$  |$$ | /$$/ 
+// $$ |__$$ |$$ |__    $$ |/$  \$$ |$$ |  $$ |$$ |__$$ |$$ |/$$/  
+// $$    $$< $$    |   $$ /$$$  $$ |$$ |  $$ |$$    $$< $$  $$<   
+// $$$$$$$  |$$$$$/    $$ $$/$$ $$ |$$ |  $$ |$$$$$$$  |$$$$$  \  
+// $$ |  $$ |$$ |_____ $$$$/  $$$$ |$$ \__$$ |$$ |  $$ |$$ |$$  \ 
+// $$ |  $$ |$$       |$$$/    $$$ |$$    $$/ $$ |  $$ |$$ | $$  |
+// $$/   $$/ $$$$$$$$/ $$/      $$/  $$$$$$/  $$/   $$/ $$/   $$/ 
+
+/**
+ * Deploy TIP-3 token root contract and wallets
+ * @param {freeton.TonWrapper} tonInstance 
+ * @param {JSON} tokenConfig
+ */
+async function deployTIP3Root(tonInstance, tokenConfig) {
+    let rootSC;
+
+    logger.log('#####################################');
+    logger.log('Initial stage');
+
+    let wallet = new Wallet(tonInstance);
+    await wallet.loadContract();
+
+    tokenConfig.root.config.initParams.wallet_code = wallet.walletContract.code;
+    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
+    await rootSC.loadContract();
+
+    logger.log('Deploying root contract');
+    await rootSC.deployContract();
+
+    return rootSC;
+}
+
+/**
+ * create config for root swap pair contract
+ * @param {JSON} config 
+ * @param {freeton.TonWrapper} tonInstance 
+ * @returns 
+ */
+function createRootSwapPairConfig(config, tonInstance) {
+    config.root.keyPair = tonInstance.keys[0];
+    config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
+
+    return config;
+}
+
+/**
+ * Wait until contract is deployed
+ * @param {String} contractAddress 
+ */
+async function awaitForContractDeployment(contractAddress) {
+    res = {
+        acc_type: 0
+    };
+    while (res.acc_type == 0) {
+        res = await this.tonInstance.ton.net.query_collection({
+            collection: 'accounts',
+            filter: {
+                id: { eq: address }
+            },
+            result: 'acc_type'
+        });
+        sleep(1000);
+    }
+}
+
+module.exports = {
+    toHex,
+    copyJSON,
+    sendGrams,
+    initialTokenSetup,
+    initialSwapSetup,
+    deployTIP3,
+    deployTIP3Root,
+    createRootSwapPairConfig,
+    awaitForContractDeployment
+}

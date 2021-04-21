@@ -1,4 +1,5 @@
 const freeton = require('../../src');
+const { sleep } = require('../../src/utils');
 
 class RootSwapPairContract {
     /**
@@ -118,6 +119,48 @@ class RootSwapPairContract {
             },
             this.keyPair
         )
+    }
+
+    /**
+     * Get future address of swap pair
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     */
+    async getFutureSwapPairAddress(rootContract1, rootContract2) {
+        return await this.rootSwapPairContract.runLocal(
+            'getFutureSwapPairAddress', {
+                tokenRootContract1: rootContract1,
+                tokenRootContract2: rootContract2
+            },
+            this.keyPair
+        );
+    }
+
+    //========================Misc========================//
+
+    /**
+     * Await while swap pair will be initialized
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     * @returns {JSON}
+     */
+    async awaitSwapPairInitialization(rootContract1, rootContract2) {
+        let res = {
+            tokenWallet1: ZERO_ADDRESS,
+            tokenWallet2: ZERO_ADDRESS,
+            lpTokenWallet: ZERO_ADDRESS
+        }
+
+        while (
+            res.tokenWallet1 == ZERO_ADDRESS ||
+            res.tokenWallet2 == ZERO_ADDRESS ||
+            res.lpTokenWallet == ZERO_ADDRESS
+        ) {
+            res = getPairInfo(rootContract1, rootContract2);
+            sleep(1000);
+        }
+
+        return res;
     }
 
     //========================Actual Functions========================//

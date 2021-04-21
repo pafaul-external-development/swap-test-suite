@@ -1,16 +1,3 @@
-let testScenario = {
-    pair1: {
-        tokensAmount: {
-            user: 30000,
-            swap: 30000
-        }
-    },
-    pair2: {
-        tokensAmount: {
-            user: 300,
-            swap: 300
-        }
-    }
-}
+let testScenario = [800000, 600000];
 
 module.exports = testScenario;

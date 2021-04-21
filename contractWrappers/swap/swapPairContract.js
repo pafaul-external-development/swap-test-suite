@@ -7,11 +7,9 @@ class SwapPairContract {
      * @param {JSON} config
      * @param {JSON} keyPair 
      */
-    constructor(tonInstance, config, keyPair) {
+    constructor(tonInstance, keyPair) {
         this.tonInstance = tonInstance;
         this.keyPair = keyPair;
-        this.initParams = config.initParams;
-        this.constructorParams = config.constructorParams;
         this.swapPairContract = undefined;
 
         this.tokenWallets = [];
@@ -22,6 +20,22 @@ class SwapPairContract {
      */
     async loadContract() {
         this.swapPairContract = await freeton.requireContract(this.tonInstance, 'SwapPairContract');
+    }
+
+    /**
+     * Get swap pair contract address
+     * @returns swap pair contract address
+     */
+    getAddress() {
+        return this.swapPairContract.address;
+    }
+
+    /**
+     * Set contract address
+     * @param {String} spAddress 
+     */
+    setContractAddress(spAddress) {
+        this.swapPairContract.address = spAddress;
     }
 
     //========================Getters========================//
