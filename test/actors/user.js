@@ -292,7 +292,7 @@ class User {
 
         return {
             start: initialBalances,
-            end: finalBalances
+            finish: finalBalances
         };
     }
 

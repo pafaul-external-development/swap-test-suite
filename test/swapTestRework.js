@@ -1,15 +1,11 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { CRYSTAL_AMOUNT, DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES, USERS_OF_TONSWAP } = require('../config/general/constants');
+const { USERS_OF_TONSWAP } = require('../config/general/constants');
 
 const RootContract = require('../contractWrappers/tip3/rootContract');
-const Wallet = require('../contractWrappers/tip3/walletContract');
-const Giver = require('../contractWrappers/giverContract');
-const WalletDeployer = require('../contractWrappers/tip3/walletDeployer');
 const RootSwapPairContract = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
-const TONStorage = require('../contractWrappers/util/tonStorage');
 const User = require('./actors/user');
 
 const giverConfig = require('../config/contracts/giverConfig');
@@ -19,11 +15,7 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 var pairsConfig = require('../config/contracts/walletsForSwap');
 const testScenario = require('../config/general/testScenario');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const wallet = require('../config/contracts/walletParameters');
-const { root } = require('../config/contracts/swapPairContractsConfig');
-const { sleep } = require('../src/utils');
 const { deployTIP3Root, initialTokenSetup, createRootSwapPairConfig, awaitForContractDeployment } = require('./util');
-const { keyPair } = require('../config/contracts/giverConfig');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -120,6 +112,35 @@ describe('Test of swap pairs', async function() {
 
     it('Providing liquidity for swap pair', async function() {
         // TODO: Паша, Антон: предоставление ликвидности свап паре
+
+        let token1Amount = testScenario[0] / 4;
+        let token2Amount = testScenario[1] / 4;
+        let expectedLPTokenAmount = token1Amount * token2Amount;
+        /**
+         * @name user
+         * @type {User}
+         */
+        let user;
+
+        /**
+         * @name userStateChange
+         * @type {JSON[]}
+         */
+        let userStateChange;
+        for (user of users)
+            userStateChange.push(await user.provideLiquidity(swapPairContract, token1Amount, token2Amount));
+
+        /**
+         * @name state
+         * @type {JSON}
+         */
+        let state;
+        for (let state of userStateChange) {
+            let token1State = token1Amount == (state.start[tip3RootContracts[0].getAddress()] - state.finish[tip3RootContracts[0].getAddress()]);
+            let token2State = token2Amount == (state.start[tip3RootContracts[1].getAddress()] - state.finish[tip3RootContracts[1].getAddress()]);
+            let lpTokenState = expectedLPTokenAmount == (state.finish[swapPairContract.info.lpTokenRoot] - state.start[swapPairContract.info.lpTokenRoot]);
+            let resState = token1State && token2State && lpTokenState;
+        }
     })
 
     it('Providing liquidity using one token', async function() {
@@ -127,11 +148,64 @@ describe('Test of swap pairs', async function() {
     })
 
     it('Token swap', async function() {
-        // TODO: Паша, Антон: обмен одних токенов на другие токены 
+        // TODO: Паша, Антон: обмен одних токенов на другие токены
+        let tokenAmount = testScenario[0] / 100;
+
+        /**
+         * @name userStateChange
+         * @type {JSON[]}
+         */
+        let userStateChange;
+
+        /**
+         * @name user
+         * @type {User}
+         */
+        let user;
+        for (user of users) {
+            userStateChange.push(await user.swapTokens(swapPairContract, tokenAmount));
+        }
+
+        /**
+         * @name state
+         * @type {JSON}
+         */
+        let state;
+        for (state of userStateChange) {
+            let token1State = tokenAmount == (state.start[tip3RootContracts[0].getAddress()] - state.finish[tip3RootContracts[0].getAddress]);
+            let token2State = (state.start[tip3RootContracts[1].getAddress()] < state.finish[tip3RootContracts[1].getAddress()]);
+            let resState = token1State && token2State;
+        }
     })
 
     it('Withdrawing liquidity', async function() {
         // TODO: Паша, Антон: вывод ликвидности из пары
+        /**
+         * @name user
+         * @type {User}
+         */
+        let user;
+
+        /**
+         * @name userStateChange
+         * @type {JSON[]}
+         */
+        let userStateChange = [];
+
+        for (user of users) {
+            let lpTokenAmount = await user.checkWalletBalance(swapPairContract.info.lpTokenRoot);
+            userStateChange.push(await user.withdrawTokens(swapPairContract, lpTokenAmount / 2));
+        }
+        /**
+         * @name state
+         * @type {JSON}
+         */
+        let state;
+        for (state of userStateChange) {
+            let token1State = (state.finish[tip3RootContracts[0].getAddress()] > state.start[tip3RootContracts[0].getAddress()]);
+            let token2State = (state.finish[tip3RootContracts[1].getAddress()] > state.start[tip3RootContracts[1].getAddress()]);
+            let resState = token1State && token2State;
+        }
     })
 
     it('Withdrawing liquidity by using one token', async function() {
