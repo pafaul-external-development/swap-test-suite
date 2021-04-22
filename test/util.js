@@ -149,19 +149,15 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
 /**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} tokenConfig
+ * @param {JSON} rootConfig
  */
-async function deployTIP3Root(tonInstance, tokenConfig) {
+async function deployTIP3Root(tonInstance, rootConfig) {
     let rootSC;
 
     logger.log('#####################################');
     logger.log('Initial stage');
 
-    let wallet = new Wallet(tonInstance);
-    await wallet.loadContract();
-
-    tokenConfig.root.config.initParams.wallet_code = wallet.walletContract.code;
-    rootSC = new RootContract(tonInstance, tokenConfig.root.config, tokenConfig.root.keys);
+    rootSC = new RootContract(tonInstance, rootConfig.root.config, rootConfig.root.keys);
     await rootSC.loadContract();
 
     logger.log('Deploying root contract');
@@ -181,6 +177,23 @@ function createRootSwapPairConfig(config, tonInstance) {
     config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
 
     return config;
+}
+
+/**
+ * create config for tip3 root contract
+ * @param {freeton.TonWrapper} tonInstance 
+ * @param {JSON} config 
+ */
+async function initialTokenSetup(tonInstance, config) {
+    let rootConfig = copyJSON(config);
+
+    rootConfig.root.keys = tonInstance.keys[0];
+    rootConfig.root.config.constructorParams.root_public_key_ = '0x' + tonInstance.keys[0].public;
+
+    let wallet = await freeton.requireContract(tonInstance, 'TONTokenWallet');
+    rootConfig.root.config.initParams.wallet_code = wallet.code;
+
+    return rootConfig;
 }
 
 /**

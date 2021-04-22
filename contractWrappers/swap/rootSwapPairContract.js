@@ -48,7 +48,7 @@ class RootSwapPairContract {
                 keyPair: this.keyPair
             })
         else {
-            let futureAddress = await this.getFutureAddress();
+            let futureAddress = await this.deployContract(false);
             let exists = await ton.ton.net.query_collection({
                 collection: 'accounts',
                 filter: {

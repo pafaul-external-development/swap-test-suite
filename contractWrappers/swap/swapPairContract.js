@@ -3,8 +3,7 @@ const freeton = require('../../src');
 class SwapPairContract {
     /**
      * 
-     * @param {freeton.TonWrapper} tonInstance 
-     * @param {JSON} config
+     * @param {freeton.TonWrapper} tonInstance
      * @param {JSON} keyPair 
      */
     constructor(tonInstance, keyPair) {

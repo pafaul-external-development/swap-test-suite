@@ -18,24 +18,20 @@ const { sleep } = require('../../src/utils');
 class User {
     /**
      * 
-     * @param {String} public
-     * @param {String} private
+     * @param {JSON} keyPair
      * @param {freeton.TonWrapper} tonInstance
      */
-    constructor({ public, private }, tonInstance) {
-        this.tonWallet = undefined;
+    constructor(keyPair, tonInstance) {
+        this.msig = undefined;
         this.wallets = {};
-        this.keyPair = {
-            public: public,
-            private: private
-        };
-        this.pubkey = '0x' + public;
+        this.keyPair = keyPair;
+        this.pubkey = '0x' + keyPair.public;
         this.tonInstance = tonInstance;
-        this.giverContract = new ContractWrapper(
-            this.tonWrapper,
-            this.tonWrapper.giverConfig.abi,
+        this.giverContract = new freeton.ContractWrapper(
+            this.tonInstance,
+            this.tonInstance.giverConfig.abi,
             null,
-            this.tonWrapper.giverConfig.address,
+            this.tonInstance.giverConfig.address,
         );
     }
 
@@ -43,14 +39,14 @@ class User {
      * Create multisig for user
      */
     async createMultisigWallet() {
-        this.tonWallet = new MultisigWallet(this.tonInstance, {
+        this.msig = new MultisigWallet(this.tonInstance, {
             intiParams: {},
             constructorParams: {
                 owners: [this.pubkey],
                 reqConfirms: 1
             }
         }, this.keyPair);
-        await msig.deployContract();
+        await this.msig.deployContract();
     }
 
     /**
