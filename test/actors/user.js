@@ -9,8 +9,7 @@ const {
     TOKENS_TO_MINT,
     TWO_CRYSTALS,
     ONE_CRYSTAL,
-    HALF_CRYSTAL,
-    QUATER_CRYSTAL
+    HALF_CRYSTAL
 } = require('../../config/general/constants');
 const Wallet = require('../../contractWrappers/tip3/walletContract');
 const { sleep } = require('../../src/utils');
@@ -69,7 +68,6 @@ class User {
             this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
             if (!walletExists) {
                 console.log('Wallet does not exist');
-                // TODO: проверить а это вообще работает или нет
                 let payload = await this.tonInstance.ton.abi.encode_message_body({
                     abi: abiContract(rootTIP3TokenAbi),
                     call_set: {
@@ -117,17 +115,10 @@ class User {
                 owner_address_: this.msig.getAddress()
             }, this.keyPair
         );
-        let res = await rootTokenContract.runLocal(
-            'getDetails', {
-                _answer_id: 0
-            }, this.keyPair
-        )
         let walletExists = await this.checkIfAccountExists(futureAddress);
-        let initialBalances = undefined;
         while (!walletExists) {
             await sleep(1000);
             walletExists = await this.checkIfAccountExists(futureAddress);
-            initialBalances = await this.getWalletsStates(tokensToCheck);
         }
         this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
         this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
@@ -316,18 +307,6 @@ class User {
         );
 
         await sleep(5000);
-
-        // let state = await swapPairInstance.swapPairContract.runLocal(
-        //     '_getLiquidityState', {}, {}
-        // );
-
-        // let payloadSize = await swapPairInstance.swapPairContract.runLocal(
-        //     '_getSS', {}, {}
-        // );
-
-        // let info = await swapPairInstance.swapPairContract.runLocal(
-        //     'getInfo', {}, {}
-        // );
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 

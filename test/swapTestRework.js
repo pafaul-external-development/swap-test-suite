@@ -159,7 +159,7 @@ try {
              * @type {JSON}
              */
             let state;
-            for (let state of userStateChange) {
+            for (state of userStateChange) {
                 let token1State = token1Amount == (state.start[tip3RootContracts[0].getAddress()].balance - state.finish[tip3RootContracts[0].getAddress()].balance);
                 let token2State = token2Amount == (state.start[tip3RootContracts[1].getAddress()].balance - state.finish[tip3RootContracts[1].getAddress()].balance);
                 let lpTokenState = expectedLPTokenAmount == (state.finish[swapPairContract.info.lpTokenRoot].balance - state.start[swapPairContract.info.lpTokenRoot].balance);
