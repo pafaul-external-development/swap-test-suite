@@ -15,8 +15,8 @@ class TonWrapper {
     }) {
         this.giverConfig = giverConfig;
         this.debug = debug !== undefined;
-        this.runAttempts = runAttempts === undefined ? 10 : runAttempts;
-        this.deployAttempts = deployAttempts === undefined ? 20 : deployAttempts;
+        this.runAttempts = runAttempts === undefined ? 3 : runAttempts;
+        this.deployAttempts = deployAttempts === undefined ? 3 : deployAttempts;
         this.config = config;
     }
 
@@ -36,7 +36,7 @@ class TonWrapper {
             if (this.config.network === 'https://net.ton.dev') {
                 await utils.sleep(10000);
             } else { // Default
-                await utils.sleep(100);
+                await utils.sleep(50);
             }
         } else {
             await utils.sleep(parseInt(process.env.TON_AFTER_RUN_SLEEP_MS));

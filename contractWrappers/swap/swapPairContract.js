@@ -44,7 +44,9 @@ class SwapPairContract {
      */
     async getPairInfo() {
         return await this.swapPairContract.runLocal(
-            'getPairInfo', {}, {}
+            'getPairInfo', {
+                _answer_id: 0
+            }, {}
         )
     }
 

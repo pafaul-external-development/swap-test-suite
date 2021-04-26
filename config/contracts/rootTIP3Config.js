@@ -1,4 +1,5 @@
 let rootParameters = require('./rootContractParameters');
+const freeton = require('../../src');
 
 /**
  * Is used to encode text parameters
@@ -23,10 +24,12 @@ let rootTIP3Params = [{
         keys: {},
     }
 }];
-
-rootTIP3Params[0].root.config.initParams.name = toHex('The One And Only');
-rootTIP3Params[0].root.config.initParams.symbol = toHex('TOAO');
-rootTIP3Params[1].root.config.initParams.name = toHex('The Second and The Last');
-rootTIP3Params[1].root.config.initParams.symbol = toHex('TSATL');
-
+let name1 = `Coin_${freeton.utils.getRandomNonce()}_1`;
+let name2 = name1 + '_2';
+console.log(name1);
+console.log(name2);
+rootTIP3Params[0].root.config.initParams.name = toHex(name1);
+rootTIP3Params[0].root.config.initParams.symbol = toHex(name1);
+rootTIP3Params[1].root.config.initParams.name = toHex(name2);
+rootTIP3Params[1].root.config.initParams.symbol = toHex(name2);
 module.exports = rootTIP3Params;

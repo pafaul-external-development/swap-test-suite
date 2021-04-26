@@ -10,8 +10,8 @@ ONE_CRYSTAL = freeton.utils.convertCrystal('1', 'nano');
 HALF_CRYSTAL = freeton.utils.convertCrystal('0.5', 'nano');
 QUATER_CRYSTAL = freeton.utils.convertCrystal('0.25', 'nano');
 TOKENS_TO_MINT = 10e+12;
-RETRIES = 25;
-USERS_OF_TONSWAP = 4;
+RETRIES = 3;
+USERS_OF_TONSWAP = 1;
 
 module.exports = {
     CRYSTAL_AMOUNT,

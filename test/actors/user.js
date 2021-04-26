@@ -14,6 +14,8 @@ const {
 } = require('../../config/general/constants');
 const Wallet = require('../../contractWrappers/tip3/walletContract');
 const { sleep } = require('../../src/utils');
+const { rootTIP3TokenAbi } = require('../../config/contracts/abis');
+const { abiContract, signerNone } = require('@tonclient/core');
 
 class User {
     /**
@@ -55,51 +57,80 @@ class User {
      * @param {String} tokenAmount 
      */
     async createWallet(tip3Token, tokenAmount) {
-        let rootTokenAddress = tip3Token.rootContract.address;
+        let rootTokenAddress = tip3Token.getAddress();
         if (!this.wallets[rootTokenAddress]) {
+            console.log('Wallet does not exist');
             let futureAddress = await tip3Token.calculateFutureWalletAddress(
-                ZERO_PUBKEY, this.msig.msigContract.address
+                ZERO_PUBKEY, this.msig.getAddress()
             );
             let walletExists = await this.checkIfAccountExists(futureAddress);
+            console.log('Future address calculated');
+            this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
+            this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
             if (!walletExists) {
+                console.log('Wallet does not exist');
                 // TODO: проверить а это вообще работает или нет
                 let payload = await this.tonInstance.ton.abi.encode_message_body({
-                    abi: tip3Token.rootContract.abi,
+                    abi: abiContract(rootTIP3TokenAbi),
                     call_set: {
                         function_name: 'deployEmptyWallet',
                         input: {
-                            deployGrams: freeton.utils.convertCrystal('0.5', 'nano'),
-                            wallet_public_key: ZERO_PUBKEY,
-                            owner_address_: this.msig.msigContract.address,
+                            deploy_grams: freeton.utils.convertCrystal('0.5', 'nano'),
+                            wallet_public_key_: ZERO_PUBKEY,
+                            owner_address_: this.msig.getAddress(),
                             gas_back_address: ZERO_ADDRESS
                         }
                     },
                     is_internal: true,
-                    signer: {
-                        type: 'Keys',
-                        keys: this.keyPair
-                    }
+                    signer: signerNone()
                 });
+
                 await this.msig.transferTo(
-                    tip3Token,
+                    rootTokenAddress,
                     freeton.utils.convertCrystal('1', 'nano'),
-                    payload
+                    payload.body
                 );
 
                 while (!walletExists) {
                     walletExists = await this.checkIfAccountExists(futureAddress);
                     await sleep(1000);
                 }
-                this.wallets[rootTokenAddress] = futureAddress;
                 await tip3Token.mintTokensToWallet(
                     this.wallets[rootTokenAddress],
                     tokenAmount
                 );
             }
-            this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
-            this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
         }
-        return this._getWalletState(wallets[rootTokenAddress].walletContract.address);
+        return this._getWalletState(this.wallets[rootTokenAddress]);
+    }
+
+    /**
+     * Claim wallet if it exists
+     * @param {String} rootTokenAddress address of token root contracts
+     */
+    async claimWallet(rootTokenAddress, tokensToCheck) {
+        let rootTokenContract = await freeton.requireContract(this.tonInstance, 'RootTokenContract', rootTokenAddress);
+        let futureAddress = await rootTokenContract.runLocal(
+            'getWalletAddress', {
+                _answer_id: 0,
+                wallet_public_key_: ZERO_PUBKEY,
+                owner_address_: this.msig.getAddress()
+            }, this.keyPair
+        );
+        let res = await rootTokenContract.runLocal(
+            'getDetails', {
+                _answer_id: 0
+            }, this.keyPair
+        )
+        let walletExists = await this.checkIfAccountExists(futureAddress);
+        let initialBalances = undefined;
+        while (!walletExists) {
+            await sleep(1000);
+            walletExists = await this.checkIfAccountExists(futureAddress);
+            initialBalances = await this.getWalletsStates(tokensToCheck);
+        }
+        this.wallets[rootTokenAddress] = new Wallet(this.tonInstance, {}, this.keyPair);
+        this.wallets[rootTokenAddress].setWalletAddress(futureAddress);
     }
 
     /**
@@ -133,7 +164,7 @@ class User {
         let state = {};
         for (let address of rootAddresses) {
             state[address] = this.wallets[address] !== undefined ?
-                await this.getWalletState(this.wallets[address]) : {
+                await this._getWalletState(this.wallets[address]) : {
                     balance: 0,
                     tonBalance: 0,
                     address: ZERO_ADDRESS
@@ -176,12 +207,14 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let provideLiquidityPayload = await swapPairInstance.runLocal('createProvideLiquidityPayload', {}, {});
+        let provideLiquidityPayload = await swapPairInstance.swapPairContract.runLocal('createProvideLiquidityPayload', {
+            tip3Address: initialBalances[res.lpTokenRoot].address
+        }, {});
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
             ONE_CRYSTAL,
-            await createPayloadForTIP3Wallet(
+            await this.createPayloadForTIP3Wallet(
                 this.wallets[res.tokenRoot1].getAbi(),
                 res.tokenWallet1,
                 token1Amount,
@@ -193,7 +226,7 @@ class User {
         await this.msig.transferTo(
             this.wallets[res.tokenRoot2].getAddress(),
             ONE_CRYSTAL,
-            await createPayloadForTIP3Wallet(
+            await this.createPayloadForTIP3Wallet(
                 this.wallets[res.tokenRoot2].getAbi(),
                 res.tokenWallet2,
                 token2Amount,
@@ -204,13 +237,13 @@ class User {
 
         await sleep(2000);
 
-        await this.createWallet(res.lpTokenRoot);
+        await this.claimWallet(res.lpTokenRoot, tokensToCheck);
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
         return {
             start: initialBalances,
-            end: finalBalances
+            finish: finalBalances
         };
     }
 
@@ -226,14 +259,14 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let swapPayload = await swapPairInstance.runLocal('createProvideLiquidityPayload', {
-            sendTokensTo: this.wallets[res.tokenRoot2]
+        let swapPayload = await swapPairInstance.swapPairContract.runLocal('createSwapPayload', {
+            sendTokensTo: this.wallets[res.tokenRoot2].getAddress()
         }, {});
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
             ONE_CRYSTAL,
-            await createPayloadForTIP3Wallet(
+            await this.createPayloadForTIP3Wallet(
                 this.wallets[res.tokenRoot1].getAbi(),
                 res.tokenWallet1,
                 tokenAmount,
@@ -248,7 +281,7 @@ class User {
 
         return {
             start: initialBalances,
-            end: finalBalances
+            finish: finalBalances
         };
     }
 
@@ -263,7 +296,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let withdrawPayload = await swapPairInstance.runLocal('createWithdrawLiquidityPayload', {
+        let withdrawPayload = await swapPairInstance.swapPairContract.runLocal('createWithdrawLiquidityPayload', {
             tokenRoot1: res.tokenRoot1,
             tokenWallet1: this.wallets[res.tokenRoot1].getAddress(),
             tokenRoot2: res.tokenRoot2,
@@ -271,9 +304,9 @@ class User {
         });
 
         await this.msig.transferTo(
-            this.wallets[res.lpTokenRoot].getAddress,
+            this.wallets[res.lpTokenRoot].getAddress(),
             TWO_CRYSTALS,
-            await createPayloadForTIP3Wallet(
+            await this.createPayloadForTIP3Wallet(
                 this.wallets[res.tokenRoot1].getAbi(),
                 res.lpTokenWallet,
                 tokenAmount,
@@ -282,7 +315,19 @@ class User {
             )
         );
 
-        await sleep(2000);
+        await sleep(5000);
+
+        // let state = await swapPairInstance.swapPairContract.runLocal(
+        //     '_getLiquidityState', {}, {}
+        // );
+
+        // let payloadSize = await swapPairInstance.swapPairContract.runLocal(
+        //     '_getSS', {}, {}
+        // );
+
+        // let info = await swapPairInstance.swapPairContract.runLocal(
+        //     'getInfo', {}, {}
+        // );
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
@@ -317,9 +362,9 @@ class User {
             filter: {
                 id: { eq: address }
             },
-            result: 'acc_type'
+            result: 'acc_type balance'
         });
-        return res.acc_type == 0;
+        return Boolean(res.result[0]) && res.result[0].acc_type != 0;
     }
 
     async checkAccountBalance(address) {
@@ -328,9 +373,9 @@ class User {
             filter: {
                 id: { eq: address }
             },
-            result: 'balance'
+            result: 'acc_type balance'
         });
-        return Number(res.balance);
+        return Number(res.result[0].balance);
     }
 
     async sendGiverGrams(address, amount) {
@@ -352,8 +397,8 @@ class User {
      * @returns {String} payload for swap operation
      */
     async createPayloadForTIP3Wallet(walletAbi, tokenWallet, amount, grams, payload) {
-        return await this.tonInstance.ton.abi.encode_message_body({
-            abi: walletAbi,
+        return (await this.tonInstance.ton.abi.encode_message_body({
+            abi: abiContract(walletAbi),
             call_set: {
                 function_name: 'transfer',
                 input: {
@@ -367,10 +412,9 @@ class User {
             },
             is_internal: true,
             signer: {
-                type: 'Keys',
-                keys: this.keyPair
+                type: 'None'
             }
-        });
+        })).body;
     }
 
 }

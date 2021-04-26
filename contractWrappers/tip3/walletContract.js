@@ -32,7 +32,9 @@ class Wallet {
      * Set wallet address
      * @param {String} walletAddress 
      */
-    setWalletAddress(walletAddress) {
+    async setWalletAddress(walletAddress) {
+        if (!this.walletContract)
+            await this.loadContract();
         this.walletContract.address = walletAddress;
     }
 
@@ -64,7 +66,9 @@ class Wallet {
 
     async getBalance() {
         return Number((await this.walletContract.runLocal(
-            'getDetails', {},
+            'getDetails', {
+                _answer_id: 0
+            },
             this.keyPair
         )).balance);
     }

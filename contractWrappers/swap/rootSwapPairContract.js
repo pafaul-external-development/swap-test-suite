@@ -1,5 +1,6 @@
 const freeton = require('../../src');
 const { sleep } = require('../../src/utils');
+const SwapPairContract = require('./swapPairContract');
 
 class RootSwapPairContract {
     /**
@@ -41,30 +42,53 @@ class RootSwapPairContract {
      * @param {Boolean} deployRequired true -> deploy, false -> only get address
      */
     async deployContract(deployRequired = false) {
-        if (!deployRequired)
+        if (!deployRequired) {
+            if (!this.rootSwapPairContract)
+                await this.loadContract();
             return await this.rootSwapPairContract.getFutureAddress({
                 constructorParams: this.constructorParams,
                 initParams: this.initParams,
                 keyPair: this.keyPair
             })
-        else {
+        } else {
             let futureAddress = await this.deployContract(false);
-            let exists = await ton.ton.net.query_collection({
+            let exists = await this.tonInstance.ton.net.query_collection({
                 collection: 'accounts',
                 filter: {
                     id: { eq: futureAddress }
                 },
-                result: 'acc_type'
+                result: 'acc_type balance'
             });
-            if (exists.acc_type == 0) {
-                return await this.rootSwapPairContract.deploy({
+            if (exists.result.length == 0) {
+                await this.rootSwapPairContract.deploy({
                     constructorParams: this.constructorParams,
                     initParams: this.initParams,
                     initialBalance: freeton.utils.convertCrystal('200', 'nano'),
-                    _randomNonce: true,
+                    _randomNonce: false,
                     keyPair: this.keyPair,
                 });
+            } else {
+                if (Number(exists.result[0].balance) < Number(freeton.utils.convertCrystal('100', 'nano'))) {
+                    const giverContract = new freeton.ContractWrapper(
+                        this.tonInstance.giverConfig,
+                        this.tonInstance.giverConfig.abi,
+                        null,
+                        this.tonInstance.giverConfig.keyPair,
+                    );
+
+                    try {
+                        await giverContract.run('sendGrams', {
+                                dest: futureAddress,
+                                amount: freeton.utils.convertCrystal('100', 'nano'),
+                            },
+                            this.tonInstance.giverConfig.keyPair
+                        );
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
             }
+            this.rootSwapPairContract.address = futureAddress;
             return futureAddress;
         }
     }
@@ -142,9 +166,10 @@ class RootSwapPairContract {
      * Await while swap pair will be initialized
      * @param {String} rootContract1 
      * @param {String} rootContract2 
+     * @param {SwapPairContract} swapPairContract
      * @returns {JSON}
      */
-    async awaitSwapPairInitialization(rootContract1, rootContract2) {
+    async awaitSwapPairInitialization(rootContract1, rootContract2, swapPairContract) {
         let res = {
             tokenWallet1: ZERO_ADDRESS,
             tokenWallet2: ZERO_ADDRESS,
@@ -156,8 +181,8 @@ class RootSwapPairContract {
             res.tokenWallet2 == ZERO_ADDRESS ||
             res.lpTokenWallet == ZERO_ADDRESS
         ) {
-            res = getPairInfo(rootContract1, rootContract2);
-            sleep(1000);
+            res = await this.getPairInfo(rootContract1, rootContract2);
+            await sleep(1000);
         }
 
         return res;

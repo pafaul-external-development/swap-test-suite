@@ -169,14 +169,18 @@ async function deployTIP3Root(tonInstance, rootConfig) {
 /**
  * create config for root swap pair contract
  * @param {JSON} config 
+ * @param {String} tip3DeployerAddress
  * @param {freeton.TonWrapper} tonInstance 
  * @returns 
  */
-function createRootSwapPairConfig(config, tonInstance) {
+async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance) {
     config.root.keyPair = tonInstance.keys[0];
     config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
+    let sp = await freeton.requireContract(tonInstance, 'SwapPairContract');
+    config.root.constructorParams.spCode = sp.code;
+    config.root.constructorParams.tip3Deployer_ = tip3DeployerAddress;
 
-    return config;
+    return config.root;
 }
 
 /**
@@ -197,18 +201,33 @@ async function initialTokenSetup(tonInstance, config) {
 }
 
 /**
+ * Get codes of tip3 contracts
+ * @param {freeton.TonWrapper} tonInstance
+ * @returns {JSON} output with Root and wallet codes
+ */
+async function getTIP3Codes(tonInstance) {
+    let wallet = await freeton.requireContract(tonInstance, 'TONTokenWallet');
+    let root = await freeton.requireContract(tonInstance, 'RootTokenContract');
+    return {
+        wallet: wallet.code,
+        root: root.code
+    }
+}
+
+/**
  * Wait until contract is deployed
  * @param {String} contractAddress 
+ * @param {freeton.TonWrapper} tonInstance
  */
-async function awaitForContractDeployment(contractAddress) {
+async function awaitForContractDeployment(contractAddress, tonInstance) {
     res = {
-        acc_type: 0
+        result: []
     };
-    while (res.acc_type == 0) {
-        res = await this.tonInstance.ton.net.query_collection({
+    while (res.result.length == 0) {
+        res = await tonInstance.ton.net.query_collection({
             collection: 'accounts',
             filter: {
-                id: { eq: address }
+                id: { eq: contractAddress }
             },
             result: 'acc_type'
         });
@@ -225,5 +244,6 @@ module.exports = {
     deployTIP3,
     deployTIP3Root,
     createRootSwapPairConfig,
-    awaitForContractDeployment
+    awaitForContractDeployment,
+    getTIP3Codes
 }

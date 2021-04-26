@@ -1,5 +1,5 @@
 let tonOSSE = {
-    network: 'http://localhost:3333'
+    network: 'http://localhost:80'
 }
 
 let devnet = {

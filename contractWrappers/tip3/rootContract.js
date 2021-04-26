@@ -19,6 +19,14 @@ class RootContract {
         this.rootContract = undefined;
     }
 
+    /**
+     * 
+     * @returns {String} address of contract
+     */
+    getAddress() {
+        return this.rootContract.address;
+    }
+
     setConfig(newConfig) {
         this.initParams = newConfig.initParams;
         this.constructorParams = newConfig.constructorParams;
@@ -72,7 +80,7 @@ class RootContract {
         await this.rootContract.run(
             'mint', {
                 tokens: tokensAmount,
-                to: walletObject.walletContract.address
+                to: walletObject.walletContract ? walletObject.walletContract.address : walletObject
             },
             this.keyPair
         );
