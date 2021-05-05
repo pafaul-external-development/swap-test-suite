@@ -118,7 +118,7 @@ class RootContract {
     }
 
     async getDetails() {
-        return this.rootContract.runLocal('getDetails', {});
+        return this.rootContract.runLocal('getDetails', { _answer_id: 0 });
     }
 
     /**

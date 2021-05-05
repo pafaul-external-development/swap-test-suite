@@ -19,21 +19,25 @@ const ton = new freeton.TonWrapper({
 });
 
 async function main() {
-    await ton.setup(1);
-    let debot = await freeton.requireContract(ton, 'debot');
-    await debot.deploy({
-        constructorParams: {
-            swapDebotAbi: toHex(JSON.stringify(debot.abi))
-        },
-        initParams: {},
-        initialBalance: freeton.utils.convertCrystal(10, 'nano'),
-        _randomNonce: true,
-        keyPair: ton.keys[0],
-    });
+    try {
+        await ton.setup(1);
+        let debot = await freeton.requireContract(ton, 'TIP3Deployer');
+        await debot.deploy({
+            constructorParams: {
+                dabi: toHex(JSON.stringify(debot.abi))
+            },
+            initParams: {},
+            initialBalance: freeton.utils.convertCrystal(10, 'nano'),
+            _randomNonce: false,
+            keyPair: ton.keys[0],
+        });
 
-    console.log(await debot.address);
-    console.log(ton.keys[0]);
-    process.exit(0);
+        console.log(await debot.address);
+        console.log(ton.keys[0]);
+        process.exit(0);
+    } catch (err) {
+        console.log(err);
+    }
 }
 
 main();

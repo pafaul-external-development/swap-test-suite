@@ -18,16 +18,16 @@
     },
     "homepage": "https://github.com/SVOIcom/ton-testing-suite#readme",
     "dependencies": {
-        "@tonclient/core": "^1.5.2",
-        "@tonclient/lib-node": "^1.5.2",
+        "@tonclient/core": "^1.14.2",
+        "@tonclient/lib-node": "^1.14.2",
         "bignumber.js": "^9.0.1",
-        "chai": "^4.2.0",
+        "chai": "^4.3.4",
         "child_process": "^1.0.2",
-        "directory-tree": "^2.2.5",
+        "directory-tree": "^2.2.9",
         "dotenv": "^8.2.0",
         "mocha-logger": "^1.0.7",
         "ton-client-js": "^0.28.1",
         "ton-client-node-js": "^0.28.0",
-        "underscore": "^1.12.0"
+        "underscore": "^1.13.1"
     }
 }
