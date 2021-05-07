@@ -15,7 +15,7 @@ let rootParameters = {
         symbol: toHex('TRC'),
         decimals: 9,
         wallet_code: "", // Wallet code is added in tokenTest.js after loading wallet
-        _randomNonce: 0 // This is changed during deploy stage
+        _randomNonce: 3 // This is changed during deploy stage
     },
     constructorParams: {
         root_public_key_: "pubkey",

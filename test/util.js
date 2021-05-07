@@ -176,8 +176,6 @@ async function deployTIP3Root(tonInstance, rootConfig) {
 async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance) {
     config.root.keyPair = tonInstance.keys[0];
     config.root.initParams.ownerPubkey = '0x' + tonInstance.keys[0].public;
-    let sp = await freeton.requireContract(tonInstance, 'SwapPairContract');
-    config.root.constructorParams.spCode = sp.code;
     config.root.constructorParams.tip3Deployer_ = tip3DeployerAddress;
 
     return config.root;

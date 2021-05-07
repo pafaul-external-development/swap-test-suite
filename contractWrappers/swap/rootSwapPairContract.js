@@ -59,7 +59,7 @@ class RootSwapPairContract {
                 },
                 result: 'acc_type balance'
             });
-            if (exists.result.length == 0) {
+            if (exists.result.length == 0 || exists.result[0].acc_type != 1) {
                 await this.rootSwapPairContract.deploy({
                     constructorParams: this.constructorParams,
                     initParams: this.initParams,
@@ -67,6 +67,9 @@ class RootSwapPairContract {
                     _randomNonce: false,
                     keyPair: this.keyPair,
                 });
+                let swapPairCode = await freeton.requireContract(this.tonInstance, 'SwapPairContract');
+                swapPairCode = swapPairCode.code;
+                await this.setSwapPairCode(swapPairCode, 1);
             } else {
                 if (Number(exists.result[0].balance) < Number(freeton.utils.convertCrystal('100', 'nano'))) {
                     const giverContract = new freeton.ContractWrapper(
