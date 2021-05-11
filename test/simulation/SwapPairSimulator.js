@@ -97,7 +97,7 @@ class SwapPairSimulator {
 
     /////////////   Cahnges states  
     _swap() {
-        
+
     }
 
     _provide() {
@@ -130,7 +130,7 @@ class SwapPairSimulator {
     _calculateProvidingLiquidityInfo(maxFirstTokenAmount, maxSecondTokenAmount) {
         let provided1 = 0, provided2 = 0, minted = 0;
 
-        if (this.isLiquidityProvided) {
+        if (!this.isLiquidityProvided) {
             provided1 = maxFirstTokenAmount;
             provided2 = maxSecondTokenAmount;
             minted = uint256(provided1) * uint256(provided2);
