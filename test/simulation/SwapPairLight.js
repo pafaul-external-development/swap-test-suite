@@ -14,6 +14,18 @@ class SwapPairLight {
 
 
     /**
+     * @property
+     * @returns {{lp1: Number, lp2: Number, minted: Number}}
+     */
+    get poolsInfo() {
+        return {
+            lp1: this._pools.true,
+            lp2: this._pools.false, 
+            minted: this._minted
+        }
+    }
+
+    /**
      * @param {Boolean} lpFromKey
      * @param {Number} amount 
      * 
