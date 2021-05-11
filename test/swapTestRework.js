@@ -46,7 +46,7 @@ rootSwapPairContract = undefined;
  * @name swapPairContract
  * @type {SwapPairContract}
  */
-swapPairContract = undefined;
+let swapPairContract = undefined;
 
 /**
  * @name tip3Deployer
@@ -129,7 +129,8 @@ try {
                 await rootSwapPairContract.getFutureSwapPairAddress(tip3RootContracts[0].getAddress(), tip3RootContracts[1].getAddress())
             );
             await awaitForContractDeployment(swapPairContract.getAddress(), ton);
-            swapPairContract.info = await rootSwapPairContract.awaitSwapPairInitialization(tip3RootContracts[0].getAddress(), tip3RootContracts[1].getAddress(), swapPairContract);
+            await rootSwapPairContract.awaitSwapPairInitialization(tip3RootContracts[0].getAddress(), tip3RootContracts[1].getAddress(), swapPairContract);
+            await swapPairContract.getSetPairInfo();
 
         })
 

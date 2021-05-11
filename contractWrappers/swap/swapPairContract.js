@@ -1,5 +1,22 @@
 const freeton = require('../../src');
 
+/**
+ * @typedef SwapPairInfo
+ * @type {Object}
+ * 
+ * @property {String} rootContract
+ * @property {String} tokenRoot1
+ * @property {String} tokenRoot2
+ * @property {String} lpTokenRoot
+ * @property {String} tokenWallet1
+ * @property {String} tokenWallet2
+ * @property {String} lpTokenWallet
+ * @property {BigInt} deployTimestamp
+ * @property {String} swapPairAddress
+ * @property {BigInt} uniqueId   
+ * @property {Number} swapPairCodeVersion
+ */
+
 class SwapPairContract {
     /**
      * 
@@ -11,6 +28,10 @@ class SwapPairContract {
         this.keyPair = keyPair;
         this.swapPairContract = undefined;
 
+        /**
+         * @type {SwapPairInfo}
+         */
+        this.info = {};
         this.tokenWallets = [];
     }
 
@@ -35,6 +56,13 @@ class SwapPairContract {
      */
     setContractAddress(spAddress) {
         this.swapPairContract.address = spAddress;
+    }
+
+    /**
+     * Get pair info and set it
+     */
+    async getSetPairInfo() {
+        this.info = await this.getPairInfo();
     }
 
     //========================Getters========================//
