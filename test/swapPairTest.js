@@ -1,20 +1,22 @@
 const freeton = require('../src');
 const { expect } = require('chai');
 const logger = require('mocha-logger');
-const { DEFAULT_TIMEOUT, ZERO_ADDRESS, RETRIES } = require('../config/general/constants');
-const { initialTokenSetup, initialSwapSetup, deployTIP3 } = require('./util');
+const { USERS_OF_TONSWAP, DEFAULT_TIMEOUT } = require('../config/general/constants');
 
-const RootSwapPairContarct = require('../contractWrappers/swap/rootSwapPairContract');
+const RootContract = require('../contractWrappers/tip3/rootContract');
+const RootSwapPairContract = require('../contractWrappers/swap/rootSwapPairContract');
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
-const TONStorage = require('../contractWrappers/util/tonStorage');
+const TIP3Deployer = require('../contractWrappers/util/tip3Deployer');
+const User = require('./actors/user');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
 
-var pairsConfig = require('../config/contracts/walletsForSwap');
+const testScenario = require('../config/general/testScenario');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const { sleep } = require('../src/utils');
+const { deployTIP3Root, initialTokenSetup, createRootSwapPairConfig, awaitForContractDeployment, getTIP3Codes } = require('./util');
+const rootTIP3Params = require('../config/contracts/rootTIP3Config');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -22,444 +24,248 @@ const ton = new freeton.TonWrapper({
     seed: seedPhrase
 });
 
-var rootSwapContract;
-var swapPairContract;
-var tonStorages = [];
-var tip3Tokens = [];
-var tip3TokensConfig = [];
+/**
+ * @name users
+ * @type {User[]}
+ */
+let users = [];
 
-var keysRequired = 0;
-var transferAmount = [];
-var totalLPTokens = [];
-var walletsCount = 0;
+/**
+ * @name tip3RootContracts
+ * @type {RootContract[]}
+ */
+let tip3RootContracts = [];
 
-var giverSC = new freeton.ContractWrapper(
-    ton,
-    giverConfig.abi,
-    null,
-    giverConfig.address,
-);
+/**
+ * @name rootSwapPairContract
+ * @type {RootSwapPairContract}
+ */
+let rootSwapPairContract = undefined;
 
+/**
+ * @name swapPairContract
+ * @type {SwapPairContract}
+ */
+let swapPairContract = undefined;
 
+/**
+ * @name tip3Deployer
+ * @type {TIP3Deployer}
+ */
+let tip3Deployer = undefined;
 
-describe('Test of swap pairs', async function() {
-    it('Preinit stage', async function() {
-        for (let i = 0; i < pairsConfig.pairs.length; i++)
-            if (pairsConfig.pairs[i].walletsAmount > keysRequired)
-                keysRequired = pairsConfig.pairs[i].walletsAmount;
-    })
+/**
+ * @name firstTIP3Address
+ * @type {String}
+ */
+let firstTIP3Address = undefined;
 
-    it('Initial stage', async function() {
-        logger.log('#####################################');
-        logger.log('Setting up ton instance');
-        try {
-            await ton.setup(keysRequired);
+/**
+ * @name secondTIP3Address
+ * @type {String}
+ */
+let secondTIP3Address = undefined;
+
+/**
+ * @name lpTokenRootAddress
+ * @type {String}
+ */
+let lpTokenRootAddress = undefined;
+
+try {
+    describe('Test of swap pairs', async function() {
+        it('Preinit stage', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            await ton.setup(USERS_OF_TONSWAP);
             ton.debug = true;
-            for (let tokenId = 0; tokenId < pairsConfig.pairs.length; tokenId++)
-                tip3TokensConfig.push(initialTokenSetup(ton, pairsConfig.pairs[tokenId]));
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Deploying ton handlers', async function() {
-        logger.log('#####################################');
-        logger.log('Loading contracts');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-        try {
-            for (let index = 0; index < ton.keys.length; index++) {
-                tonStorages.push(new TONStorage(ton, {}, ton.keys[index]));
-                await tonStorages[index].loadContract();
+            for (let i = 0; i < USERS_OF_TONSWAP; i++) {
+                users.push(new User(ton.keys[i], ton));
             }
+        })
 
-            logger.log('Deploying contracts');
-            for (let index = 0; index < tonStorages.length; index++) {
-                await tonStorages[index].deploy();
-                logger.log(`#${index+1}: ${tonStorages[index].tonStorageContract.address}`);
-                logger.log(`${tonStorages[index].keyPair.public}`);
-                logger.log(`${JSON.stringify(await tonStorages[index].tonStorageContract.runLocal('getPk', {}, {}))}`);
+        it('Creating multisig wallets', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша: создание мультисиг кошельков
+            /**
+             * @name user
+             * @type {User}
+             */
+            let user;
+            for (user of users) {
+                await user.createMultisigWallet();
             }
+        })
 
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
+        it('Deploying TIP3 root contracts', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша: деплой тип-3 рут контрактов
+            for (let tip3Index = 0; tip3Index < 2; tip3Index++)
+                tip3RootContracts.push(await deployTIP3Root(ton, await initialTokenSetup(ton, rootTIP3Params[tip3Index])));
 
-    it('Deploying TIP-3', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-        try {
-            for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++) {
-                logger.log(`Deploying ${tokenId+1} TIP-3 token`);
-                tip3Tokens.push(await deployTIP3(ton, tip3TokensConfig[tokenId], giverSC));
-            }
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
+            firstTIP3Address = tip3RootContracts[0].getAddress();
+            secondTIP3Address = tip3RootContracts[1].getAddress();
+        })
 
-    it('Initial config of swap contracts', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-        swapConfig = initialSwapSetup(ton, swapConfig, tip3Tokens);
-    })
+        it('Deploying TIP3 wallets', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша: деплой тип-3 кошельков 
+            /**
+             * @name user
+             * @type User
+             */
+            let user;
+            for (let tip3Index = 0; tip3Index < 2; tip3Index++)
+                for (user of users)
+                    await user.createWallet(tip3RootContracts[tip3Index], testScenario[tip3Index]);
+        })
 
-    it('Loading contracts', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 2);
-        try {
-            logger.log('Loading swap pair contract');
-            swapPairContract = new SwapPairContract(ton, swapConfig.pair, swapConfig.pair.keyPair);
+        it('Deploying tip3 deployer for contracts', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            tip3Deployer = new TIP3Deployer(ton, ton.keys[0]);
+            let tip3Codes = await getTIP3Codes(ton);
+            await tip3Deployer.deployContract(tip3Codes.root, tip3Codes.wallet);
+        })
+
+        it('Deploying Swap Pair Root Contract', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша: деплой рут контракта свап пары
+
+            /**
+             * @name rootSwapPairConfig
+             * @type {JSON}
+             */
+            rootSwapPairConfig = await createRootSwapPairConfig(swapConfig, tip3Deployer.getAddress(), ton);
+            rootSwapPairContract = new RootSwapPairContract(ton, rootSwapPairConfig, ton.keys[0]);
+            await rootSwapPairContract.loadContract();
+            await rootSwapPairContract.deployContract(true);
+        })
+
+        it('Deploying Swap Pair', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша: деплой свап пары для созданных тип3 токенов
+            await rootSwapPairContract.deploySwapPair(firstTIP3Address, secondTIP3Address);
+            swapPairContract = new SwapPairContract(ton, ton.keys[0]);
             await swapPairContract.loadContract();
-
-            logger.log('Loading root swap pair contract');
-            swapConfig.root.constructorParams.spCode = swapPairContract.swapPairContract.code;
-            rootSwapContract = new RootSwapPairContarct(ton, swapConfig.root, swapConfig.root.keyPair);
-            await rootSwapContract.loadContract();
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Deploying root contract', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        try {
-            await rootSwapContract.deployContract(true);
-            logger.success(`Root swap pair address: ${rootSwapContract.rootSwapPairContract.address}`);
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Get root swap pair contract information', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        try {
-            let rootSwapPairInfo = await rootSwapContract.getServiceInformation();
-            logger.log(`Swap pair info: ${rootSwapPairInfo.rootContract}`);
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Deploy swap pair contract from root contract', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        try {
-            await rootSwapContract.deploySwapPair(
-                swapConfig.pair.initParams.token1,
-                swapConfig.pair.initParams.token2
+            swapPairContract.setContractAddress(
+                await rootSwapPairContract.getFutureSwapPairAddress(firstTIP3Address, secondTIP3Address)
             );
+            await awaitForContractDeployment(swapPairContract.getAddress(), ton);
+            await rootSwapPairContract.awaitSwapPairInitialization(firstTIP3Address, secondTIP3Address, swapPairContract);
+            await swapPairContract.getSetPairInfo();
+            lpTokenRootAddress = swapPairContract.info.lpTokenRoot;
 
-            let output = await rootSwapContract.checkIfPairExists(
-                swapConfig.pair.initParams.token1,
-                swapConfig.pair.initParams.token2
-            );
+        })
 
-            expect(output).equal(true);
+        it('Providing liquidity for swap pair', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша, Антон: предоставление ликвидности свап паре
 
-            logger.success('Pair created');
+            let token1Amount = testScenario[0] / 4;
+            let token2Amount = testScenario[1] / 4;
+            let expectedLPTokenAmount = token1Amount * token2Amount;
+            /**
+             * @name user
+             * @type {User}
+             */
+            let user;
 
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
+            /**
+             * @name userStateChange
+             * @type {import ('./actors/user').WalletsStatesChanging[]}
+             */
+            let userStateChange = [];
 
-    it('Getting information about deployed pair', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
+            /**
+             * @name state
+             * @type {import('./actors/user').WalletsStatesChanging}
+             */
+            let state;
 
-        try {
-            let output = await rootSwapContract.getPairInfo(
-                swapConfig.pair.initParams.token1,
-                swapConfig.pair.initParams.token2
-            );
+            for (user of users)
+                userStateChange.push(await user.provideLiquidity(swapPairContract, token1Amount, token2Amount));
 
-            if (!output.swapPairAddress) {
-                throw new Error(`Strange output of getPairInfo function: ${JSON.stringify(output)}`)
+            for (state of userStateChange) {
+                let token1State = token1Amount == (state.start[firstTIP3Address].balance - state.finish[firstTIP3Address].balance);
+                let token2State = token2Amount == (state.start[secondTIP3Address].balance - state.finish[secondTIP3Address].balance);
+                let lpTokenState = expectedLPTokenAmount == (state.finish[lpTokenRootAddress].balance - state.start[lpTokenRootAddress].balance);
+                let resState = token1State && token2State && lpTokenState;
+            }
+        })
+
+        it('Providing liquidity using one token', async function() {
+            // TODO: Паша, Антон: предоставление ликвидности свап паре с помощью одного токена
+        })
+
+        it('Token swap', async function() {
+            this.timeout(DEFAULT_TIMEOUT);
+            // TODO: Паша, Антон: обмен одних токенов на другие токены
+            let tokenAmountForSwap = testScenario[0] / 100;
+
+            /**
+             * @name userStateChange
+             * @type {import ('./actors/user').WalletsStatesChanging;[]}
+             */
+            let userStateChange = [];
+
+            /**
+             * @name state
+             * @type {import('./actors/user').WalletsStatesChanging}
+             */
+            let state;
+
+            /**
+             * @name user
+             * @type {User}
+             */
+            let user;
+            for (user of users) {
+                userStateChange.push(await user.swapTokens(swapPairContract, tokenAmountForSwap));
             }
 
-            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1, 'Invalid token1 address');
-            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2, 'Invalid token2 address');
-            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address, 'Invalid root address');
+            for (state of userStateChange) {
+                let token1State = tokenAmountForSwap == (state.start[firstTIP3Address] - state.finish[firstTIP3Address]);
+                let token2State = (state.start[secondTIP3Address] < state.finish[secondTIP3Address]);
+                let resState = token1State && token2State;
+            }
+        })
 
-            logger.log(`Swap pair address: ${output.swapPairAddress}`);
-            swapPairContract.swapPairContract.address = output.swapPairAddress;
+        it('Withdrawing liquidity', async function() {
+            // TODO: Паша, Антон: вывод ликвидности из пары
+            this.timeout(DEFAULT_TIMEOUT);
+            /**
+             * @name user
+             * @type {User}
+             */
+            let user;
 
-            logger.success('Information check passed');
+            /**
+             * @name userStateChange
+             * @type {import('./actors/user').WalletsStatesChanging[]}
+             */
+            let userStateChange = [];
 
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
+            /**
+             * @name state
+             * @type {import('./actors/user').WalletsStatesChanging}
+             */
+            let state;
 
-    it('Getting information about swap pair from swap pair', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        let counter = 0;
-        try {
-            let output = await swapPairContract.getPairInfo();
-            logger.log(JSON.stringify(output, null, '\t'));
-            expect(output.tokenRoot1).equal(swapConfig.pair.initParams.token1);
-            expect(output.tokenRoot2).equal(swapConfig.pair.initParams.token2);
-            expect(output.rootContract).equal(rootSwapContract.rootSwapPairContract.address);
-
-            while (output.tokenWallet1 == ZERO_ADDRESS && output.tokenWallet2 == ZERO_ADDRESS) {
-                if (counter > RETRIES) {
-                    throw new Error(
-                        `Cannot receive wallet address in ${RETRIES} retries`
-                    )
-                }
-                counter++;
-                output = await swapPairContract.getPairInfo();
-                await sleep(2000);
+            for (user of users) {
+                let lpTokenAmount = await user.checkWalletBalance(lpTokenRootAddress);
+                userStateChange.push(await user.withdrawTokens(swapPairContract, lpTokenAmount / 2));
             }
 
-            swapPairContract.tokenWallets.push(output.tokenWallet1, output.tokenWallet2);
-
-            logger.success('Information check passed');
-        } catch (err) {
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Transferring tons to swap pair wallet', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-
-        try {
-            for (let contractIndex = 0; contractIndex < tonStorages.length; contractIndex++) {
-                await tonStorages[contractIndex].sendTONTo(
-                    swapPairContract.swapPairContract.address,
-                    freeton.utils.convertCrystal('1', 'nano')
-                );
-
-                let output = 0;
-                let counter = 0;
-                while (output == 0) {
-                    if (counter > RETRIES)
-                        throw new Error(
-                            `Swap pair did not receive TONs in ${RETRIES} retries. ` +
-                            `Contract address: ${tonStorages[contractIndex].tonStorageContract.address}`
-                        );
-                    counter++;
-                    output = await swapPairContract.getUserTONBalance(ton.keys[contractIndex]);
-                    console.log(output);
-                    output = output.toNumber();
-                    await sleep(2000);
-                }
+            for (state of userStateChange) {
+                let token1State = (state.finish[firstTIP3Address] > state.start[firstTIP3Address]);
+                let token2State = (state.finish[secondTIP3Address] > state.start[secondTIP3Address]);
+                let resState = token1State && token2State;
             }
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
+        })
+
+        it('Withdrawing liquidity by using one token', async function() {
+            // TODO: Паша, Антон: вывод ликвидности из пары с помощью одного токена
+        })
     })
-
-    it('Transferring tokens to swap pair wallet', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-
-        try {
-            transferAmount = [];
-            for (let tokenId = 0; tokenId < tip3TokensConfig.length; tokenId++)
-                transferAmount.push(tip3TokensConfig[tokenId].tokensAmount);
-
-            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                logger.log(`Transferring ${transferAmount[tokenId]} tokens to swap pair wallet`);
-                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    logger.log(`transferring tokens from ${walletId+1} wallet`)
-                    await tip3Tokens[tokenId].wallets[walletId].transferWithNotify(
-                        swapPairContract.tokenWallets[tokenId],
-                        (transferAmount[tokenId]).toLocaleString('en').replace(/,/g, '')
-                    )
-                }
-            }
-
-            logger.success('Transfer finished');
-
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Checking if all tokens are credited to virtual balance', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        try {
-            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                let field = `tokenBalance${tokenId+1}`;
-                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    let wallet = tip3Tokens[tokenId].wallets[walletId];
-                    let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                    expect(Number(output[field]).toLocaleString('en').replace(/,/g, '')).
-                    equal((transferAmount[tokenId]).toLocaleString('en').replace(/,/g, ''), 'Invalid balance');
-                }
-            }
-
-            logger.success('Tokens credited successfully');
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Adding liquidity to pool', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-
-        totalLPTokens = [0, 0];
-        walletsCount = tip3Tokens[0].wallets.length < tip3Tokens[1].wallets.length ? tip3Tokens[0].wallets.length : tip3Tokens[1].wallets.length;
-        logger.log(`Wallets for providing liquidity: ${walletsCount}`);
-        try {
-            for (let walletId = 0; walletId < walletsCount; walletId++) {
-                let wallet = tip3Tokens[0].wallets[walletId];
-                let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                logger.log(`Wallet ${walletId+1} providing: ${output.tokenBalance1}, ${output.tokenBalance2}`);
-                await swapPairContract.provideLiquidity(
-                    Number(output.tokenBalance1).toLocaleString('en').replace(/,/g, ''),
-                    Number(output.tokenBalance2).toLocaleString('en').replace(/,/g, ''),
-                    wallet.keyPair
-                );
-                totalLPTokens[0] += Number(output.tokenBalance1);
-                totalLPTokens[1] += Number(output.tokenBalance2);
-            }
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Check tokens amount in liquidity pool', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT);
-
-        try {
-            let output = await swapPairContract.getLPTokens();
-            logger.log(`Tokens in LPs: ${Number(output.userLiquidityTokenBalance)}, ${Number(output.liquidityTokensMinted)}`);
-            expect(Number(output.lpToken1).toLocaleString('en').replace(/,/g, '')).
-            equal((totalLPTokens[0]).toLocaleString('en').replace(/,/g, ''));
-            expect(Number(output.lpToken2).toLocaleString('en').replace(/,/g, '')).
-            equal((totalLPTokens[1]).toLocaleString('en').replace(/,/g, ''));
-            logger.success('LP tokens amount is equal to tokens added to pool');
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Swap tokens', async function() {
-        logger.log('#####################################');
-        //TODO: token swap checks
-    })
-
-    it('Remove liquidity', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-
-        try {
-            for (let walletId = 0; walletId < walletsCount; walletId++) {
-                logger.log(`Wallet #${walletId+1}`)
-                let wallet = tip3Tokens[0].wallets[walletId];
-                let userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
-                logger.log(`User balance befor withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
-                let output = await swapPairContract.getUserLPBalance(wallet.keyPair);
-                console.log(JSON.stringify(output, null, '\t'));
-
-                let tokensWithdrawed = (await swapPairContract.withdrawLiquidity(
-                    Number(output.userLiquidityTokenBalance).toLocaleString('en').replace(/,/g, ''),
-                    wallet.keyPair
-                )).decoded.output;
-                logger.log(JSON.stringify(tokensWithdrawed, null, '\t'));
-
-                logger.log(`Withdrawed: ${tokensWithdrawed.withdrawedFirstTokenAmount}, ${tokensWithdrawed.withdrawedSecondTokenAmount}`);
-                userVBalance = await swapPairContract.getUserBalance(wallet.keyPair);
-                logger.log(`User balance after withdraw: ${userVBalance.tokenBalance1}, ${userVBalance.tokenBalance2}`);
-            }
-
-            logger.success('Liquidity removed from liquidity pair');
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Withdraw tokens from pair', async function() {
-        logger.log('#####################################');
-        this.timeout(DEFAULT_TIMEOUT * 5);
-        try {
-            let spi = await swapPairContract.getPairInfo();
-            let counter = 0;
-            for (let tokenId = 0; tokenId < tip3Tokens.length; tokenId++) {
-                let rootTokenField = `tokenRoot${tokenId+1}`;
-                let balanceField = `tokenBalance${tokenId+1}`;
-                for (let walletId = 0; walletId < tip3Tokens[tokenId].wallets.length; walletId++) {
-                    logger.log(`Transferring tokens to #${walletId+1} wallet of ${tokenId+1} token`);
-                    let wallet = tip3Tokens[tokenId].wallets[walletId];
-                    let output = await swapPairContract.getUserBalance(wallet.keyPair);
-                    logger.log(`Output of call: ${JSON.stringify(output)}`);
-                    if (output[balanceField] > 0) {
-                        let walletBalance = (await wallet.getDetails()).balance.toNumber();
-                        let resultBalance = walletBalance + output[balanceField].toNumber();
-                        output = await swapPairContract.withdrawTokens(
-                            spi[rootTokenField],
-                            wallet.walletContract.address,
-                            output[balanceField].toLocaleString('en').replace(/,/g, ''),
-                            wallet.keyPair
-                        );
-                        walletBalance = 0;
-                        counter = 0;
-                        while (walletBalance == 0) {
-                            if (counter > 10) {
-                                throw new Error(
-                                    `Target wallet did not receive tokens. Wallet address: ${wallet.walletContract.address}, ` +
-                                    `token root: ${spi[rootTokenField]}, ` +
-                                    `swap pair wallet: ${spi['tokenWallet'+(tokenId+1)]}`
-                                );
-                            }
-                            counter++;
-                            output = await wallet.getDetails();
-                            logger.log(`balance: ${output.balance }`);
-                            walletBalance = output.balance.toNumber();
-                            await sleep(5000);
-                        }
-                        expect(walletBalance).equal(resultBalance);
-                    }
-                }
-            }
-        } catch (err) {
-            console.log(err);
-            logger.error(JSON.stringify(err, null, '\t'));
-            process.exit(1);
-        }
-    })
-
-    it('Yaaaay', async function() {
-        logger.success(`Approximate time of execution at TON OS SE - 2+ minutes`);
-    })
-})
+} catch (error) {
+    console.log(JSON.stringify(error));
+}

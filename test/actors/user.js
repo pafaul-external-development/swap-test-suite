@@ -1,6 +1,10 @@
 const freeton = require('../../src');
 const RootContract = require("../../contractWrappers/tip3/rootContract");
 const MultisigWallet = require('../../contractWrappers/util/MultiSigWallet');
+const Wallet = require('../../contractWrappers/tip3/walletContract');
+const { sleep } = require('../../src/utils');
+const { rootTIP3TokenAbi } = require('../../config/contracts/abis');
+const { abiContract, signerNone } = require('@tonclient/core');
 const {
     ZERO_ADDRESS,
     ZERO_PUBKEY,
@@ -11,20 +15,43 @@ const {
     ONE_CRYSTAL,
     HALF_CRYSTAL
 } = require('../../config/general/constants');
-const Wallet = require('../../contractWrappers/tip3/walletContract');
-const { sleep } = require('../../src/utils');
-const { rootTIP3TokenAbi } = require('../../config/contracts/abis');
-const { abiContract, signerNone } = require('@tonclient/core');
+
+/**
+ * @typedef WalletState
+ * @type {Object}
+ * 
+ * @property {Number} balance
+ * @property {Number} tonBalance
+ * @property {String} address
+ */
+
+/**
+ * @typedef WalletsStatesChanging
+ * @type {Object}
+ * 
+ * @property {Record<String, WalletState>} start  Mapping: walletAddress -> WalletState
+ * @property {Record<String, WalletState>} finish Mapping: walletAddress -> WalletState
+ */
+
+
+
+
+//TODO: Паша: Привести все `tokenAmount` к одному типу (String или Number)
 
 class User {
     /**
      * 
-     * @param {JSON} keyPair
+     * @param {Object} keyPair
      * @param {freeton.TonWrapper} tonInstance
      */
     constructor(keyPair, tonInstance) {
-        this.msig = undefined;
+
+        /**
+         * @type {Record<String, WalletState>} Mapping: walletAddress -> WalletState
+         */
         this.wallets = {};
+
+        this.msig = undefined;
         this.keyPair = keyPair;
         this.pubkey = '0x' + keyPair.public;
         this.tonInstance = tonInstance;
@@ -54,6 +81,8 @@ class User {
      * Create tip3 wallet for given tip3 token
      * @param {RootContract} tip3Token 
      * @param {String} tokenAmount 
+     * 
+     * @returns {Promise<WalletState>}
      */
     async createWallet(tip3Token, tokenAmount) {
         let rootTokenAddress = tip3Token.getAddress();
@@ -127,7 +156,7 @@ class User {
     /**
      * Check tip3 wallet balance
      * @param {String} rootTokenAddress 
-     * @returns {Number} balance of tip3 wallet
+     * @returns {Promise<Number>} balance of tip3 wallet
      */
     async checkWalletBalance(rootTokenAddress) {
         return await this.wallets[rootTokenAddress].getBalance();
@@ -136,7 +165,7 @@ class User {
     /**
      * Get wallet state: balance, tonBalance, address
      * @param {Wallet} wallet 
-     * @returns {JSON}
+     * @returns {Promise<WalletState>}
      */
     async _getWalletState(wallet) {
         let state = {};
@@ -146,20 +175,16 @@ class User {
         return state;
     }
 
+
     /**
-     * 
      * @param {Array<String>} rootAddresses 
-     * @returns {JSON}
+     * @returns {Promise< Record<String, WalletState> >}
      */
     async getWalletsStates(rootAddresses) {
         let state = {};
         for (let address of rootAddresses) {
-            state[address] = this.wallets[address] !== undefined ?
-                await this._getWalletState(this.wallets[address]) : {
-                    balance: 0,
-                    tonBalance: 0,
-                    address: ZERO_ADDRESS
-                };
+            const st = this.wallets[address] && await this._getWalletState(this.wallets[address]);
+            state[address] = st || { balance: 0, tonBalance: 0, address: ZERO_ADDRESS };
         }
         return state;
     }
@@ -190,7 +215,8 @@ class User {
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} token1Amount
      * @param {Number} token2Amount
-     * @returns {JSON}
+     * 
+     * @returns {Promise<WalletsStatesChanging>}
      */
     async provideLiquidity(swapPairInstance, token1Amount, token2Amount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
@@ -198,9 +224,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let provideLiquidityPayload = await swapPairInstance.swapPairContract.runLocal('createProvideLiquidityPayload', {
-            tip3Address: initialBalances[res.lpTokenRoot].address
-        }, {});
+        let provideLiquidityPayload = await swapPairInstance.createProvideLiquidityPayload(initialBalances[res.lpTokenRoot].address);
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
@@ -242,7 +266,7 @@ class User {
      * swap tokens with given root contract
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} tokenAmount 
-     * @returns {JSON}
+     * @returns {Promise<WalletsStatesChanging>}
      */
     async swapTokens(swapPairInstance, tokenAmount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
@@ -250,9 +274,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let swapPayload = await swapPairInstance.swapPairContract.runLocal('createSwapPayload', {
-            sendTokensTo: this.wallets[res.tokenRoot2].getAddress()
-        }, {});
+        let swapPayload = await swapPairInstance.createSwapPayload(this.wallets[res.tokenRoot2].getAddress());
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
@@ -280,6 +302,8 @@ class User {
      * withdraw tip3 tokens from swap pair
      * @param {SwapPairContract} swapPairInstance 
      * @param {Number} tokenAmount 
+     * 
+     * @returns {Promise<WalletsStatesChanging>}
      */
     async withdrawTokens(swapPairInstance, tokenAmount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
@@ -287,12 +311,10 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let withdrawPayload = await swapPairInstance.swapPairContract.runLocal('createWithdrawLiquidityPayload', {
-            tokenRoot1: res.tokenRoot1,
-            tokenWallet1: this.wallets[res.tokenRoot1].getAddress(),
-            tokenRoot2: res.tokenRoot2,
-            tokenWallet2: this.wallets[res.tokenRoot2].getAddress()
-        });
+        let withdrawPayload = await swapPairInstance.createWithdrawLiquidityPayload(
+            res.tokenRoot1, this.wallets[res.tokenRoot1].getAddress(),
+            res.tokenRoot2, this.wallets[res.tokenRoot2].getAddress()
+        );
 
         await this.msig.transferTo(
             this.wallets[res.lpTokenRoot].getAddress(),
@@ -333,7 +355,8 @@ class User {
 
     /**
      * 
-     * @param {String} address 
+     * @param {Promise<String>} address 
+     * @returns {Promise<Boolean>}
      */
     async checkIfAccountExists(address) {
         let res = await this.tonInstance.ton.net.query_collection({
@@ -346,6 +369,10 @@ class User {
         return Boolean(res.result[0]) && res.result[0].acc_type != 0;
     }
 
+    /**
+     * @param {String} address 
+     * @returns {Promise<Number>}
+     */
     async checkAccountBalance(address) {
         let res = await this.tonInstance.ton.net.query_collection({
             collection: 'accounts',
@@ -368,34 +395,37 @@ class User {
 
     /**
      * 
-     * @param {JSON} walletAbi 
+     * @param {Object} walletAbi 
      * @param {String} tokenWallet 
      * @param {Number} amount 
      * @param {Number} grams
      * @param {String} payload
-     * @returns {String} payload for swap operation
+     * @returns {Promise<String>} payload for swap operation
      */
     async createPayloadForTIP3Wallet(walletAbi, tokenWallet, amount, grams, payload) {
-        return (await this.tonInstance.ton.abi.encode_message_body({
+        const callSet = {
+            function_name: 'transfer',
+            input: {
+                to: tokenWallet,
+                tokens: amount,
+                grams: grams,
+                send_gas_to: ZERO_ADDRESS,
+                notify_receiver: true,
+                payload: payload
+            }
+        }
+        const encoded_msg = await this.tonInstance.ton.abi.encode_message_body({
             abi: abiContract(walletAbi),
-            call_set: {
-                function_name: 'transfer',
-                input: {
-                    to: tokenWallet,
-                    tokens: amount,
-                    grams: grams,
-                    send_gas_to: ZERO_ADDRESS,
-                    notify_receiver: true,
-                    payload: payload
-                }
-            },
+            call_set: callSet,
             is_internal: true,
             signer: {
                 type: 'None'
             }
-        })).body;
+        });
+        return encoded_msg.body;
     }
 
 }
+
 
 module.exports = User;

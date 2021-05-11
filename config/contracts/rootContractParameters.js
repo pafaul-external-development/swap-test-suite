@@ -1,8 +1,36 @@
 const { ZERO_ADDRESS } = require('../general/constants');
 
 /**
+ * @typedef RootTIP3Config
+ * @type {Object}
+ * 
+ * @property {RootTIP3ConfigInitParams} initParams
+ * @property {RootTIP3ConfigConstructorParams} constructorParams
+ */
+
+/**
+ * @typedef RootTIP3ConfigInitParams
+ * @type {Object}
+ * 
+ * @property {String} name
+ * @property {String} symbol
+ * @property {Number} decimals
+ * @property {String} wallet_code
+ * @property {Number} _randomNonce
+ */
+
+/**
+ * @typedef RootTIP3ConfigConstructorParams
+ * @type {Object}
+ * 
+ * @property {String} root_public_key_
+ * @property {String} root_owner_address_
+ */
+
+/**
  * Is used to encode text parameters
  * @param {String} str 
+ * @returns {String}
  */
 function toHex(str) {
     return Buffer.from(str, 'utf8').toString('hex');
