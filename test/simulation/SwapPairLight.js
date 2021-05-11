@@ -29,7 +29,7 @@ class SwapPairLight {
      * @param {Boolean} lpFromKey
      * @param {Number} amount 
      * 
-     * @returns {Number} swap amount
+     * @returns {Number} amount after swap
      */
     swap(lpFromKey, amount) {
         let a = amount;
@@ -50,7 +50,7 @@ class SwapPairLight {
      * @param {Number} amount1 
      * @param {Number} amount2 
      * 
-     * @returns {Number} minted lp tokens
+     * @returns {{p1: Number, p2: Number, minted: Number}} minted lp tokens
      */
     provide(amount1, amount2) {
         let provided1 = 0, provided2 = 0, minted = 0;
@@ -83,6 +83,8 @@ class SwapPairLight {
         this._pools[true] += provided1;
         this._pools[false] += provided2;
         this._minted += minted;
+
+        return {p1: provided1, p2: provided2, minted: minted}
     }
 
 
