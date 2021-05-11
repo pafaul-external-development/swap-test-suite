@@ -33,9 +33,6 @@ const {
  * @property {Record<String, WalletState>} finish Mapping: walletAddress -> WalletState
  */
 
-
-
-
 //TODO: Паша: Привести все `tokenAmount` к одному типу (String или Number)
 
 class User {
