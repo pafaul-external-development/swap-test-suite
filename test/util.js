@@ -147,6 +147,29 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
 // $$/   $$/ $$$$$$$$/ $$/      $$/  $$$$$$/  $$/   $$/ $$/   $$/ 
 
 /**
+ * @typedef SwapPairConfig
+ * @type {Object}
+ * 
+ * @property {}
+ */
+
+/**
+ * @typedef RootSwapPairConfig
+ */
+
+/**
+ * @typedef RootSwapPairConfigInitParams
+ * @type {Object}
+ */
+
+/**
+ * @typedef RootSwapPairConfigContructParams
+ * @type {Object}
+ * 
+ * @property {}
+ */
+
+/**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
  * @param {JSON} rootConfig

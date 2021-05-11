@@ -97,7 +97,12 @@ class RootSwapPairContract {
     }
 
     //========================Getters========================//
-
+    /**
+     * 
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     * @returns 
+     */
     async getXOR(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
             'getXOR', {
@@ -196,7 +201,7 @@ class RootSwapPairContract {
     /**
      * Deploy swap pair with known root contract addresses
      * @param {String} rootContract1 
-     * @param {String} rootContract2 
+     * @param {String} rootContract2
      */
     async deploySwapPair(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.run(
@@ -210,8 +215,8 @@ class RootSwapPairContract {
 
     /**
      * Set new swap pair code ??? Probably will be done using SC
-     * @param {*} newPairCode 
-     * @param {*} newCodeVersion 
+     * @param {String} newPairCode 
+     * @param {String} newCodeVersion 
      */
     async setSwapPairCode(newPairCode, newCodeVersion) {
         return await this.rootSwapPairContract.run(

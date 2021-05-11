@@ -16,9 +16,6 @@ const {
     HALF_CRYSTAL
 } = require('../../config/general/constants');
 
-
-
-
 /**
  * @typedef WalletState
  * @type {Object}
@@ -27,7 +24,6 @@ const {
  * @property {Number} tonBalance
  * @property {String} address
  */
-
 
 /**
  * @typedef WalletsStatesChanging

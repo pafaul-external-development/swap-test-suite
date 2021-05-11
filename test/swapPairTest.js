@@ -374,7 +374,6 @@ describe('Test of swap pairs', async function() {
 
     it('Swap tokens', async function() {
         logger.log('#####################################');
-        //TODO: token swap checks
     })
 
     it('Remove liquidity', async function() {

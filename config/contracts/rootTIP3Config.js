@@ -2,6 +2,10 @@ let rootParameters = require('./rootContractParameters');
 const freeton = require('../../src');
 
 /**
+ *
+ */
+
+/**
  * Is used to encode text parameters
  * @param {String} str 
  */
@@ -13,6 +17,10 @@ function copyJSON(json) {
     return JSON.parse(JSON.stringify(json));
 }
 
+/**
+ * @name rootTIP3Params
+ * @type {import('./rootContractParameters').RootTIP3Config[]}
+ */
 let rootTIP3Params = [{
     root: {
         config: copyJSON(rootParameters),
