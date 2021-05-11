@@ -226,93 +226,93 @@ class SwapPairSimulator {
 
 
     
-    /**
-     * @private
-     * @param {0 | 1} swappableTokenRoot 
-     * @param {Number} swappableTokenAmount
-     * 
-     * @returns {SwapInfo}
-     */
-    _swap(swappableTokenRoot, swappableTokenAmount)
-    {
-        const _si = this._calculateSwapInfo(swappableTokenRoot, swappableTokenAmount);
+    // /**
+    //  * @private
+    //  * @param {0 | 1} swappableTokenRoot 
+    //  * @param {Number} swappableTokenAmount
+    //  * 
+    //  * @returns {SwapInfo}
+    //  */
+    // _swap(swappableTokenRoot, swappableTokenAmount)
+    // {
+    //     const _si = this._calculateSwapInfo(swappableTokenRoot, swappableTokenAmount);
 
-        if (!notZeroLiquidity(swappableTokenAmount, _si.targetTokenAmount)) {
-            return SwapInfo(0, 0, 0);
-        }
+    //     if (!notZeroLiquidity(swappableTokenAmount, _si.targetTokenAmount)) {
+    //         return SwapInfo(0, 0, 0);
+    //     }
 
-        this.lps[_si.fromKey] = _si.newFromPool;
-        this.lps[_si.toKey] = _si.newToPool;
+    //     this.lps[_si.fromKey] = _si.newFromPool;
+    //     this.lps[_si.toKey] = _si.newToPool;
 
-        return SwapInfo(swappableTokenAmount, _si.targetTokenAmount, _si.fee);
-    }
+    //     return SwapInfo(swappableTokenAmount, _si.targetTokenAmount, _si.fee);
+    // }
 
-    /**
-     * @private
-     * @param {*} tokenRoot 
-     * @param {*} tokenAmount 
-     * @param {*} senderPubkey 
-     * @param {*} senderAddress 
-     * @param {*} lpWallet 
-     */
-    _provideLiquidityOneToken(tokenRoot, tokenAmount, senderPubkey, senderAddress, lpWallet)  
-    tokenExistsInPair(tokenRoot)
-    returns (uint128 provided1, uint128 provided2, uint256 toMint, uint128 inputTokenRemainder)
-    {
-        const amount = _calculateOneTokenProvidingAmount(tokenRoot, tokenAmount);
+    // /**
+    //  * @private
+    //  * @param {*} tokenRoot 
+    //  * @param {*} tokenAmount 
+    //  * @param {*} senderPubkey 
+    //  * @param {*} senderAddress 
+    //  * @param {*} lpWallet 
+    //  */
+    // _provideLiquidityOneToken(tokenRoot, tokenAmount, senderPubkey, senderAddress, lpWallet)  
+    // tokenExistsInPair(tokenRoot)
+    // returns (uint128 provided1, uint128 provided2, uint256 toMint, uint128 inputTokenRemainder)
+    // {
+    //     const amount = _calculateOneTokenProvidingAmount(tokenRoot, tokenAmount);
 
-        if (amount <= 0) 
-            return (0, 0, 0, 0);
+    //     if (amount <= 0) 
+    //         return (0, 0, 0, 0);
 
-        SwapInfo si = _swap(tokenRoot, amount);
+    //     SwapInfo si = _swap(tokenRoot, amount);
 
-        uint128 amount1 = 0;
-        uint128 amount2 = 0;
+    //     uint128 amount1 = 0;
+    //     uint128 amount2 = 0;
 
-        bool isT1 = (tokenRoot == token1);
-        if ( isT1 ) {
-            amount1 = tokenAmount - si.swappableTokenAmount;
-            amount2 = si.targetTokenAmount;
-        } else {
-            amount1 = si.targetTokenAmount;
-            amount2 = tokenAmount - si.swappableTokenAmount;
-        }
+    //     bool isT1 = (tokenRoot == token1);
+    //     if ( isT1 ) {
+    //         amount1 = tokenAmount - si.swappableTokenAmount;
+    //         amount2 = si.targetTokenAmount;
+    //     } else {
+    //         amount1 = si.targetTokenAmount;
+    //         amount2 = tokenAmount - si.swappableTokenAmount;
+    //     }
 
-        (provided1, provided2, toMint) = _provideLiquidity(amount1, amount2, senderPubkey, senderAddress, lpWallet);
-        inputTokenRemainder = isT1 ? (amount1 - provided1) : (amount2 - provided2);
-    }
+    //     (provided1, provided2, toMint) = _provideLiquidity(amount1, amount2, senderPubkey, senderAddress, lpWallet);
+    //     inputTokenRemainder = isT1 ? (amount1 - provided1) : (amount2 - provided2);
+    // }
 
 
-    /**
-     * Internal function for liquidity providing using both tokens
-     * @notice This function changes LP volumes
-     * @param amount1 Amount of first token provided by user
-     * @param amount2 Amount of second token provided by user
-     * @param senderPubkey Public key of user that provides liquidity
-     * @param senderAddress Address of TON wallet of user 
-     * @param lpWallet Address of user's LP wallet
-     */
-    _provideLiquidity(uint128 amount1, uint128 amount2, uint256 senderPubkey, address senderAddress, address lpWallet)
-         private
-         returns (uint128 provided1, uint128 provided2, uint256 toMint)
-     {
-         (provided1, provided2, toMint) = _calculateProvidingLiquidityInfo(amount1, amount2);
-         lps[T1] += provided1;
-         lps[T2] += provided2;
-         liquidityTokensMinted += toMint;
+    // /**
+    //  * Internal function for liquidity providing using both tokens
+    //  * @notice This function changes LP volumes
+    //  * @param amount1 Amount of first token provided by user
+    //  * @param amount2 Amount of second token provided by user
+    //  * @param senderPubkey Public key of user that provides liquidity
+    //  * @param senderAddress Address of TON wallet of user 
+    //  * @param lpWallet Address of user's LP wallet
+    //  */
+    // _provideLiquidity(uint128 amount1, uint128 amount2, uint256 senderPubkey, address senderAddress, address lpWallet)
+    //      private
+    //      returns (uint128 provided1, uint128 provided2, uint256 toMint)
+    //  {
+    //      (provided1, provided2, toMint) = _calculateProvidingLiquidityInfo(amount1, amount2);
+    //      lps[T1] += provided1;
+    //      lps[T2] += provided2;
+    //      liquidityTokensMinted += toMint;
  
-         /*
-             If user doesn't have wallet for LP tokens - we create one for user
-         */
-         if (lpWallet.value == 0) {
-             IRootTokenContract(lpTokenRootAddress).deployWallet{
-                 value: msg.value/2,
-                 flag: 0
-             }(uint128(toMint), msg.value/4, senderPubkey, senderAddress, senderAddress);
-         } else {
-             IRootTokenContract(lpTokenRootAddress).mint(uint128(toMint), lpWallet);
-         }
-     }
+    //      /*
+    //          If user doesn't have wallet for LP tokens - we create one for user
+    //      */
+    //      if (lpWallet.value == 0) {
+    //          IRootTokenContract(lpTokenRootAddress).deployWallet{
+    //              value: msg.value/2,
+    //              flag: 0
+    //          }(uint128(toMint), msg.value/4, senderPubkey, senderAddress, senderAddress);
+    //      } else {
+    //          IRootTokenContract(lpTokenRootAddress).mint(uint128(toMint), lpWallet);
+    //      }
+    //  }
 
 
 
