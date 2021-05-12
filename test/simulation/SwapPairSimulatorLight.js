@@ -28,8 +28,21 @@ class SwapPairSimulatorLight {
         }
     }
 
+
     /**
-     * @param {Boolean} lpFromKey
+     * @param {BigInt} amount1 
+     * @param {BigInt} amount2 
+     */
+    setPools(amount1, amount2) {
+        if (amount1 < 0n || amount2 < 0n)
+            throw Error('SwapParSimulatorLight: pools cannot be negative');
+        this._pools.true = amount1;
+        this._pools.false =  amount2;
+    }
+
+
+    /**
+     * @param {Boolean} lpFromKey   true - 1, false - 2
      * @param {BigInt} amount 
      * 
      * @returns {BigInt} amount after swap
@@ -198,6 +211,12 @@ class SwapPairSimulatorLight {
     }
 
 }
+
+
+if (require.main === module){
+    console.log('kek');
+}
+
 
 
 module.exports = SwapPairSimulatorLight;
