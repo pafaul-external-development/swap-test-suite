@@ -6,7 +6,7 @@ class GiverContract {
      * 
      * @param {freeton.TonWrapper} tonInstance 
      * @param {JSON} config
-     * @param {JSON} keyPair 
+     * @param {import('@tonclient/core').KeyPair} keyPair 
      */
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;

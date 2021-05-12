@@ -13,4 +13,4 @@ let devnet = {
     network: 'https://net.ton.dev'
 }
 
-module.exports = tonOSSE;
+module.exports = devnet;

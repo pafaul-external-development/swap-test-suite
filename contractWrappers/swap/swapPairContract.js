@@ -13,19 +13,45 @@ const freeton = require('../../src');
  * @property {String} lpTokenWallet
  * @property {BigInt} deployTimestamp
  * @property {String} swapPairAddress
- * @property {BigInt} uniqueId   
+ * @property {BigInt} uniqueId
  * @property {Number} swapPairCodeVersion
+ */
+
+/**
+ * @typedef SwapInfo
+ * @type {Object}
+ * 
+ * @property {BigInt} swappableTokenAmount
+ * @property {BigInt} targetTokenAmount
+ * @property {BigInt} fee
+ */
+
+/**
+ * @typedef LiquidityPoolsInfo
+ * @type {Object}
+ * 
+ * @property {BigInt} lp1
+ * @property {BigInt} lp2
  */
 
 class SwapPairContract {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance
-     * @param {JSON} keyPair 
+     * @param {import('@tonclient/core').KeyPair} keyPair 
      */
     constructor(tonInstance, keyPair) {
+        /**
+         * @type {freeton.TonWrapper}
+         */
         this.tonInstance = tonInstance;
+        /**
+         * @type {import('@tonclient/core').KeyPair}
+         */
         this.keyPair = keyPair;
+        /**
+         * @type {freeton.TonWrapper}
+         */
         this.swapPairContract = undefined;
 
         /**
@@ -44,7 +70,7 @@ class SwapPairContract {
 
     /**
      * Get swap pair contract address
-     * @returns swap pair contract address
+     * @returns {String} swap pair contract address
      */
     getAddress() {
         return this.swapPairContract.address;
@@ -69,6 +95,7 @@ class SwapPairContract {
 
     /**
      * Get pair service information 
+     * @returns {Promise<SwapPairInfo>}
      */
     async getPairInfo() {
         return await this.swapPairContract.runLocal(
@@ -79,10 +106,23 @@ class SwapPairContract {
     }
 
     /**
+     * Get current liquidity pools volumes
+     * @returns {Promise<LiquidityPoolsInfo>}
+     */
+    async getCurrentExchangeRate() {
+        return await this.swapPairContract.runLocal(
+            'getCurrentExchangeRate', {
+                _answer_id: 0
+            }, {}
+        );
+    }
+
+    /**
      * get exchange rate if amount is exchanged
      * @param {String} rootToken address of token root
      * @param {Number} amount amount of tokens to swap
-     * @param {JSON} keyPair user's keypair
+     * @param {import('@tonclient/core').KeyPair} keyPair user's keypair
+     * @returns {Promise<SwapInfo>}
      */
     async getExchangeRate(rootToken, amount, keyPair) {
         return await this.swapPairContract.runLocal(
@@ -151,7 +191,7 @@ class SwapPairContract {
      * @returns {Promise<String>}
      */
     async createWithdrawLiquidityPayload(tr, tw) {
-        return await swapPairInstance.swapPairContract.runLocal('createWithdrawLiquidityOneTokenPayload', {
+        return await this.swapPairContract.runLocal('createWithdrawLiquidityOneTokenPayload', {
             tokenRoot: tr,
             userWallet: tw
         });

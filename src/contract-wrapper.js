@@ -71,7 +71,7 @@ class OutputDecoder {
     }
 
     decodeInt(value) {
-        return new BigNumber(value);
+        return BigInt(value);
     }
 
     decodeIntArray(value) {

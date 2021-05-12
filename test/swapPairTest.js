@@ -153,7 +153,6 @@ try {
             await rootSwapPairContract.awaitSwapPairInitialization(firstTIP3Address, secondTIP3Address, swapPairContract);
             await swapPairContract.getSetPairInfo();
             lpTokenRootAddress = swapPairContract.info.lpTokenRoot;
-
         })
 
         it('Providing liquidity for swap pair', async function() {

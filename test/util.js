@@ -163,8 +163,6 @@ module.exports = {
     copyJSON,
     sendGrams,
     initialTokenSetup,
-    initialSwapSetup,
-    deployTIP3,
     deployTIP3Root,
     createRootSwapPairConfig,
     awaitForContractDeployment,
