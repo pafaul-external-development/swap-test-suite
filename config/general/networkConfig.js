@@ -1,3 +1,10 @@
+/**
+ * @typedef NetworkConfig
+ * @type {Object}
+ * 
+ * @property {String} network
+ */
+
 let tonOSSE = {
     network: 'http://localhost:80'
 }

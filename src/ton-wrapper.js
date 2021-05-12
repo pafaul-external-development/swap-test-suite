@@ -50,7 +50,7 @@ class TonWrapper {
                 wait_for_timeout: this.config.waitForTimeout ? this.config.waitForTimeout : 5000,
             },
             abi: {
-                message_expiration_timeout: this.config.messageExpirationTimeout ? this.config.messageExpirationTimeout : 120000,
+                message_expiration_timeout: this.config.messageExpirationTimeout ? this.config.messageExpirationTimeout : 30000,
             }
         });
     }

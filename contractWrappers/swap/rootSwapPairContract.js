@@ -2,14 +2,22 @@ const freeton = require('../../src');
 const { sleep } = require('../../src/utils');
 const SwapPairContract = require('./swapPairContract');
 
+/**
+ * @typedef RootServiceInfo
+ * @type {Object}
+ * 
+ * @property {String} ownerPubkey
+ * @property {BigInt} contractBalance
+ * @property {BigInt} creationTimestamp
+ * @property {BigInt} codeVersion
+ * @property {String} swapPairCode
+ */
 class RootSwapPairContract {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance 
-     * @param {Object} config 
-     * @param {Object} config.initParams
-     * @param {Object} config.constructorParams
-     * @param {Object} keyPair 
+     * @param {import('../../config/contracts/swapPairContractsConfig').RootSwapPairConfig} config
+     * @param {import('@tonclient/core').KeyPair} keyPair 
      */
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;
@@ -28,9 +36,7 @@ class RootSwapPairContract {
 
     /**
      * Set new config if it is updated
-     * @param {Object} config 
-     * @param {Object} config.initParams
-     * @param {Object} config.constructorParams 
+     * @param {import('../../config/contracts/swapPairContractsConfig').RootSwapPairConfig} config
      */
     setConfig(config) {
         this.initParams = config.initParams;
@@ -40,6 +46,7 @@ class RootSwapPairContract {
     /**
      * Deploy root contract to net
      * @param {Boolean} deployRequired true -> deploy, false -> only get address
+     * @returns {Promise<String>}
      */
     async deployContract(deployRequired = false) {
         if (!deployRequired) {
@@ -59,7 +66,7 @@ class RootSwapPairContract {
                 },
                 result: 'acc_type balance'
             });
-            if (exists.result.length == 0) {
+            if (exists.result.length == 0 || exists.result[0].acc_type != 1) {
                 await this.rootSwapPairContract.deploy({
                     constructorParams: this.constructorParams,
                     initParams: this.initParams,
@@ -67,6 +74,9 @@ class RootSwapPairContract {
                     _randomNonce: false,
                     keyPair: this.keyPair,
                 });
+                let swapPairCode = await freeton.requireContract(this.tonInstance, 'SwapPairContract');
+                swapPairCode = swapPairCode.code;
+                await this.setSwapPairCode(swapPairCode, 1);
             } else {
                 if (Number(exists.result[0].balance) < Number(freeton.utils.convertCrystal('100', 'nano'))) {
                     const giverContract = new freeton.ContractWrapper(
@@ -94,7 +104,12 @@ class RootSwapPairContract {
     }
 
     //========================Getters========================//
-
+    /**
+     * 
+     * @param {String} rootContract1 
+     * @param {String} rootContract2 
+     * @returns 
+     */
     async getXOR(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
             'getXOR', {
@@ -109,6 +124,7 @@ class RootSwapPairContract {
      * Get info about deployed pair
      * @param {String} rootContract1 
      * @param {String} rootContract2 
+     * @returns {import('./swapPairContract').SwapPairInfo}
      */
     async getPairInfo(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
@@ -122,6 +138,7 @@ class RootSwapPairContract {
 
     /**
      * Get information about deployed root contract
+     * @returns {Promise<RootServiceInfo>} 
      */
     async getServiceInformation() {
         return await this.rootSwapPairContract.runLocal(
@@ -134,6 +151,7 @@ class RootSwapPairContract {
      * Check if swap pair already deployed
      * @param {String} rootContract1 
      * @param {String} rootContract2 
+     * @returns {Promise<Boolean>}
      */
     async checkIfPairExists(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
@@ -149,6 +167,7 @@ class RootSwapPairContract {
      * Get future address of swap pair
      * @param {String} rootContract1 
      * @param {String} rootContract2 
+     * @returns {Promise<String>}
      */
     async getFutureSwapPairAddress(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.runLocal(
@@ -167,7 +186,7 @@ class RootSwapPairContract {
      * @param {String} rootContract1 
      * @param {String} rootContract2 
      * @param {SwapPairContract} swapPairContract
-     * @returns { Promise<Object> }
+     * @returns {Promise<import('./swapPairContract').SwapPairInfo>}
      */
     async awaitSwapPairInitialization(rootContract1, rootContract2, swapPairContract) {
         let res = {
@@ -193,7 +212,8 @@ class RootSwapPairContract {
     /**
      * Deploy swap pair with known root contract addresses
      * @param {String} rootContract1 
-     * @param {String} rootContract2 
+     * @param {String} rootContract2
+     * @returns {Promise<String>}
      */
     async deploySwapPair(rootContract1, rootContract2) {
         return await this.rootSwapPairContract.run(
@@ -207,8 +227,8 @@ class RootSwapPairContract {
 
     /**
      * Set new swap pair code ??? Probably will be done using SC
-     * @param {*} newPairCode 
-     * @param {*} newCodeVersion 
+     * @param {String} newPairCode 
+     * @param {String} newCodeVersion 
      */
     async setSwapPairCode(newPairCode, newCodeVersion) {
         return await this.rootSwapPairContract.run(

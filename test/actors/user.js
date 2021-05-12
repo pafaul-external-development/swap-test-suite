@@ -16,9 +16,6 @@ const {
     HALF_CRYSTAL
 } = require('../../config/general/constants');
 
-
-
-
 /**
  * @typedef WalletState
  * @type {Object}
@@ -28,7 +25,6 @@ const {
  * @property {String} address
  */
 
-
 /**
  * @typedef WalletsStatesChanging
  * @type {Object}
@@ -36,9 +32,6 @@ const {
  * @property {Record<String, WalletState>} start  Mapping: walletAddress -> WalletState
  * @property {Record<String, WalletState>} finish Mapping: walletAddress -> WalletState
  */
-
-
-
 
 //TODO: Паша: Привести все `tokenAmount` к одному типу (String или Number)
 
@@ -228,9 +221,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let provideLiquidityPayload = await swapPairInstance.swapPairContract.runLocal('createProvideLiquidityPayload', {
-            tip3Address: initialBalances[res.lpTokenRoot].address
-        }, {});
+        let provideLiquidityPayload = await swapPairInstance.createProvideLiquidityPayload(initialBalances[res.lpTokenRoot].address);
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
@@ -280,9 +271,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let swapPayload = await swapPairInstance.swapPairContract.runLocal('createSwapPayload', {
-            sendTokensTo: this.wallets[res.tokenRoot2].getAddress()
-        }, {});
+        let swapPayload = await swapPairInstance.createSwapPayload(this.wallets[res.tokenRoot2].getAddress());
 
         await this.msig.transferTo(
             this.wallets[res.tokenRoot1].getAddress(),
@@ -319,12 +308,10 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let withdrawPayload = await swapPairInstance.swapPairContract.runLocal('createWithdrawLiquidityPayload', {
-            tokenRoot1: res.tokenRoot1,
-            tokenWallet1: this.wallets[res.tokenRoot1].getAddress(),
-            tokenRoot2: res.tokenRoot2,
-            tokenWallet2: this.wallets[res.tokenRoot2].getAddress()
-        });
+        let withdrawPayload = await swapPairInstance.createWithdrawLiquidityPayload(
+            res.tokenRoot1, this.wallets[res.tokenRoot1].getAddress(),
+            res.tokenRoot2, this.wallets[res.tokenRoot2].getAddress()
+        );
 
         await this.msig.transferTo(
             this.wallets[res.lpTokenRoot].getAddress(),
@@ -431,7 +418,7 @@ class User {
             signer: {
                 type: 'None'
             }
-        });        
+        });
         return encoded_msg.body;
     }
 

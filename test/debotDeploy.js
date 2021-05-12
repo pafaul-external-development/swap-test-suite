@@ -32,6 +32,12 @@ async function main() {
             keyPair: ton.keys[0],
         });
 
+        console.log(debot.address);
+
+        await debot.run('setTIP3DeployerAddress', {
+            'newTip3Deployer': '0:cd326f453ae7d6e857319efd3f655ff17aa98dab5558124088009f6c9f8bbb42'
+        }, ton.keys[0]);
+
         console.log(await debot.address);
         console.log(ton.keys[0]);
         process.exit(0);
