@@ -6,10 +6,10 @@ class RootSwapPairContract {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance 
-     * @param {JSON} config 
-     * @param {JSON} config.initParams
-     * @param {JSON} config.constructorParams
-     * @param {JSON} keyPair 
+     * @param {Object} config 
+     * @param {Object} config.initParams
+     * @param {Object} config.constructorParams
+     * @param {Object} keyPair 
      */
     constructor(tonInstance, config, keyPair) {
         this.tonInstance = tonInstance;
@@ -28,9 +28,9 @@ class RootSwapPairContract {
 
     /**
      * Set new config if it is updated
-     * @param {JSON} config 
-     * @param {JSON} config.initParams
-     * @param {JSON} config.constructorParams 
+     * @param {Object} config 
+     * @param {Object} config.initParams
+     * @param {Object} config.constructorParams 
      */
     setConfig(config) {
         this.initParams = config.initParams;
@@ -167,7 +167,7 @@ class RootSwapPairContract {
      * @param {String} rootContract1 
      * @param {String} rootContract2 
      * @param {SwapPairContract} swapPairContract
-     * @returns {JSON}
+     * @returns { Promise<Object> }
      */
     async awaitSwapPairInitialization(rootContract1, rootContract2, swapPairContract) {
         let res = {

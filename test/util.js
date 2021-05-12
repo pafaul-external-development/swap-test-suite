@@ -28,7 +28,7 @@ function copyJSON(json) {
  * Send grams to address
  * @param {freeton.ContractWrapper} giver 
  * @param {String} address 
- * @param {Number} amount 
+ * @param {Promise<Number>} amount 
  */
 async function sendGrams(giver, address, amount) {
     await giver.run(
@@ -42,7 +42,7 @@ async function sendGrams(giver, address, amount) {
 /**
  * Initial token config creation
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} config 
+ * @param {Object} config 
  */
 function initialTokenSetup(tonInstance, config) {
     let tokenConfig = copyJSON(config);
@@ -64,7 +64,7 @@ function initialTokenSetup(tonInstance, config) {
 /**
  * Initial swap config
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} config 
+ * @param {Object} config 
  * @param {Array} tokens
  */
 function initialSwapSetup(tonInstance, config, tokens) {
@@ -82,7 +82,7 @@ function initialSwapSetup(tonInstance, config, tokens) {
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
  * @param {JSON} tokenConfig 
- * @param {freeton.ContractWrapper} giverSC
+ * @param {Promise<freeton.ContractWrapper>} giverSC
  */
 async function deployTIP3(tonInstance, tokenConfig, giverSC) {
     let rootSC;
@@ -149,7 +149,9 @@ async function deployTIP3(tonInstance, tokenConfig, giverSC) {
 /**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} rootConfig
+ * @param {Object} rootConfig
+ * 
+ * @returns {Promise<RootContract>}
  */
 async function deployTIP3Root(tonInstance, rootConfig) {
     let rootSC;
@@ -168,9 +170,9 @@ async function deployTIP3Root(tonInstance, rootConfig) {
 
 /**
  * create config for root swap pair contract
- * @param {JSON} config 
+ * @param {Object} config 
  * @param {String} tip3DeployerAddress
- * @param {freeton.TonWrapper} tonInstance 
+ * @param {Promise<freeton.TonWrapper>} tonInstance 
  * @returns 
  */
 async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance) {
@@ -186,7 +188,9 @@ async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance
 /**
  * create config for tip3 root contract
  * @param {freeton.TonWrapper} tonInstance 
- * @param {JSON} config 
+ * @param {Object} config 
+ * 
+ * @returns {Promise<Object>}
  */
 async function initialTokenSetup(tonInstance, config) {
     let rootConfig = copyJSON(config);
@@ -203,7 +207,7 @@ async function initialTokenSetup(tonInstance, config) {
 /**
  * Get codes of tip3 contracts
  * @param {freeton.TonWrapper} tonInstance
- * @returns {JSON} output with Root and wallet codes
+ * @returns {Promise< {wallet, root} >} output with Root and wallet codes
  */
 async function getTIP3Codes(tonInstance) {
     let wallet = await freeton.requireContract(tonInstance, 'TONTokenWallet');

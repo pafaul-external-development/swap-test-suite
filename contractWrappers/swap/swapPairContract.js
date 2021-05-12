@@ -4,8 +4,9 @@ class SwapPairContract {
     /**
      * 
      * @param {freeton.TonWrapper} tonInstance
-     * @param {JSON} keyPair 
+     * @param {Object} keyPair 
      */
+    // TODO: рефакторинг:  добавить свойство `info` и его инициализацию
     constructor(tonInstance, keyPair) {
         this.tonInstance = tonInstance;
         this.keyPair = keyPair;

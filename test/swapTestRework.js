@@ -28,31 +28,31 @@ const ton = new freeton.TonWrapper({
  * @name users
  * @type {User[]}
  */
-users = [];
+let users = [];
 
 /**
  * @name tip3RootContracts
  * @type {RootContract[]}
  */
-tip3RootContracts = [];
+let tip3RootContracts = [];
 
 /**
  * @name rootSwapPairContract
  * @type {RootSwapPairContract}
  */
-rootSwapPairContract = undefined;
+let rootSwapPairContract = undefined;
 
 /**
  * @name swapPairContract
  * @type {SwapPairContract}
  */
-swapPairContract = undefined;
+let swapPairContract = undefined;
 
 /**
  * @name tip3Deployer
  * @type {TIP3Deployer}
  */
-tip3Deployer = undefined;
+let tip3Deployer = undefined;
 
 try {
     describe('Test of swap pairs', async function() {
@@ -133,6 +133,8 @@ try {
 
         })
 
+
+
         it('Providing liquidity for swap pair', async function() {
             this.timeout(DEFAULT_TIMEOUT);
             // TODO: Паша, Антон: предоставление ликвидности свап паре
@@ -148,15 +150,17 @@ try {
 
             /**
              * @name userStateChange
-             * @type {JSON[]}
+             * @type { Array<import('./actors/user').WalletsStatesChanging> }
              */
             let userStateChange = [];
-            for (user of users)
-                userStateChange.push(await user.provideLiquidity(swapPairContract, token1Amount, token2Amount));
+            for (user of users) {
+                const userStates = await user.provideLiquidity(swapPairContract, token1Amount, token2Amount)
+                userStateChange.push(userStates);
+            }
 
             /**
              * @name state
-             * @type {JSON}
+             * @type {import('./actors/user').WalletsStatesChanging}
              */
             let state;
             for (state of userStateChange) {
@@ -193,7 +197,7 @@ try {
 
             /**
              * @name state
-             * @type {JSON}
+             * @type {Object}
              */
             let state;
             for (state of userStateChange) {
