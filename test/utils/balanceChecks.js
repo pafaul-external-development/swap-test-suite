@@ -2,6 +2,16 @@ const SwapPairContract = require("../../contractWrappers/swap/swapPairContract")
 const SwapPairSimulatorLight = require("../simulation/SwapPairSimulatorLight");
 
 /**
+ * @typedef PoolsState
+ * @type {Object}
+ * 
+ * @property {Boolean} general
+ * @property {Boolean} lp1
+ * @property {Boolean} lp2
+ * @property {Boolean} minted
+ */
+
+/**
  * 
  * @param {import("../actors/user").WalletsStatesChanging} walletState 
  * @param {import("../actors/user").WalletsState} deltas 
@@ -20,6 +30,7 @@ function checkBalanceDeltas(walletState, deltas, addresses) {
  * 
  * @param {SwapPairContract} swapPairInstance 
  * @param {SwapPairSimulatorLight} swapPairSimulator 
+ * @returns {PoolsState}
  */
 async function checkPoolEquality(swapPairInstance, swapPairSimulator) {
     let swapPairLP = await swapPairInstance.getCurrentExchangeRate();

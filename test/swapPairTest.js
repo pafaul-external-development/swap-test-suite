@@ -8,15 +8,20 @@ const RootSwapPairContract = require('../contractWrappers/swap/rootSwapPairContr
 const SwapPairContract = require('../contractWrappers/swap/swapPairContract');
 const TIP3Deployer = require('../contractWrappers/util/tip3Deployer');
 const User = require('./actors/user');
+const SwapPairSimulatorLight = require('./simulation/SwapPairSimulatorLight');
+const {
+    deployMultisigForUsers,
+    deployTIP3Tokens,
+    deployTIP3Wallets,
+    deployTIP3Deployer,
+    deployRootSwapPairContract,
+    deploySwapPair
+} = require('./deployContracts/deployContracts');
 
 const giverConfig = require('../config/contracts/giverConfig');
 const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
-
 const testScenario = require('../config/general/testScenario');
-const { deployMultisigForUsers, deployTIP3Tokens, deployTIP3Wallets, deployTIP3Deployer, deployRootSwapPairContract, deploySwapPair } = require('./deployContracts/deployContracts');
-const { checkBalanceDeltas, checkPoolEquality } = require('./utils/balanceChecks');
-const SwapPairSimulatorLight = require('./simulation/SwapPairSimulatorLight');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -188,7 +193,7 @@ try {
              */
             let user;
             for (user of users) {
-                userStateChange.push(await user.swapTokens(swapPairContract, tokenAmountForSwap));
+                userStateChange.push(await user.swapTokens(swapPairContract, firstTIP3Address, tokenAmountForSwap));
             }
 
             for (state of userStateChange) {

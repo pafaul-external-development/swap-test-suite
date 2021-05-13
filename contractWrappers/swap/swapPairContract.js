@@ -192,7 +192,7 @@ class SwapPairContract {
      * @param {String} tw
      * @returns {Promise<String>}
      */
-    async createWithdrawLiquidityPayload(tr, tw) {
+    async createWithdrawLiquidityOneTokenPayload(tr, tw) {
         return await this.swapPairContract.runLocal('createWithdrawLiquidityOneTokenPayload', {
             tokenRoot: tr,
             userWallet: tw
