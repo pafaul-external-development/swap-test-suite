@@ -1,11 +1,26 @@
 const SwapPairSimulatorLight = require('./SwapPairSimulatorLight');
 
 
+/**
+ *  NOTE:
+ *      Функции возвращают ожидаемые изменения балансов пользовательских кошельков!
+ */
+
 class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
-    constructor(firstTokenAddress, secondTokenAddress) {
+    /**
+     * 
+     * @param {String} firstTokenAddress 
+     * @param {String} secondTokenAddress 
+     * @param {String} lpTokenAddress 
+     */
+    constructor(firstTokenAddress, secondTokenAddress, lpTokenAddress) {
+        if (!firstTokenAddress || !secondTokenAddress || !lpTokenAddress)
+            throw Error('SwapPairSimulatorWrapper: invalid addresses in constructor');
+
         super();
         this._token1 = firstTokenAddress;
         this._token2 = secondTokenAddress;
+        this._lpToken = lpTokenAddress;
     }
 
     /**
@@ -13,7 +28,7 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @returns {Record<String, BigInt>}
      */
     get poolsInfo() {
-        return this._createMapping(super._pools.true, super._pools.false);
+        return this._createMapping(super._pools.true, super._pools.false, super._minted);
     }
     
 
@@ -21,10 +36,15 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @param {String} tokenAddress
      * @param {BigInt} amount 
      * 
-     * @returns {BigInt} amount after swap
+     * @returns {Record<String, BigInt>}
      */
     swap(tokenAddress, amount) {
-        return super.swap(this._getPosition(tokenAddress), amount);
+        const pos = this._getPosition(tokenAddress);
+        const res = super.swap(pos, amount);
+        if (pos)
+            return this._createMapping(-1n * amount, res, 0);
+        else 
+            return this._createMapping(res, -1n * amount, 0);
     }
 
 
@@ -32,27 +52,21 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @param {BigInt} amount1 
      * @param {BigInt} amount2 
      * 
-     * @returns {{provided: Record<String, BigInt> , minted: BigInt}} 
+     * @returns {Record<String, BigInt>} 
      */
     provide(amount1, amount2) {
         const res = super.provide(amount1, amount2);
-        return {
-            provided: this._createMapping(res.p1, res.p2),
-            minted: res.minted,
-        };
+        return this._createMapping(-1n*res.p1, -1n*res.p2, res.minted);
     }
 
 
     /**
      * @param {BigInt} lpTokensAmount 
-     * @returns {{withdrawed: Record<String, BigInt>, burned: BigInt}}
+     * @returns {Record<String, BigInt>}
      */
     withdraw(lpTokensAmount) {
         const res = super.withdraw(lpTokensAmount);
-        return { 
-            withdrawed: this._createMapping(res.w1, res.w2),
-            burned: res.burned,
-         };
+        return this._createMapping(res.w1, res.w2, -1n*res.burned);
     }
 
 
@@ -60,14 +74,18 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @param {String} tokenAddress
      * @param {BigInt} amount 
      * 
-     * @returns {{provided: Record<String, BigInt> , minted: BigInt}} 
+     * @returns {Record<String, BigInt>} 
      */
-     provideOneToken(tokenAddress, amount) {
-        const res = super.provideOneToken(this._getPosition(tokenAddress), amount)
-        return {
-            provided: this._createMapping(res.p1, res.p2),
-            minted: res.minted,
-        };
+    provideOneToken(tokenAddress, amount) {
+        const pos = this._getPosition(tokenAddress);
+        const res = super.provideOneToken(pos, amount);
+        
+        const provided = amount - res.inputRemainder;
+
+        if(pos)
+            return this._createMapping(-1n*provided, 0, res.minted);
+        else
+            return this._createMapping(0, -1n*provided, res.minted);
     }
 
 
@@ -77,8 +95,14 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * 
      * @returns {BigInt}
      */
-     withdrawOneToken(receivingTokenAddress, lpTokensAmount) {
-        return super.withdrawOneToken(this._getPosition(receivingTokenAddress), lpTokensAmount);
+    withdrawOneToken(receivingTokenAddress, lpTokensAmount) 
+    {   
+        const pos = this._getPosition(receivingTokenAddress);
+        const res = super.withdrawOneToken(pos, lpTokensAmount);
+        if (pos)
+            return this._createMapping(res, 0, -1n*lpTokensAmount);
+        else
+            return this._createMapping(0, res, -1n*lpTokensAmount);
     }
  
 
@@ -96,12 +120,14 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @private
      * @param {T} val1 
      * @param {T} val2 
+     * @param {T} valLP
      * @returns {Record<String, T>}
      */
-    _createMapping(val1, val2) {
+    _createMapping(val1, val2, valLP) {
         const obj = {};
         obj[this._token1] = val1;
         obj[this._token2] = val2;
+        obj[this._lpToken] = valLP;
 
         return obj;
     }
