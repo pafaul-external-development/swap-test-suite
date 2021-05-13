@@ -14,10 +14,8 @@ const networkConfig = require('../config/general/networkConfig');
 const seedPhrase = require('../config/general/seedPhraseConfig');
 
 const testScenario = require('../config/general/testScenario');
-var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const { deployTIP3Root, initialTokenSetup, createRootSwapPairConfig, awaitForContractDeployment, getTIP3Codes } = require('./utils/util');
+const { deployMultisigForUsers, deployTIP3Tokens, deployTIP3Wallets, deployTIP3Deployer, deployRootSwapPairContract, deploySwapPair } = require('./deployContracts/deployContracts');
 const { checkBalanceDeltas, checkPoolEquality } = require('./utils/balanceChecks');
-const rootTIP3Params = require('../config/contracts/rootTIP3Config');
 const SwapPairSimulatorLight = require('./simulation/SwapPairSimulatorLight');
 
 const ton = new freeton.TonWrapper({
@@ -93,75 +91,38 @@ try {
 
         it('Creating multisig wallets', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            // TODO: Паша: создание мультисиг кошельков
-            /**
-             * @name user
-             * @type {User}
-             */
-            let user;
-            for (user of users) {
-                await user.createMultisigWallet();
-            }
+            users = await deployMultisigForUsers(users);
         })
 
         it('Deploying TIP3 root contracts', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            // TODO: Паша: деплой тип-3 рут контрактов
-            for (let tip3Index = 0; tip3Index < 2; tip3Index++)
-                tip3RootContracts.push(await deployTIP3Root(ton, await initialTokenSetup(ton, rootTIP3Params[tip3Index])));
-
-            firstTIP3Address = tip3RootContracts[0].getAddress();
-            secondTIP3Address = tip3RootContracts[1].getAddress();
+            let deployResult = await deployTIP3Tokens(ton);
+            tip3RootContracts = deployResult.tokens;
+            firstTIP3Address = deployResult.firstTIP3Address;
+            secondTIP3Address = deployResult.secondTIP3Address;
         })
 
         it('Deploying TIP3 wallets', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            // TODO: Паша: деплой тип-3 кошельков 
-            /**
-             * @name user
-             * @type User
-             */
-            let user;
-            for (let tip3Index = 0; tip3Index < 2; tip3Index++)
-                for (user of users)
-                    await user.createWallet(tip3RootContracts[tip3Index], testScenario[tip3Index]);
+            users = await deployTIP3Wallets(users, tip3RootContracts);
         })
 
         it('Deploying tip3 deployer for contracts', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            tip3Deployer = new TIP3Deployer(ton, ton.keys[0]);
-            let tip3Codes = await getTIP3Codes(ton);
-            await tip3Deployer.deployContract(tip3Codes.root, tip3Codes.wallet);
+            tip3Deployer = await deployTIP3Deployer(ton);
         })
 
         it('Deploying Swap Pair Root Contract', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            // TODO: Паша: деплой рут контракта свап пары
 
-            /**
-             * @name rootSwapPairConfig
-             * @type {import('../config/contracts/swapPairContractsConfig').RootSwapPairConfig}
-             */
-            rootSwapPairConfig = await createRootSwapPairConfig(swapConfig, tip3Deployer.getAddress(), ton);
-            rootSwapPairContract = new RootSwapPairContract(ton, rootSwapPairConfig, ton.keys[0]);
-            await rootSwapPairContract.loadContract();
-            await rootSwapPairContract.deployContract(true);
+            rootSwapPairContract = await deployRootSwapPairContract(ton, tip3Deployer);
         })
 
         it('Deploying Swap Pair', async function() {
             this.timeout(DEFAULT_TIMEOUT);
-            // TODO: Паша: деплой свап пары для созданных тип3 токенов
-            await rootSwapPairContract.deploySwapPair(firstTIP3Address, secondTIP3Address);
-            swapPairContract = new SwapPairContract(ton, ton.keys[0]);
-            await swapPairContract.loadContract();
-            swapPairContract.setContractAddress(
-                await rootSwapPairContract.getFutureSwapPairAddress(firstTIP3Address, secondTIP3Address)
-            );
-            await awaitForContractDeployment(swapPairContract.getAddress(), ton);
-            await rootSwapPairContract.awaitSwapPairInitialization(firstTIP3Address, secondTIP3Address, swapPairContract);
-            await swapPairContract.getSetPairInfo();
-            lpTokenRootAddress = swapPairContract.info.lpTokenRoot;
-            let res = await checkPoolEquality(swapPairContract, swapPairSimulator);
+            let deployResult = await deploySwapPair(ton, rootSwapPairContract, tip3RootContracts);
+            swapPairContract = deployResult.swapPairContract;
+            lpTokenRootAddress = deployResult.lpTokenRootAddress;
         })
 
         it('Providing liquidity for swap pair', async function() {

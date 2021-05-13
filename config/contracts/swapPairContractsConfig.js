@@ -54,7 +54,7 @@ let swapPairConfig = {
     root: {
         initParams: {
             ownerPubkey: '',
-            _randomNonce: 103 // increment after new fix
+            _randomNonce: 104 // increment after new fix
         },
         constructorParams: {
             minMsgValue: 0, // Minimal msg.value
