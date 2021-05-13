@@ -22,10 +22,6 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
         this._token2 = secondTokenAddress;
         this._lpToken = lpTokenAddress;
     }
-<<<<<<< HEAD
-=======
-    
->>>>>>> origin
 
     /**
      * @param {String} tokenAddress
@@ -34,6 +30,7 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @returns {Record<String, BigInt>}
      */
     swap(tokenAddress, amount) {
+        console.log(tokenAddress, amount);
         amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
         const res = super.swap(pos, amount);
@@ -130,6 +127,13 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
         return obj;
     }
 }
+
+if (require.main === module){
+    let s = new SwapPairSimulatorWrapper('a', 'b', 'c');
+    s.setPools(10000000000000n, 1000000000n);
+    s.withdrawOneToken(s._token1, 1000000000000000000n);
+}
+
 
 
 

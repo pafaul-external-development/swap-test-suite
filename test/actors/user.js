@@ -415,9 +415,6 @@ class User {
 
         await sleep(2000);
 
-        let res1 = await swapPairInstance.swapPairContract.runLocal('getWi', {});
-        let res2 = await swapPairInstance.swapPairContract.runLocal('getStage', {});
-
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
         return {
