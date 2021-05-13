@@ -153,7 +153,7 @@ class SwapPairSimulatorLight {
     provideOneToken(lpFromKey, amount) {
         amount = BigInt(amount)
         const needToSwap = this._calculateNeedToSwap(lpFromKey, amount);
-        const afterSwap = this.swap(needToSwap);
+        const afterSwap = this.swap(lpFromKey, needToSwap);
         const p1 = lpFromKey ? amount - needToSwap : afterSwap;
         const p2 = lpFromKey ? afterSwap : amount - needToSwap;
         let res = this.provide(p1, p2);
@@ -225,7 +225,8 @@ class SwapPairSimulatorLight {
 
 if (require.main === module){
     let s = new SwapPairSimulatorLight();
-    s.provide(100, 300);
+    s.provide(100, 100)
+    s.withdrawOneToken(true, 100);
 }
 
 
