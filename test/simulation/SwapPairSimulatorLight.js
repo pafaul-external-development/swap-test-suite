@@ -158,6 +158,8 @@ class SwapPairSimulatorLight {
      * 
      * @param {Boolean} wannaGetKey 
      * @param {BigInt} lpTokensAmount 
+     * 
+     * @returns {BigInt} withdrawed amount
      */
     withdrawOneToken(wannaGetKey, lpTokensAmount) {
         const w = this.withdraw(lpTokensAmount);
