@@ -143,21 +143,24 @@ class SwapPairSimulatorLight {
      * @param {Boolean} lpFromKey 
      * @param {BigInt} amount 
      * 
-     * @returns {{p1: BigInt, p2: BigInt, minted: BigInt}} 
+     * @returns {{p1: BigInt, p2: BigInt, minted: BigInt, inputRemainder: BigInt}} 
      */
     provideOneToken(lpFromKey, amount) {
         const needToSwap = this._calculateNeedToSwap(lpFromKey, amount);
         const afterSwap = this.swap(needToSwap);
         const p1 = lpFromKey ? amount - needToSwap : afterSwap;
         const p2 = lpFromKey ? afterSwap : amount - needToSwap;
-
-        return this.provide(p1, p2);
+        let res = this.provide(p1, p2);
+        res.inputRemainder = lpFromKey ? (p1 - res.p1) : (p2 - res.p2);
+        return res;
     }
 
     /**
      * 
      * @param {Boolean} wannaGetKey 
      * @param {BigInt} lpTokensAmount 
+     * 
+     * @returns {BigInt} withdrawed amount
      */
     withdrawOneToken(wannaGetKey, lpTokensAmount) {
         const w = this.withdraw(lpTokensAmount);
