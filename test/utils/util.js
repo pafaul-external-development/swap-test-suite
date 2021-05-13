@@ -26,7 +26,7 @@ function copyJSON(json) {
  * Send grams to address
  * @param {freeton.ContractWrapper} giver 
  * @param {String} address 
- * @param {Number} amount 
+ * @param {Promise<Number>} amount 
  */
 async function sendGrams(giver, address, amount) {
     await giver.run(
@@ -126,7 +126,7 @@ async function initialTokenSetup(tonInstance, config) {
 /**
  * Get codes of tip3 contracts
  * @param {freeton.TonWrapper} tonInstance
- * @returns {{wallet: String, root: String}} output with Root and wallet codes
+ * @returns {Promise<{wallet: String, root: String}>} output with Root and wallet codes
  */
 async function getTIP3Codes(tonInstance) {
     let wallet = await freeton.requireContract(tonInstance, 'TONTokenWallet');

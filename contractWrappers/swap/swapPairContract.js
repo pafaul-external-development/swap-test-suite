@@ -41,6 +41,7 @@ class SwapPairContract {
      * @param {freeton.TonWrapper} tonInstance
      * @param {import('@tonclient/core').KeyPair} keyPair 
      */
+    // TODO: рефакторинг:  добавить свойство `info` и его инициализацию
     constructor(tonInstance, keyPair) {
         /**
          * @type {freeton.TonWrapper}
