@@ -211,7 +211,7 @@ class SwapPairSimulatorLight {
             res = z;
             z = (x/z + z) / 2n
         }
-        // console.log('sqrt counter = ', counter);
+        console.log('sqrt counter = ', counter);
         return res;
     }
 
@@ -225,7 +225,7 @@ class SwapPairSimulatorLight {
 
 if (require.main === module){
     let s = new SwapPairSimulatorLight();
-    s.provide(100, 300);
+    s._sqrt(BigInt(1997**2)+BigInt(4*1000*997*100000000000000/10000000000000000));
 }
 
 

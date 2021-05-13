@@ -17,7 +17,6 @@ const {
     HALF_CRYSTAL
 } = require('../../config/general/constants');
 
-
 /**
  * @typedef WalletState
  * @type {Object}
@@ -35,7 +34,6 @@ const {
  * @property {Record<String, WalletState>} finish Mapping: walletAddress -> WalletState
  */
 
-//TODO: Паша: Привести все `tokenAmount` к одному типу (String или Number)
 
 class User {
     /**
@@ -212,8 +210,8 @@ class User {
     /**
      * provide liquidity for swap pair
      * @param {SwapPairContract} swapPairInstance 
-     * @param {Number} token1Amount
-     * @param {Number} token2Amount
+     * @param {String} token1Amount
+     * @param {String} token2Amount
      * 
      * @returns {Promise<WalletsStatesChanging>}
      */
@@ -265,7 +263,7 @@ class User {
      * swap tokens with given root contract
      * @param {SwapPairContract} swapPairInstance 
      * @param {String} tokenAddress
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAmount 
      * @returns {Promise<WalletsStatesChanging>}
      */
     async swapTokens(swapPairInstance, tokenAddress, tokenAmount) {
@@ -306,7 +304,7 @@ class User {
     /**
      * withdraw tip3 tokens from swap pair
      * @param {SwapPairContract} swapPairInstance 
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAmount 
      * 
      * @returns {Promise<WalletsStatesChanging>}
      */
@@ -347,7 +345,7 @@ class User {
      * Provide liquidity using one token
      * @param {SwapPairContract} swapPairInstance 
      * @param {String} tokenAddress
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAmount 
      * @returns {Promise<WalletsStatesChanging>}
      */
     async provideLiquidityOneToken(swapPairInstance, tokenAddress, tokenAmount) {
@@ -387,7 +385,7 @@ class User {
      * Withdraw liquidity using one token
      * @param {SwapPairContract} swapPairInstance 
      * @param {String} tokenAddress
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAmount 
      * @returns {Promise<WalletsStatesChanging>}
      */
     async withdrawLiquidityOneToken(swapPairInstance, tokenAddress, tokenAmount) {
@@ -416,6 +414,9 @@ class User {
         );
 
         await sleep(2000);
+
+        let res1 = await swapPairInstance.swapPairContract.runLocal('getWi', {});
+        let res2 = await swapPairInstance.swapPairContract.runLocal('getStage', {});
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
@@ -509,6 +510,7 @@ class User {
                 type: 'None'
             }
         });
+
         return encoded_msg.body;
     }
 

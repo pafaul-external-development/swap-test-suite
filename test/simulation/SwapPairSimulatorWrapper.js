@@ -24,15 +24,6 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
     }
 
     /**
-     * @property
-     * @returns {Record<String, BigInt>}
-     */
-    get poolsInfo() {
-        return this._createMapping(super._pools.true, super._pools.false, super._minted);
-    }
-    
-
-    /**
      * @param {String} tokenAddress
      * @param {BigInt} amount 
      * 
