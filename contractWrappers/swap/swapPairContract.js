@@ -32,6 +32,7 @@ const freeton = require('../../src');
  * 
  * @property {BigInt} lp1
  * @property {BigInt} lp2
+ * @property {BigInt} lpTokensMinted
  */
 
 class SwapPairContract {

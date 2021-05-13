@@ -15,8 +15,10 @@ const seedPhrase = require('../config/general/seedPhraseConfig');
 
 const testScenario = require('../config/general/testScenario');
 var swapConfig = require('../config/contracts/swapPairContractsConfig');
-const { deployTIP3Root, initialTokenSetup, createRootSwapPairConfig, awaitForContractDeployment, getTIP3Codes } = require('./util');
+const { deployTIP3Root, initialTokenSetup, createRootSwapPairConfig, awaitForContractDeployment, getTIP3Codes } = require('./utils/util');
+const { checkBalanceDeltas, checkPoolEquality } = require('./utils/balanceChecks');
 const rootTIP3Params = require('../config/contracts/rootTIP3Config');
+const SwapPairSimulatorLight = require('./simulation/SwapPairSimulatorLight');
 
 const ton = new freeton.TonWrapper({
     giverConfig: giverConfig,
@@ -47,6 +49,12 @@ let rootSwapPairContract = undefined;
  * @type {SwapPairContract}
  */
 let swapPairContract = undefined;
+
+/**
+ * @name swapPairSimulator
+ * @type {SwapPairSimulatorLight}
+ */
+let swapPairSimulator = new SwapPairSimulatorLight();
 
 /**
  * @name tip3Deployer
@@ -132,7 +140,7 @@ try {
 
             /**
              * @name rootSwapPairConfig
-             * @type {JSON}
+             * @type {import('../config/contracts/swapPairContractsConfig').RootSwapPairConfig}
              */
             rootSwapPairConfig = await createRootSwapPairConfig(swapConfig, tip3Deployer.getAddress(), ton);
             rootSwapPairContract = new RootSwapPairContract(ton, rootSwapPairConfig, ton.keys[0]);
@@ -153,6 +161,7 @@ try {
             await rootSwapPairContract.awaitSwapPairInitialization(firstTIP3Address, secondTIP3Address, swapPairContract);
             await swapPairContract.getSetPairInfo();
             lpTokenRootAddress = swapPairContract.info.lpTokenRoot;
+            let res = await checkPoolEquality(swapPairContract, swapPairSimulator);
         })
 
         it('Providing liquidity for swap pair', async function() {

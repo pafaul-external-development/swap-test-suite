@@ -40,4 +40,4 @@ let devnetConfig = {
     address: '0:b8bb25d89595898d8886dec11d3bfcd022f3e70b5011b59f5a6ff4dae846acdf',
 }
 
-module.exports = devnetConfig;
+module.exports = tonOSSEGiver;

@@ -1,8 +1,8 @@
-const freeton = require('../src');
+const freeton = require('../../src');
 const logger = require('mocha-logger');
 
-const RootContract = require('../contractWrappers/tip3/rootContract');
-const { sleep } = require('../src/utils');
+const RootContract = require('../../contractWrappers/tip3/rootContract');
+const { sleep } = require('../../src/utils');
 
 /**
  * String to hex
@@ -40,8 +40,8 @@ async function sendGrams(giver, address, amount) {
 /**
  * Initial token config creation
  * @param {freeton.TonWrapper} tonInstance 
- * @param {import('../config/contracts/rootContractParameters').RootTIP3Config} config 
- * @returns {import('../config/contracts/rootContractParameters').RootTIP3Config}
+ * @param {import('../../config/contracts/rootContractParameters').RootTIP3Config} config 
+ * @returns {import('../../config/contracts/rootContractParameters').RootTIP3Config}
  */
 function initialTokenSetup(tonInstance, config) {
     let tokenConfig = copyJSON(config);
@@ -73,7 +73,7 @@ function initialTokenSetup(tonInstance, config) {
 /**
  * Deploy TIP-3 token root contract and wallets
  * @param {freeton.TonWrapper} tonInstance 
- * @param {import('../config/contracts/rootContractParameters').RootTIP3Config} rootConfig
+ * @param {import('../../config/contracts/rootContractParameters').RootTIP3Config} rootConfig
  */
 async function deployTIP3Root(tonInstance, rootConfig) {
     let rootSC;
@@ -92,10 +92,10 @@ async function deployTIP3Root(tonInstance, rootConfig) {
 
 /**
  * create config for root swap pair contract
- * @param {import('../config/contracts/swapPairContractsConfig').SwapPairConfig} config 
+ * @param {import('../../config/contracts/swapPairContractsConfig').SwapPairConfig} config 
  * @param {String} tip3DeployerAddress
  * @param {freeton.TonWrapper} tonInstance 
- * @returns {Promise<import('../config/contracts/swapPairContractsConfig').SwapPairConfig>}
+ * @returns {Promise<import('../../config/contracts/swapPairContractsConfig').SwapPairConfig>}
  */
 async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance) {
     config.root.keyPair = tonInstance.keys[0];
@@ -108,8 +108,8 @@ async function createRootSwapPairConfig(config, tip3DeployerAddress, tonInstance
 /**
  * create config for tip3 root contract
  * @param {freeton.TonWrapper} tonInstance 
- * @param {import('../config/contracts/rootContractParameters').RootTIP3Config} config 
- * @returns {Promise<import('../config/contracts/rootContractParameters').RootTIP3Config>}
+ * @param {import('../../config/contracts/rootContractParameters').RootTIP3Config} config 
+ * @returns {Promise<import('../../config/contracts/rootContractParameters').RootTIP3Config>}
  */
 async function initialTokenSetup(tonInstance, config) {
     let rootConfig = copyJSON(config);
