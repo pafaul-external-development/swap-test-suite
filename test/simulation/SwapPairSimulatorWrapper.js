@@ -22,6 +22,10 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
         this._token2 = secondTokenAddress;
         this._lpToken = lpTokenAddress;
     }
+<<<<<<< HEAD
+=======
+    
+>>>>>>> origin
 
     /**
      * @param {String} tokenAddress
@@ -30,6 +34,7 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @returns {Record<String, BigInt>}
      */
     swap(tokenAddress, amount) {
+        amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
         const res = super.swap(pos, amount);
         if (pos)
@@ -68,6 +73,7 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      * @returns {Record<String, BigInt>} 
      */
     provideOneToken(tokenAddress, amount) {
+        amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
         const res = super.provideOneToken(pos, amount);
         
@@ -88,6 +94,7 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
      */
     withdrawOneToken(receivingTokenAddress, lpTokensAmount) 
     {   
+        lpTokensAmount = BigInt(lpTokensAmount);
         const pos = this._getPosition(receivingTokenAddress);
         const res = super.withdrawOneToken(pos, lpTokensAmount);
         if (pos)
