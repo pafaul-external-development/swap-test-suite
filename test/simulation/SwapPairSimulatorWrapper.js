@@ -42,11 +42,13 @@ class SwapPairSimulatorWrapper {
 
     /**
      * @param {String} tokenAddress
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {Record<String, BigInt>}
      */
     swap(tokenAddress, amount) {
+        this._checkIsLiquidityProvided();
+
         amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
         const res = this._simulator.swap(pos, amount);
@@ -58,8 +60,8 @@ class SwapPairSimulatorWrapper {
 
 
     /**
-     * @param {BigInt} amount1 
-     * @param {BigInt} amount2 
+     * @param {BigInt | Number} amount1 
+     * @param {BigInt | Number} amount2 
      * 
      * @returns {Record<String, BigInt>} 
      */
@@ -70,10 +72,12 @@ class SwapPairSimulatorWrapper {
 
 
     /**
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * @returns {Record<String, BigInt>}
      */
     withdraw(lpTokensAmount) {
+        this._checkIsLiquidityProvided();
+
         const res = this._simulator.withdraw(lpTokensAmount);
         return this._createMapping(res.w1, res.w2, -1n*res.burned);
     }
@@ -81,7 +85,7 @@ class SwapPairSimulatorWrapper {
 
     /**
      * @param {String} tokenAddress
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {Record<String, BigInt>} 
      */
@@ -101,12 +105,13 @@ class SwapPairSimulatorWrapper {
 
     /**
      * @param {String} receivingTokenAddress 
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * 
      * @returns {BigInt}
      */
-    withdrawOneToken(receivingTokenAddress, lpTokensAmount) 
-    {   
+    withdrawOneToken(receivingTokenAddress, lpTokensAmount) {
+        this._checkIsLiquidityProvided();
+        
         lpTokensAmount = BigInt(lpTokensAmount);
         const pos = this._getPosition(receivingTokenAddress);
         const res = this._simulator.withdrawOneToken(pos, lpTokensAmount);
@@ -142,6 +147,12 @@ class SwapPairSimulatorWrapper {
 
         return obj;
     }
+
+    _checkIsLiquidityProvided() {
+        if (this._simulator._pools.true <= 0 || this._simulator._pools.false <= 0)
+            throw Error('SwapPairSimulatorWrapper: Liquidity pools are empty');
+        return true
+    }
 }
 
 
@@ -150,7 +161,7 @@ if (require.main === module) {
     const x = new SwapPairSimulatorWrapper('x', 'y', 'z');
     const p = (z) => console.log(z);
 
-    x.setPools(100, 100);
+    // x.setPools(100, 100);
 
     p(x.poolsInfo);
     p(x.swap('x', 10));
