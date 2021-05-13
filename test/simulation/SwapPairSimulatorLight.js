@@ -30,10 +30,12 @@ class SwapPairSimulatorLight {
 
 
     /**
-     * @param {BigInt} amount1 
-     * @param {BigInt} amount2 
+     * @param {BigInt | Number} amount1 
+     * @param {BigInt | Number} amount2 
      */
     setPools(amount1, amount2) {
+        amount1 = BigInt(amount1);
+        amount2 = BigInt(amoutn2);
         if (amount1 < 0n || amount2 < 0n)
             throw Error('SwapParSimulatorLight: pools cannot be negative');
         this._pools.true = amount1;
@@ -43,12 +45,12 @@ class SwapPairSimulatorLight {
 
     /**
      * @param {Boolean} lpFromKey   true - 1, false - 2
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {BigInt} amount after swap
      */
     swap(lpFromKey, amount) {
-        const a = amount;
+        const a = BigInt(amount);
         /**@type {BigInt} */
         const f = this._pools[lpFromKey];
         /**@type {BigInt} */
@@ -70,12 +72,15 @@ class SwapPairSimulatorLight {
 
 
     /**
-     * @param {BigInt} amount1 
-     * @param {BigInt} amount2 
+     * @param {BigInt | Number} amount1 
+     * @param {BigInt | Number} amount2 
      * 
      * @returns {{p1: BigInt, p2: BigInt, minted: BigInt}} 
      */
     provide(amount1, amount2) {
+        amount1 = BigInt(amount1);
+        amount2 = BigInt(amount2);
+
         let provided1 = 0n,
             provided2 = 0n,
             minted = 0n;
@@ -113,7 +118,7 @@ class SwapPairSimulatorLight {
 
 
     /**
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * @returns {{w1: BigInt, w2: BigInt, burned: BigInt}} burned
      */
     withdraw(lpTokensAmount) {
@@ -121,7 +126,7 @@ class SwapPairSimulatorLight {
             w2 = 0n,
             burned = 0n;
         const m = this._minted;
-        const a = lpTokensAmount;
+        const a = BigInt(lpTokensAmount);
         const p1 = this._pools.true;
         const p2 = this._pools.false;
 
@@ -141,11 +146,12 @@ class SwapPairSimulatorLight {
 
     /**
      * @param {Boolean} lpFromKey 
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {{p1: BigInt, p2: BigInt, minted: BigInt, inputRemainder: BigInt}} 
      */
     provideOneToken(lpFromKey, amount) {
+        amount = BigInt(amount)
         const needToSwap = this._calculateNeedToSwap(lpFromKey, amount);
         const afterSwap = this.swap(needToSwap);
         const p1 = lpFromKey ? amount - needToSwap : afterSwap;
@@ -158,11 +164,12 @@ class SwapPairSimulatorLight {
     /**
      * 
      * @param {Boolean} wannaGetKey 
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * 
      * @returns {BigInt} withdrawed amount
      */
     withdrawOneToken(wannaGetKey, lpTokensAmount) {
+        lpTokensAmount = BigInt(lpTokensAmount);
         const w = this.withdraw(lpTokensAmount);
         const afterSwap = this.swap(!wannaGetKey, wannaGetKey ? w.w2 : w.w1);
 
@@ -172,13 +179,13 @@ class SwapPairSimulatorLight {
 
     /**
      * @param {Boolean} lpFromKey 
-     * @param {BigInt} providingAmount
+     * @param {BigInt | Number} providingAmount
      * 
      * @returns {BigInt}
      */
     _calculateNeedToSwap(lpFromKey, providingAmount) {
         const f = this._pools[lpFromKey];
-        const p = providingAmount;
+        const p = BigInt(providingAmount);
 
         const b = f*(n+d);
         const x = (n+d)*(n+d) + 4n*d*p*n/f;
@@ -217,7 +224,8 @@ class SwapPairSimulatorLight {
 
 
 if (require.main === module){
-    console.log('kek');
+    let s = new SwapPairSimulatorLight();
+    s.provide(100, 300);
 }
 
 
