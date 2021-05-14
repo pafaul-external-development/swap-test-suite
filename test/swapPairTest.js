@@ -165,7 +165,7 @@ try {
             let res = await swap(swapPairContract, swapPairSimulator, users[0], {
                 tokenAddress: firstTIP3Address,
                 swapAmount: BigInt(tokenAmountForSwap)
-            })
+            });
         })
 
         it('Withdrawing liquidity', async function() {
