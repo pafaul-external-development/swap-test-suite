@@ -6,7 +6,7 @@ const SwapPairSimulatorLight = require('./SwapPairSimulatorLight');
  *      Функции возвращают ожидаемые изменения балансов пользовательских кошельков!
  */
 
-class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
+class SwapPairSimulatorWrapper {
     /**
      * 
      * @param {String} firstTokenAddress 
@@ -17,23 +17,41 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
         if (!firstTokenAddress || !secondTokenAddress || !lpTokenAddress)
             throw Error('SwapPairSimulatorWrapper: invalid addresses in constructor');
 
-        super();
+        this._simulator = new SwapPairSimulatorLight();
         this._token1 = firstTokenAddress;
         this._token2 = secondTokenAddress;
         this._lpToken = lpTokenAddress;
     }
+    
+    /**
+     * @property
+     * @returns {{lp1: BigInt, lp2: BigInt, minted: BigInt}}
+     */
+    get poolsInfo() {
+        return this._simulator.poolsInfo;
+    }
+
+    /**
+     * @param {BigInt | Number} amount1 
+     * @param {BigInt | Number} amount2 
+     */
+    setPools(amount1, amount2) {
+        return this._simulator.setPools(amount1, amount2);
+    }
+
 
     /**
      * @param {String} tokenAddress
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {Record<String, BigInt>}
      */
     swap(tokenAddress, amount) {
-        console.log(tokenAddress, amount);
+        this._checkIsLiquidityProvided();
+
         amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
-        const res = super.swap(pos, amount);
+        const res = this._simulator.swap(pos, amount);
         if (pos)
             return this._createMapping(-1n * amount, res, 0);
         else 
@@ -42,37 +60,39 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
 
 
     /**
-     * @param {BigInt} amount1 
-     * @param {BigInt} amount2 
+     * @param {BigInt | Number} amount1 
+     * @param {BigInt | Number} amount2 
      * 
      * @returns {Record<String, BigInt>} 
      */
     provide(amount1, amount2) {
-        const res = super.provide(amount1, amount2);
+        const res = this._simulator.provide(amount1, amount2);
         return this._createMapping(-1n*res.p1, -1n*res.p2, res.minted);
     }
 
 
     /**
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * @returns {Record<String, BigInt>}
      */
     withdraw(lpTokensAmount) {
-        const res = super.withdraw(lpTokensAmount);
+        this._checkIsLiquidityProvided();
+
+        const res = this._simulator.withdraw(lpTokensAmount);
         return this._createMapping(res.w1, res.w2, -1n*res.burned);
     }
 
 
     /**
      * @param {String} tokenAddress
-     * @param {BigInt} amount 
+     * @param {BigInt | Number} amount 
      * 
      * @returns {Record<String, BigInt>} 
      */
     provideOneToken(tokenAddress, amount) {
         amount = BigInt(amount);
         const pos = this._getPosition(tokenAddress);
-        const res = super.provideOneToken(pos, amount);
+        const res = this._simulator.provideOneToken(pos, amount);
         
         const provided = amount - res.inputRemainder;
 
@@ -85,15 +105,16 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
 
     /**
      * @param {String} receivingTokenAddress 
-     * @param {BigInt} lpTokensAmount 
+     * @param {BigInt | Number} lpTokensAmount 
      * 
      * @returns {BigInt}
      */
-    withdrawOneToken(receivingTokenAddress, lpTokensAmount) 
-    {   
+    withdrawOneToken(receivingTokenAddress, lpTokensAmount) {
+        this._checkIsLiquidityProvided();
+        
         lpTokensAmount = BigInt(lpTokensAmount);
         const pos = this._getPosition(receivingTokenAddress);
-        const res = super.withdrawOneToken(pos, lpTokensAmount);
+        const res = this._simulator.withdrawOneToken(pos, lpTokensAmount);
         if (pos)
             return this._createMapping(res, 0, -1n*lpTokensAmount);
         else
@@ -126,6 +147,12 @@ class SwapPairSimulatorWrapper extends SwapPairSimulatorLight {
 
         return obj;
     }
+
+    _checkIsLiquidityProvided() {
+        if (this._simulator._pools.true <= 0 || this._simulator._pools.false <= 0)
+            throw Error('SwapPairSimulatorWrapper: Liquidity pools are empty');
+        return true
+    }
 }
 
 if (require.main === module){
@@ -135,6 +162,22 @@ if (require.main === module){
 }
 
 
+
+
+if (require.main === module) {
+    const x = new SwapPairSimulatorWrapper('x', 'y', 'z');
+    const p = (z) => console.log(z);
+
+    // x.setPools(100, 100);
+
+    p(x.poolsInfo);
+    p(x.swap('x', 10));
+    p(x.provide(100, 100));
+    p(x.withdraw(1));
+    p(x.provideOneToken('y', 50));
+    p(x.withdrawOneToken('x', 10));
+
+}
 
 
 module.exports = SwapPairSimulatorWrapper;
