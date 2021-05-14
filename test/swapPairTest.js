@@ -148,6 +148,7 @@ try {
                 token1Amount: BigInt(token1Amount),
                 token2Amount: BigInt(token2Amount)
             });
+            expect(res.totalResult).to.equal(true, 'Invalid providing liquidity result');
         })
 
         it('Providing liquidity using one token', async function() {
@@ -156,6 +157,7 @@ try {
                 tokenAddress: firstTIP3Address,
                 tokenAmount: tokenAmount
             })
+            expect(res.totalResult).to.equal(true, 'Invalid providing liquidity one token result');
         })
 
         it('Token swap', async function() {
@@ -166,6 +168,7 @@ try {
                 tokenAddress: firstTIP3Address,
                 swapAmount: BigInt(tokenAmountForSwap)
             });
+            expect(res.totalResult).to.equal(true, 'Invalid swap result');
         })
 
         it('Withdrawing liquidity', async function() {
@@ -175,6 +178,7 @@ try {
             let res = await withdrawLiquidity(swapPairContract, swapPairSimulator, users[0], {
                 withdrawLPAmount: BigInt(lpTokenAmount / 2)
             });
+            expect(res.totalResult).to.equal(true, 'Invalid withdraw liquidity result');
         })
 
         it('Withdrawing liquidity by using one token', async function() {
@@ -184,6 +188,7 @@ try {
                 tokenAddress: firstTIP3Address,
                 withdrawLPAmount: tokenAmount
             });
+            expect(res.totalResult).to.equal(true, 'Invalid withdarw one token result');
         })
     })
 } catch (error) {

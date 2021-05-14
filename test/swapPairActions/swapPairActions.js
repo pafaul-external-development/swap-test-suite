@@ -144,6 +144,7 @@ async function withdrawLiquidityOneToken(swapPairContract, swapPairSim, user, wi
     return await checkAll(swapPairContract, swapPairSim, withdrawStateChange, simWithdrawResult);
 }
 
+// TODO: доделать
 /**
  * 
  * @param {SwapPairContract} swapPairContract 
@@ -190,6 +191,5 @@ module.exports = {
     withdrawLiquidity,
     swap,
     provideLiquidityOneToken,
-    withdrawLiquidityOneToken,
-    checkIfOperationIsCorrect
+    withdrawLiquidityOneToken
 };

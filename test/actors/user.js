@@ -272,7 +272,7 @@ class User {
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let walletToReceiveTokens = (res.tokenRoot1 == tokenAddress) ? this.wallets[res.tokenRoot1] : this.wallets[res.tokenRoot2];
+        let walletToReceiveTokens = (res.tokenRoot1 == tokenAddress) ? this.wallets[res.tokenRoot2] : this.wallets[res.tokenRoot1];
 
         let swapPayload = await swapPairInstance.createSwapPayload(walletToReceiveTokens.getAddress());
 
@@ -291,7 +291,7 @@ class User {
             )
         );
 
-        await sleep(2000);
+        await sleep(4000);
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
