@@ -36,6 +36,7 @@ class SwapPairSimulatorLight {
     setPools(amount1, amount2) {
         amount1 = BigInt(amount1);
         amount2 = BigInt(amount2);
+        this._minted = amount1*amount2;
         if (amount1 < 0n || amount2 < 0n)
             throw Error('SwapParSimulatorLight: pools cannot be negative');
         this._pools.true = amount1;
@@ -58,12 +59,18 @@ class SwapPairSimulatorLight {
 
         const fn = f+a;
         const x =  f * t;
-        const y = fn - a * BigInt(Math.ceil(Number(d-n) / Number(d)));
+
+        const feeN = a * (d-n);
+        let fee = feeN / d;
+        if (fee * d < feeN)
+            fee++;  //ceiling
+            
+        const y = fn - fee;
 
         let tn = x / y;
         if (tn * y < x)  
             tn++;    // ceiling
-
+            
         this._pools[lpFromKey] = fn;
         this._pools[!lpFromKey] = tn;
 
@@ -171,6 +178,7 @@ class SwapPairSimulatorLight {
     withdrawOneToken(wannaGetKey, lpTokensAmount) {
         lpTokensAmount = BigInt(lpTokensAmount);
         const w = this.withdraw(lpTokensAmount);
+        // console.log(w);
         const afterSwap = this.swap(!wannaGetKey, wannaGetKey ? w.w2 : w.w1);
 
         return afterSwap + (wannaGetKey ? w.w1 : w.w2);
@@ -225,8 +233,7 @@ class SwapPairSimulatorLight {
 
 if (require.main === module){
     let s = new SwapPairSimulatorLight();
-    s.provide(100, 100)
-    s.withdrawOneToken(true, 100);
+    s._sqrt(BigInt(1997**2)+BigInt(4*1000*997*100000000000000/10000000000000000));
 }
 
 
