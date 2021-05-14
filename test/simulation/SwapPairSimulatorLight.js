@@ -36,7 +36,7 @@ class SwapPairSimulatorLight {
     setPools(amount1, amount2) {
         amount1 = BigInt(amount1);
         amount2 = BigInt(amount2);
-        //this._minted = amount1*amount2;
+        this._minted = amount1*amount2;
         if (amount1 < 0n || amount2 < 0n)
             throw Error('SwapParSimulatorLight: pools cannot be negative');
         this._pools.true = amount1;
@@ -64,9 +64,10 @@ class SwapPairSimulatorLight {
         let tn = x / y;
         if (tn * y < x)  
             tn++;    // ceiling
-
-        this._pools[lpFromKey] = fn;
-        this._pools[!lpFromKey] = tn;
+        if (t - tn === 0) {
+            this._pools[lpFromKey] = fn;
+            this._pools[!lpFromKey] = tn;
+        }
 
         return t - tn;
     }
