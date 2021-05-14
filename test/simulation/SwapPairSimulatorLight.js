@@ -59,15 +59,19 @@ class SwapPairSimulatorLight {
 
         const fn = f+a;
         const x =  f * t;
-        const y = fn - a * BigInt(Math.ceil(Number(d-n) / Number(d)));
+
+        const feeN = a * (d-n);
+        let fee = feeN / d;
+        if (fee * d < feeN)
+            fee++;  //ceiling
+        const y = fn - fee;
 
         let tn = x / y;
         if (tn * y < x)  
             tn++;    // ceiling
-        if (t - tn === 0) {
-            this._pools[lpFromKey] = fn;
-            this._pools[!lpFromKey] = tn;
-        }
+            
+        this._pools[lpFromKey] = fn;
+        this._pools[!lpFromKey] = tn;
 
         return t - tn;
     }

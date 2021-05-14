@@ -159,15 +159,17 @@ if (require.main === module) {
     const x = new SwapPairSimulatorWrapper('x', 'y', 'z');
     const p = (z) => console.log(z);
 
-    x.setPools(10000000000000n, 1000000000n);
+    const xPool = 10000000000n
+
+    x.setPools(xPool, 1000000000n);
 
     p(x.poolsInfo);
-    p(x.swap('x', 100000000n));
-    p(x.poolsInfo);
-    p(x.provide(10000000000000n, 10000000000000n));
-    p(x.withdraw(10000000000000000000n));
-    p(x.provideOneToken('y', 10000000000n));
-    p(x.withdrawOneToken('x', 1000000000000000n));
+    p(x.swap('x', xPool / 1000000000n));
+    // p(x.poolsInfo);
+    // p(x.provide(10000000000000n, 10000000000000n));
+    // p(x.withdraw(10000000000000000000n));
+    // p(x.provideOneToken('y', 10000000000n));
+    // p(x.withdrawOneToken('x', 1000000000000000n));
 
 }
 
