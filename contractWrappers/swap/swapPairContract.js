@@ -167,7 +167,7 @@ class SwapPairContract {
      * @returns {Promise<String>}
      */
     async createWithdrawLiquidityPayload(tr1, tw1, tr2, tw2) {
-        return await swapPairInstance.swapPairContract.runLocal('createWithdrawLiquidityPayload', {
+        return await this.swapPairContract.runLocal('createWithdrawLiquidityPayload', {
             tokenRoot1: tr1,
             tokenWallet1: tw1,
             tokenRoot2: tr2,
@@ -192,7 +192,7 @@ class SwapPairContract {
      * @param {String} tw
      * @returns {Promise<String>}
      */
-    async createWithdrawLiquidityPayload(tr, tw) {
+    async createWithdrawLiquidityOneTokenPayload(tr, tw) {
         return await this.swapPairContract.runLocal('createWithdrawLiquidityOneTokenPayload', {
             tokenRoot: tr,
             userWallet: tw

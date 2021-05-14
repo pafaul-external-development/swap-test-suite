@@ -2,6 +2,7 @@ const freeton = require('../../src');
 const RootContract = require("../../contractWrappers/tip3/rootContract");
 const MultisigWallet = require('../../contractWrappers/util/MultiSigWallet');
 const Wallet = require('../../contractWrappers/tip3/walletContract');
+const SwapPairContract = require('../../contractWrappers/swap/swapPairContract');
 const { sleep } = require('../../src/utils');
 const { rootTIP3TokenAbi } = require('../../config/contracts/abis');
 const { abiContract, signerNone } = require('@tonclient/core');
@@ -33,7 +34,6 @@ const {
  * @property {Record<String, WalletState>} finish Mapping: walletAddress -> WalletState
  */
 
-//TODO: Паша: Привести все `tokenAmount` к одному типу (String или Number)
 
 class User {
     /**
@@ -44,7 +44,7 @@ class User {
     constructor(keyPair, tonInstance) {
 
         /**
-         * @type {Record<String, WalletState>} Mapping: walletAddress -> WalletState
+         * @type {Record<String, Wallet>} Mapping: walletAddress -> Wallet
          */
         this.wallets = {};
 
@@ -210,8 +210,8 @@ class User {
     /**
      * provide liquidity for swap pair
      * @param {SwapPairContract} swapPairInstance 
-     * @param {Number} token1Amount
-     * @param {Number} token2Amount
+     * @param {String} token1Amount
+     * @param {String} token2Amount
      * 
      * @returns {Promise<WalletsStatesChanging>}
      */
@@ -262,30 +262,36 @@ class User {
     /**
      * swap tokens with given root contract
      * @param {SwapPairContract} swapPairInstance 
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAddress
+     * @param {String} tokenAmount 
      * @returns {Promise<WalletsStatesChanging>}
      */
-    async swapTokens(swapPairInstance, tokenAmount) {
+    async swapTokens(swapPairInstance, tokenAddress, tokenAmount) {
         let res = await this.checkIfAllWalletsExist(swapPairInstance);
-        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2];
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2, res.lpTokenRoot];
         let initialBalances = await this.getWalletsStates(tokensToCheck);
         let finalBalances = {};
 
-        let swapPayload = await swapPairInstance.createSwapPayload(this.wallets[res.tokenRoot2].getAddress());
+        let walletToReceiveTokens = (res.tokenRoot1 == tokenAddress) ? this.wallets[res.tokenRoot2] : this.wallets[res.tokenRoot1];
+
+        let swapPayload = await swapPairInstance.createSwapPayload(walletToReceiveTokens.getAddress());
+
+        let rootToUse = (res.tokenRoot1 == tokenAddress) ? res.tokenRoot1 : res.tokenRoot2;
+        let walletDestination = (res.tokenRoot1 == tokenAddress) ? res.tokenWallet1 : res.tokenWallet2;
 
         await this.msig.transferTo(
-            this.wallets[res.tokenRoot1].getAddress(),
+            this.wallets[rootToUse].getAddress(),
             ONE_CRYSTAL,
             await this.createPayloadForTIP3Wallet(
-                this.wallets[res.tokenRoot1].getAbi(),
-                res.tokenWallet1,
+                this.wallets[rootToUse].getAbi(),
+                walletDestination,
                 tokenAmount,
                 HALF_CRYSTAL,
                 swapPayload
             )
         );
 
-        await sleep(2000);
+        await sleep(4000);
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
@@ -298,7 +304,7 @@ class User {
     /**
      * withdraw tip3 tokens from swap pair
      * @param {SwapPairContract} swapPairInstance 
-     * @param {Number} tokenAmount 
+     * @param {String} tokenAmount 
      * 
      * @returns {Promise<WalletsStatesChanging>}
      */
@@ -326,6 +332,88 @@ class User {
         );
 
         await sleep(5000);
+
+        finalBalances = await this.getWalletsStates(tokensToCheck);
+
+        return {
+            start: initialBalances,
+            finish: finalBalances
+        };
+    }
+
+    /**
+     * Provide liquidity using one token
+     * @param {SwapPairContract} swapPairInstance 
+     * @param {String} tokenAddress
+     * @param {String} tokenAmount 
+     * @returns {Promise<WalletsStatesChanging>}
+     */
+    async provideLiquidityOneToken(swapPairInstance, tokenAddress, tokenAmount) {
+        let res = await this.checkIfAllWalletsExist(swapPairInstance);
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2, res.lpTokenRoot];
+        let initialBalances = await this.getWalletsStates(tokensToCheck);
+        let finalBalances = {};
+
+        let payload = await swapPairInstance.createProvideLiquidityOneTokenPayload(initialBalances[res.lpTokenRoot].address);
+
+        let rootToUse = (res.tokenRoot1 == tokenAddress) ? res.tokenRoot1 : res.tokenRoot2;
+        let walletDestination = (res.tokenRoot1 == tokenAddress) ? res.tokenWallet1 : res.tokenWallet2;
+
+        await this.msig.transferTo(
+            this.wallets[rootToUse].getAddress(),
+            ONE_CRYSTAL,
+            await this.createPayloadForTIP3Wallet(
+                this.wallets[rootToUse].getAbi(),
+                walletDestination,
+                tokenAmount,
+                HALF_CRYSTAL,
+                payload
+            )
+        );
+
+        await sleep(2000);
+
+        finalBalances = await this.getWalletsStates(tokensToCheck);
+
+        return {
+            start: initialBalances,
+            finish: finalBalances
+        };
+    }
+
+    /**
+     * Withdraw liquidity using one token
+     * @param {SwapPairContract} swapPairInstance 
+     * @param {String} tokenAddress
+     * @param {String} tokenAmount 
+     * @returns {Promise<WalletsStatesChanging>}
+     */
+    async withdrawLiquidityOneToken(swapPairInstance, tokenAddress, tokenAmount) {
+        let res = await this.checkIfAllWalletsExist(swapPairInstance);
+        let tokensToCheck = [res.tokenRoot1, res.tokenRoot2, res.lpTokenRoot];
+        let initialBalances = await this.getWalletsStates(tokensToCheck);
+        let finalBalances = {};
+
+        let rootToUse = (res.tokenRoot1 == tokenAddress) ? res.tokenRoot1 : res.tokenRoot2;
+
+        let payload = await swapPairInstance.createWithdrawLiquidityOneTokenPayload(
+            rootToUse,
+            this.wallets[rootToUse].getAddress()
+        );
+
+        await this.msig.transferTo(
+            this.wallets[res.lpTokenRoot].getAddress(),
+            ONE_CRYSTAL,
+            await this.createPayloadForTIP3Wallet(
+                this.wallets[res.lpTokenRoot].getAbi(),
+                res.lpTokenWallet,
+                tokenAmount,
+                HALF_CRYSTAL,
+                payload
+            )
+        );
+
+        await sleep(2000);
 
         finalBalances = await this.getWalletsStates(tokensToCheck);
 
@@ -419,6 +507,7 @@ class User {
                 type: 'None'
             }
         });
+
         return encoded_msg.body;
     }
 

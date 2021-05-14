@@ -64,7 +64,6 @@ class SwapPairSimulatorLight {
         let fee = feeN / d;
         if (fee * d < feeN)
             fee++;  //ceiling
-            
         const y = fn - fee;
 
         let tn = x / y;
@@ -178,7 +177,7 @@ class SwapPairSimulatorLight {
     withdrawOneToken(wannaGetKey, lpTokensAmount) {
         lpTokensAmount = BigInt(lpTokensAmount);
         const w = this.withdraw(lpTokensAmount);
-        // console.log(w);
+        console.log(w);
         const afterSwap = this.swap(!wannaGetKey, wannaGetKey ? w.w2 : w.w1);
 
         return afterSwap + (wannaGetKey ? w.w1 : w.w2);
@@ -219,7 +218,7 @@ class SwapPairSimulatorLight {
             res = z;
             z = (x/z + z) / 2n
         }
-        // console.log('sqrt counter = ', counter);
+        console.log('sqrt counter = ', counter);
         return res;
     }
 
