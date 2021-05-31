@@ -3,6 +3,6 @@
  * @type {Array<Number>}
  */
 
-let testScenario = [800000, 600000];
+let testScenario = [8000000000000, 600000000000];
 
 module.exports = testScenario;

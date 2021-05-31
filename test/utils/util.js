@@ -37,28 +37,28 @@ async function sendGrams(giver, address, amount) {
     );
 }
 
-/**
- * Initial token config creation
- * @param {freeton.TonWrapper} tonInstance 
- * @param {import('../../config/contracts/rootContractParameters').RootTIP3Config} config 
- * @returns {import('../../config/contracts/rootContractParameters').RootTIP3Config}
- */
-function initialTokenSetup(tonInstance, config) {
-    let tokenConfig = copyJSON(config);
-    tokenConfig.walletsConfig = [];
+// /**
+//  * Initial token config creation
+//  * @param {freeton.TonWrapper} tonInstance 
+//  * @param {import('../../config/contracts/rootContractParameters').RootTIP3Config} config 
+//  * @returns {import('../../config/contracts/rootContractParameters').RootTIP3Config}
+//  */
+// function initialTokenSetup(tonInstance, config) {
+//     let tokenConfig = copyJSON(config);
+//     tokenConfig.walletsConfig = [];
 
-    tokenConfig.root.keys = tonInstance.keys[0];
-    tokenConfig.root.config.constructorParams.root_public_key_ = '0x' + tonInstance.keys[0].public;
+//     tokenConfig.root.keys = tonInstance.keys[0];
+//     tokenConfig.root.config.constructorParams.root_public_key_ = '0x' + tonInstance.keys[0].public;
 
-    for (let i = 0; i < config.walletsAmount; i++) {
-        let walletConfig = copyJSON(config.wallet);
-        walletConfig.keys = tonInstance.keys[i];
-        walletConfig.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i].public;
-        tokenConfig.walletsConfig.push(walletConfig);
-    }
+//     for (let i = 0; i < config.walletsAmount; i++) {
+//         let walletConfig = copyJSON(config.wallet);
+//         walletConfig.keys = tonInstance.keys[i];
+//         walletConfig.config.initParams.wallet_public_key = '0x' + tonInstance.keys[i].public;
+//         tokenConfig.walletsConfig.push(walletConfig);
+//     }
 
-    return tokenConfig;
-}
+//     return tokenConfig;
+// }
 
 // _______   ________  __       __   ______   _______   __    __ 
 // /       \ /        |/  |  _  /  | /      \ /       \ /  |  /  |

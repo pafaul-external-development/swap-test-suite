@@ -479,6 +479,26 @@ class User {
     }
 
     /**
+     * transfer tokens to recipient
+     * @param {String} rootAddress 
+     * @param {String} transferTo 
+     * @param {Number} amount 
+     */
+    async transferTokensTo(rootAddress, transferTo, amount) {
+        await this.msig.transferTo(
+            this.wallets[rootAddress].getAddress(),
+            ONE_CRYSTAL,
+            await this.createPayloadForTIP3Wallet(
+                this.wallets[rootAddress].getAbi(),
+                transferTo,
+                amount,
+                HALF_CRYSTAL,
+                ''
+            )
+        );
+    }
+
+    /**
      * 
      * @param {Object} walletAbi 
      * @param {String} tokenWallet 

@@ -188,7 +188,7 @@ try {
                 tokenAddress: firstTIP3Address,
                 withdrawLPAmount: tokenAmount
             });
-            expect(res.totalResult).to.equal(true, 'Invalid withdarw one token result');
+            expect(res.totalResult).to.equal(true, 'Invalid withdraw one token result');
         })
     })
 } catch (error) {
