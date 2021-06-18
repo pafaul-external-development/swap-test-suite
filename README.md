@@ -2,16 +2,17 @@
 ![photo_2020-12-15_20-21-41](https://user-images.githubusercontent.com/18599919/111032509-ac9fbd80-841d-11eb-9639-843ef2d758b3.jpg)
 Hello there! \
 SVOI dev team greets you and would like to present the results of created Decentralized Exchange for the FreeTON Community contest: \
-#16 FreeTon DEX Implementation Stage 1 Contest.
+#23 FreeTon DEX Implementation Stage 2 Contest.
 
 Goal of this work is to create Decentralized Exchange based on Liquidity Pool mechanism and develop instruments, such as 
 debot and [site](https://tonswap.com) for interacting with developed smart contracts.
+ 
 # Links
-[![Channel on Telegram](https://img.shields.io/badge/-TON%20Swap%20TG%20chat-blue)](https://t.me/tonswap)
+[![Channel on Telegram](https://img.shields.io/badge/-TON%20Swap%20TG%20chat-blue)](https://t.me/tonswap) 
 
-Repository with smart contracts - [https://github.com/SVOIcom/tonswap-SC](https://github.com/SVOIcom/tonswap-SC)
+Repository for smart contracts compilation and deployment - [https://github.com/SVOIcom/ton-testing-suite](https://github.com/SVOIcom/ton-testing-suite)
 
-Used ton-solidity compiler - [solidity compiler v0.36.0](https://github.com/tonlabs/TON-Solidity-Compiler/tree/5914224aa6c03def19d98c160ad8779d2efe1c50)
+Used ton-solidity compiler - [solidity compiler v0.39.0](https://github.com/broxus/TON-Solidity-Compiler/tree/98892ddbd2817784857b54436d75b64a3fdf6eb1)
 
 Used tvm-linker - [latest tvm linker](https://github.com/tonlabs/TVM-linker)
 
@@ -69,13 +70,13 @@ mocha test/swapPairTest.js
 ## Deploy swap pair to local ton OS SE node:
 To deploy swap pair so you can test it on local ton OS SE you need to run:
 ```shell
-mocha test/deployTestSwapPair.js
+mocha test/swapPairTest.js
 ```
-Result of swap pair, TIP-3 and wallets deployment will be in file ```spRes.json```
+
 ### If there are unexpected errors with no reason
 Try running the same command with additional flag:
 ```shell
-mocha --allow-uncaught test/deployTestSwapPair.js
+mocha --allow-uncaught test/swapPairTest.js
 ```
 If this will not resolve existing problem - please contact our team for further investing of your case so we can provide all help that we can :)
 
@@ -85,22 +86,6 @@ To deploy ```Swap pair debot``` you will need to run following command:
 node test/deployDebot.js
 ```
 Result of run with debot address and used keypair will be in file ```debotRes.json```
-
-# Debot functionality
-Using debot you can perform following operations:
-
-1. Get user token balance - get token amounts available for providing liquidity or performing swap operation;
-2. Get user LP token balance - get user's tokens that are currently in liquidity pool;
-3. Ger user TON balance - get user's TON balance;
-4. Get current LP functions execution cost;
-5. Provide liquidity - add tokens to liquidity pool;
-6. Withdraw liquidity - remove tokens from liquidity pool;
-7. Get current exchange rate;
-8. Swap tokens - swap user's tokens that are currently not in liquidity pool;
-9. Withdraw tokens from swap pair - remove tokens from swap pair by requesting transfer of tokens to specified wallet;
-10. Exit debot :)
-
-For your convinience, check following file that contrains some SC addresses: 
 
 # Testing swap pair by using existing debot or site
 
