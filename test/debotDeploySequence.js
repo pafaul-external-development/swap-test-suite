@@ -23,10 +23,27 @@ const ton = new freeton.TonWrapper({
 let rootSwapPairAddress = process.argv[2];
 
 async function main() {
+    let noAddressProvided = false;
+
     if (rootSwapPairAddress == '') {
-        console.log('Root swap pair address is not defined');
+        noAddressProvided = true;
+        if (fs.existsSync('./deployedSwapPairContracts.json')) {
+            let fileContent = JSON.parse(fs.readFileSync('./deployedSwapPairContracts.js'));
+            rootSwapPairAddress = fileContent['rootSwapPairContract'];
+            if (rootSwapPairAddress == undefined) {
+                noAddressProvided = true;
+            } else {
+                noAddressProvided = false
+            }
+
+        }
+    }
+
+    if (noAddressProvided) {
+        console.log('No root swap pair address provided');
         process.exit(1);
     }
+
     try {
         await ton.setup(1);
         ton.debug = true;
