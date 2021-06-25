@@ -64,15 +64,24 @@ class TIP3Deployer {
                 _randomNonce: false,
                 keyPair: this.keyPair,
             });
-            await this.tip3Deployer.run('setTIP3RootContractCode', {
-                rootContractCode_: rootContractCode
-            }, this.keyPair);
-            await this.tip3Deployer.run('setTIP3WalletContractCode', {
-                walletContractCode_: walletContractCode
-            }, this.keyPair);
+            await this.setTIP3Codes(rootContractCode, walletContractCode);
         }
         this.tip3Deployer.address = futureAddress;
         return futureAddress;
+    }
+
+    /**
+     * Set tip-3 codes for tip-3 deployer
+     * @param {String} rootContractCode 
+     * @param {String} walletContractCode 
+     */
+    async setTIP3Codes(rootContractCode, walletContractCode) {
+        await this.tip3Deployer.run('setTIP3RootContractCode', {
+            rootContractCode_: rootContractCode
+        }, this.keyPair);
+        await this.tip3Deployer.run('setTIP3WalletContractCode', {
+            walletContractCode_: walletContractCode
+        }, this.keyPair);
     }
 }
 
