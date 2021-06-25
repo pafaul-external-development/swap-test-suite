@@ -74,11 +74,7 @@ class RootSwapPairContract {
         if (!deployRequired) {
             if (!this.rootSwapPairContract)
                 await this.loadContract();
-            return await this.rootSwapPairContract.getFutureAddress({
-                constructorParams: this.constructorParams,
-                initParams: this.initParams,
-                keyPair: this.keyPair
-            })
+            return await this.getFutureAddress();
         } else {
             let futureAddress = await this.deployContract(false);
             let exists = await this.tonInstance.ton.net.query_collection({
