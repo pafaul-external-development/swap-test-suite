@@ -28,7 +28,7 @@ async function main() {
     if (rootSwapPairAddress == '') {
         noAddressProvided = true;
         if (fs.existsSync('./deployedSwapPairContracts.json')) {
-            let fileContent = JSON.parse(fs.readFileSync('./deployedSwapPairContracts.js'));
+            let fileContent = JSON.parse(fs.readFileSync('./deployedSwapPairContracts.json'));
             rootSwapPairAddress = fileContent['rootSwapPairContract'];
             if (rootSwapPairAddress == undefined) {
                 noAddressProvided = true;
@@ -78,10 +78,12 @@ async function main() {
             }
         }
 
-        debotAddresses.keys = ton.keys[0];
+        debotAddresses['keyPair'] = ton.keys[0];
+        debotAddresses['seedPhrase'] = seedPhrase;
 
         fs.writeFileSync('./debotAddresses.json', JSON.stringify(debotAddresses, null, '\t'));
 
+        console.log('Debot contracts deployed');
         process.exit(0);
     } catch (err) {
         console.log(err);
