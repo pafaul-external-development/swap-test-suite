@@ -34,6 +34,10 @@ class RootSwapPairContract {
         this.rootSwapPairContract = await freeton.requireContract(this.tonInstance, 'RootSwapPairContract');
     }
 
+    getAddress() {
+        return this.rootSwapPairContract.address;
+    }
+
     /**
      * Set new config if it is updated
      * @param {import('../../config/contracts/swapPairContractsConfig').RootSwapPairConfig} config
@@ -46,9 +50,10 @@ class RootSwapPairContract {
     /**
      * Deploy root contract to net
      * @param {Boolean} deployRequired true -> deploy, false -> only get address
+     * @param {Number} spCodeVersion
      * @returns {Promise<String>}
      */
-    async deployContract(deployRequired = false) {
+    async deployContract(deployRequired = false, spCodeVersion = 1) {
         if (!deployRequired) {
             if (!this.rootSwapPairContract)
                 await this.loadContract();
@@ -76,7 +81,7 @@ class RootSwapPairContract {
                 });
                 let swapPairCode = await freeton.requireContract(this.tonInstance, 'SwapPairContract');
                 swapPairCode = swapPairCode.code;
-                await this.setSwapPairCode(swapPairCode, 1);
+                await this.setSwapPairCode(swapPairCode, spCodeVersion);
             } else {
                 if (Number(exists.result[0].balance) < Number(freeton.utils.convertCrystal('100', 'nano'))) {
                     const giverContract = new freeton.ContractWrapper(
@@ -242,12 +247,14 @@ class RootSwapPairContract {
 
     /**
      * Upgrade code of smart contract pair ID
-     * @param {String} pairID 
+     * @param {String} tokenRootContract1
+     * @param {String} tokenRootContract2 
      */
-    async upgradeSwapPair(pairID) {
+    async upgradeSwapPair(tokenRootContract1, tokenRootContract2) {
         return await this.rootSwapPairContract.run(
             'upgradeSwapPair', {
-                uniqueID: pairID
+                tokenRootContract1: tokenRootContract1,
+                tokenRootContract2: tokenRootContract2
             },
             this.keyPair
         )

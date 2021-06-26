@@ -190,6 +190,15 @@ try {
             });
             expect(res.totalResult).to.equal(true, 'Invalid withdraw one token result');
         })
+
+        it('logging information', async function() {
+            console.log('Swap pair:');
+            console.log(JSON.stringify(swapPairContract.info), null, '\t');
+            console.log('Wallets:');
+            console.log(JSON.stringify(users[0].wallets[0].walletContract.address), null, '\t');
+            console.log(JSON.stringify(users[0].wallets[1].walletContract.address), null, '\t');
+            console.log(JSON.stringify(users[0].wallets[2].walletContract.address), null, '\t');
+        })
     })
 } catch (error) {
     console.log(JSON.stringify(error));

@@ -16,6 +16,7 @@ const {
     ONE_CRYSTAL,
     HALF_CRYSTAL
 } = require('../../config/general/constants');
+const RootSwapPairContract = require('../../contractWrappers/swap/rootSwapPairContract');
 
 /**
  * @typedef WalletState
@@ -529,6 +530,38 @@ class User {
         });
 
         return encoded_msg.body;
+    }
+
+
+    /**
+     * 
+     * @param {RootSwapPairContract} rootContract 
+     * @param {*} rootTokenAddress1 
+     * @param {*} rootTokenAddress2 
+     */
+    async updateSwapPair(rootContract, rootTokenAddress1, rootTokenAddress2) {
+        const callSet = {
+            function_name: 'upgradeSwapPair',
+            input: {
+                tokenRootContract1: rootTokenAddress1,
+                tokenRootContract2: rootTokenAddress2
+            }
+        }
+
+        const encoded_msg = await this.tonInstance.ton.abi.encode_message_body({
+            abi: abiContract(rootContract.rootSwapPairContract.abi),
+            call_set: callSet,
+            is_internal: true,
+            signer: {
+                type: 'None'
+            }
+        });
+
+        await this.msig.transferTo(
+            rootContract.getAddress(),
+            ONE_CRYSTAL * 4,
+            encoded_msg.body
+        );
     }
 
 }

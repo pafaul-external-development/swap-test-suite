@@ -37,7 +37,7 @@ let devnetConfig = {
         "data": [],
         "events": []
     },
-    address: '0:b8bb25d89595898d8886dec11d3bfcd022f3e70b5011b59f5a6ff4dae846acdf',
+    address: '0:49071fa23d4855b5788addfd4632896c265bb40b3df21bbb6c0772632de0824b',
 }
 
 module.exports = tonOSSEGiver;

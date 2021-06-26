@@ -82,13 +82,14 @@ async function deployTIP3Deployer(tonInstance) {
  * 
  * @param {freeton.TonWrapper} tonInstance 
  * @param {TIP3Deployer} tip3Deployer
+ * @param {Number} spCodeVersion
  * @returns {RootSwapPairContract}
  */
-async function deployRootSwapPairContract(tonInstance, tip3Deployer) {
+async function deployRootSwapPairContract(tonInstance, tip3Deployer, spCodeVersion = 1) {
     let rootSwapPairConfig = await createRootSwapPairConfig(swapConfig, tip3Deployer.getAddress(), tonInstance);
     let rootSwapPairContract = new RootSwapPairContract(tonInstance, rootSwapPairConfig, tonInstance.keys[0]);
     await rootSwapPairContract.loadContract();
-    await rootSwapPairContract.deployContract(true);
+    await rootSwapPairContract.deployContract(true, spCodeVersion);
     return rootSwapPairContract;
 }
 

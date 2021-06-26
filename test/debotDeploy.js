@@ -51,11 +51,11 @@ async function main() {
     try {
         await ton.setup(1);
         ton.debug = true;
-        let debot = await freeton.requireContract(ton, 'TonLiquidityWithdrawingOneDebot');
+        let debot = await freeton.requireContract(ton, 'SwapPairExplorer');
         await debot.deploy({
             constructorParams: {},
             initParams: {},
-            initialBalance: freeton.utils.convertCrystal(10, 'nano'),
+            initialBalance: freeton.utils.convertCrystal(5, 'nano'),
             _randomNonce: false,
             keyPair: ton.keys[0],
         });
@@ -66,59 +66,9 @@ async function main() {
             'dabi': toHex(JSON.stringify(debot.abi))
         }, ton.keys[0]);
 
-        // let info = ['TONSwap debot', '0.1.0', 'SVOI.dev', 'TONSwap debot from SVOI.dev team', 'SVOI.dev', 'Hello this is debot for TONSwap from SVOI.dev team'];
-        // let hexInfo = arrayStringToArrayHex(info);
-
-        // await setStringInfo(debot, hexInfo, 0);
-
-        // let menuInfo = [
-        //     "TONSwap", "Interactions with swap pairs",
-        //     "Your TIP-3 wallets", "Add your TIP-3 wallets to interact with swap pair",
-        //     "About Svoi dev", "Information about our other projects",
-        //     "TONSwap explorer", "Explore existing swap pairs",
-        //     "What would you like to do?", "Chose an option"
-        // ]
-
-        // hexInfo = arrayStringToArrayHex(menuInfo);
-
-        // await setStringInfo(debot, hexInfo, 10);
-
-        // let swapInfo = [
-        //     "Swap tokens", "Swap tokens of chosen swap pair",
-        //     "Provide liquidity", "Provide liquidity to swap pair using two tokens",
-        //     "Provide liquidity with one token", "Provide liquidity to swap pair using one token",
-        //     "Withdraw liquidity", "Withdraw liquidity from swap pair using two tokens",
-        //     "Withdraw liquidity with one tokne", "Withdraw liquidity from swap pair using one token",
-        //     "Return to main menu", "Exit current menu",
-        //     "Chose action:", "Choose what to do",
-        //     "Add wallet for the first token to use this swap pair", "Add wallet for the second token to use this swap pair",
-        //     "Select token to use for swap", "Input amount:",
-        //     "Swap operation completed"
-        // ]
-
-        // hexInfo = arrayStringToArrayHex(swapInfo);
-
-        // await setStringInfo(debot, hexInfo, 20);
-
-        // let liquidityProvideInfo = [
-        //     "Input token amounts to provide:",
-        //     "Input first token amount:", "Input second token amount:"
-        // ]
-
-        // hexInfo = arrayStringToArrayHex(liquidityProvideInfo);
-
-        // await setStringInfo(debot, hexInfo, 40);
-
-        // let explorerInfo = [
-        //     "Return to main menu", "Choose an option"
-        // ]
-
-        // hexInfo = arrayStringToArrayHex(explorerInfo);
-        // await setStringInfo(debot, hexInfo, 200);
-
-        // await debot.run('setRootAddress', {
-        //     'rootSwapPairAddress': '0:0daaca36b1d25699eaa0f40276830d2b263d9db41dfe590c2eb13a145a3caf6a'
-        // }, ton.keys[0]);
+        await debot.run('setRootAddress', {
+            'rootSwapPairAddress': '0:3dc2f941650dbb757e47363109841a943c04a4824a6652b8be7377b945603137'
+        }, ton.keys[0]);
 
         console.log(await debot.address);
         console.log(ton.keys[0]);

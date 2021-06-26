@@ -53,8 +53,6 @@ async function main() {
         tvc: fs.readFileSync('./build/SwapPairContract.abi.json').toString('base64')
     }
 
-
-
     let qc = await ton.ton.net.query_collection({
         collection: 'messages',
         filter: filter,
@@ -64,9 +62,7 @@ async function main() {
         }],
         result: "id msg_type src boc body"
     });
-    console.log(qc);
     qc = qc.result[0];
-    console.log(qc);
 
     try {
         await ton.ton.net.query_collection({
