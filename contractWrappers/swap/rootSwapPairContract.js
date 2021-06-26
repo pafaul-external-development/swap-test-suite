@@ -48,6 +48,28 @@ class RootSwapPairContract {
     }
 
     /**
+     * Get future address of contract
+     * @returns {String}
+     */
+    async getFutureAddress() {
+        if (!this.rootSwapPairContract)
+            await this.loadContract();
+        return await this.rootSwapPairContract.getFutureAddress({
+            constructorParams: this.constructorParams,
+            initParams: this.initParams,
+            keyPair: this.keyPair
+        });
+    }
+
+    /**
+     * Get address of this contract
+     * @returns {String}
+     */
+    getAddress() {
+        return this.rootSwapPairContract.address;
+    }
+
+    /**
      * Deploy root contract to net
      * @param {Boolean} deployRequired true -> deploy, false -> only get address
      * @param {Number} spCodeVersion
@@ -57,11 +79,7 @@ class RootSwapPairContract {
         if (!deployRequired) {
             if (!this.rootSwapPairContract)
                 await this.loadContract();
-            return await this.rootSwapPairContract.getFutureAddress({
-                constructorParams: this.constructorParams,
-                initParams: this.initParams,
-                keyPair: this.keyPair
-            })
+            return await this.getFutureAddress();
         } else {
             let futureAddress = await this.deployContract(false);
             let exists = await this.tonInstance.ton.net.query_collection({
