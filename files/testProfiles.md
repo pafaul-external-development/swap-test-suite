@@ -88,5 +88,6 @@ TIP-3 token wallets:
 
 # Debot
 
-Debot address in devnet:
-0:c38e272ff7fd288c0a72c5fc01205e87913ab0c5a17744dc277f88e152862ceb
+All debot addresses for devnet published in another repo
+
+https://github.com/SVOIcom/debots-collection
